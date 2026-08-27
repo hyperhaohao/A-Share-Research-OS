@@ -35,8 +35,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M6 | Research Domain | DONE | CorporateEvent、Claim、InvestmentThesis |
 | M7 | Quality | DONE | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
 | M8 | Structured Agents | DONE | AnalystBrief、missing_data → ResearchRequest 闭环 |
-| M9 | Debate / Scenario / Risk | DOING | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
-| M10 | Valuation | PLANNED | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
+| M9 | Debate / Scenario / Risk | DONE | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
+| M10 | Valuation | DOING | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
 | M11 | ResearchReport bilingual | PLANNED | 结构化报告、zh/en renderer、共享 Research State |
 | M12 | Manifest / Versions | PLANNED | ResearchRun、RunManifest、不可变 ReportVersion |
 | M13 | Report Q&A | PLANNED | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
@@ -59,27 +59,45 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M9 — Debate / Scenario / Risk
+## 当前 DOING：M10 — Valuation
 
-### 范围（任务书 §35/§37）
+### 范围（任务书 §36）
 
-- Bull/Bear 辩论：围绕已存在 Thesis 和 Claim（不得自创新事实；新事实必须回
-  EvidenceCollector，§35）；辩论论点本身以 Claim 形式入库（analyst_inference）
-- Bear/Base/Bull Scenario（§37）：probability/assumptions/catalysts/risks/
-  trigger_conditions/valuation —— 概率总和 100% 强制
-- Risk 对象：risks + trigger + invalidate conditions 与 Thesis 关联
-- 全部辩论产物通过引用完整性校验（复用 M6 机制）
+- 确定性估值引擎：PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/历史分位/可比公司
+  —— 全部由可测试代码计算，LLM 只解释不产生无来源目标值
+- 每种方法：输入（财务数据/价格/假设）→ 确定性计算 → 单元测试固定数值
+- Scenario 绑定估值（M9 Scenario 的 valuation 字段）
+- 风险：数据缺失显式（无 EPS → PE 不可计算 → missing，不猜测）
 
-### M9 DoD
+### M10 DoD
 
 ```text
-[ ] Debate 机制（bull/bear claims 关联到 thesis/snapshot）
-[ ] Scenario 模型（概率归一校验）+ 持久化 + API
-[ ] 辩论不得引入无证据新事实（测试）
+[ ] 估值引擎核心（至少 PE/PB/DCF/DDM/历史分位 完整实现 + 单测）
+[ ] 输入缺失语义（缺数据 → 显式不可计算）
+[ ] API + Scenario 绑定
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M9 — Debate / Scenario / Risk（DONE，2026-08-28）
+
+```text
+backend/app/domain/debate.py      Scenario（§37）/ ScenarioSet（概率总和=100 强制、
+                                  kind 唯一）/ DebateRound（bull/bear claims）
+backend/app/storage/debate 持久化（scenarios + debate_rounds 表）
+backend/app/services/debate_engine.py
+                                  确定性辩论：bull/bear 论点 = analyst_inference
+                                  claims，只引用论点自身证据基（无新事实可引入，
+                                  引用完整性拒绝）；最多 3 轮；多轮递增轮次
+backend/app/api/debate.py         POST /scenarios、/debates/run + GET 两个列表
+backend/alembic                   m9 迁移
+验证: backend pytest 144 passed
+      概率非 100 拒绝；bull/bear claims 可追溯到证据；3 轮耗尽拒绝
+      风险建模：Thesis/Scenario 内嵌 risks+trigger+invalidate（§29/§37，不设重复 Risk 表）
+```
 
 ## 已完成 Milestone
 
@@ -101,8 +119,6 @@ backend/alembic                   m8 迁移
       真实行情 → 后续 run 产出带引用 brief
       PIT 正确性：数据不在快照 → agent 不能引用（即使库中已有）
 ```
-
-## 已完成 Milestone
 
 ### M7 — Quality（DONE，2026-08-28）
 

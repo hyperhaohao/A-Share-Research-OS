@@ -150,6 +150,29 @@ class ResearchRepository:
             created_at=_ensure_utc(row.created_at),
         )
 
+    def get_thesis(self, thesis_id: str) -> InvestmentThesis | None:
+        row = self._session.scalars(
+            select(ThesisORM).where(ThesisORM.thesis_id == thesis_id)
+        ).first()
+        if row is None:
+            return None
+        return InvestmentThesis(
+            thesis_id=row.thesis_id,
+            instrument_id=row.instrument_id,
+            snapshot_id=row.snapshot_id,
+            title=row.title,
+            description=row.description,
+            supporting_claims=tuple(row.supporting_claims_json or ()),
+            opposing_claims=tuple(row.opposing_claims_json or ()),
+            confidence=row.confidence,
+            catalysts=tuple(row.catalysts_json or ()),
+            risks=tuple(row.risks_json or ()),
+            trigger_conditions=tuple(row.trigger_conditions_json or ()),
+            invalidate_conditions=tuple(row.invalidate_conditions_json or ()),
+            status=row.status,  # type: ignore[arg-type]
+            created_at=_ensure_utc(row.created_at),
+        )
+
     # -- theses --------------------------------------------------------------
     def save_thesis(self, thesis: InvestmentThesis, *, validate_refs: bool = True) -> str:
         if validate_refs:
