@@ -34,8 +34,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M5 | PIT / Snapshot | DONE | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
 | M6 | Research Domain | DONE | CorporateEvent、Claim、InvestmentThesis |
 | M7 | Quality | DONE | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
-| M8 | Structured Agents | DOING | AnalystBrief、missing_data → ResearchRequest 闭环 |
-| M9 | Debate / Scenario / Risk | PLANNED | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
+| M8 | Structured Agents | DONE | AnalystBrief、missing_data → ResearchRequest 闭环 |
+| M9 | Debate / Scenario / Risk | DOING | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
 | M10 | Valuation | PLANNED | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
 | M11 | ResearchReport bilingual | PLANNED | 结构化报告、zh/en renderer、共享 Research State |
 | M12 | Manifest / Versions | PLANNED | ResearchRun、RunManifest、不可变 ReportVersion |
@@ -59,28 +59,48 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M8 — Structured Agents
+## 当前 DOING：M9 — Debate / Scenario / Risk
 
-### 范围（任务书 §30）
+### 范围（任务书 §35/§37）
 
-- AnalystBrief 契约：analyst_type/conclusions/claim_refs/evidence_refs/
-  missing_data/confidence/key_questions/risks —— Agent 输出的统一形态
-- Agent 事实来源强制：从 EvidenceSnapshot 取证（不可自带事实库）
-- missing_data → ResearchRequest → EvidenceCollector 闭环（缺数据触发补采）
-- LLM 驱动与确定性双模式（无 LLM 时按规则产出 brief，不伪造结论）
-- 拦截测试：引用不存在的 evidence/claim 的 brief 被拒绝
+- Bull/Bear 辩论：围绕已存在 Thesis 和 Claim（不得自创新事实；新事实必须回
+  EvidenceCollector，§35）；辩论论点本身以 Claim 形式入库（analyst_inference）
+- Bear/Base/Bull Scenario（§37）：probability/assumptions/catalysts/risks/
+  trigger_conditions/valuation —— 概率总和 100% 强制
+- Risk 对象：risks + trigger + invalidate conditions 与 Thesis 关联
+- 全部辩论产物通过引用完整性校验（复用 M6 机制）
 
-### M8 DoD
+### M9 DoD
 
 ```text
-[ ] AnalystBrief + ResearchRequest 契约
-[ ] 至少一个真实 analyst（基于 quote evidence 的估值/行情 brief，确定性规则）
-[ ] missing_data → 补采闭环测试
-[ ] brief 引用完整性测试
+[ ] Debate 机制（bull/bear claims 关联到 thesis/snapshot）
+[ ] Scenario 模型（概率归一校验）+ 持久化 + API
+[ ] 辩论不得引入无证据新事实（测试）
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M8 — Structured Agents（DONE，2026-08-28）
+
+```text
+backend/app/domain/agents.py      AnalystBrief（§30 统一输出契约，结构化结论支持
+                                  双语渲染）、MissingData、ResearchRequest
+backend/app/storage/agent_repo.py briefs + requests 持久化
+backend/app/services/market_analyst.py
+                                  确定性 market analyst：仅引用快照内证据；
+                                  产出价格/涨跌幅/市值结论 + 机械事实 Claim（0.99 置信、
+                                  全引用、无预测语言）；financials/announcements 缺失
+                                  显式披露 → ResearchRequest → 采集器补采
+backend/app/api/analysts.py       POST /analysts/market/run + GET briefs/research-requests
+backend/alembic                   m8 迁移
+验证: backend pytest 139 passed
+      跨 run 闭环测试：空快照(2020) → missing disclosed → 采集器跑 → 新快照含
+      真实行情 → 后续 run 产出带引用 brief
+      PIT 正确性：数据不在快照 → agent 不能引用（即使库中已有）
+```
 
 ## 已完成 Milestone
 
@@ -98,8 +118,6 @@ backend/alembic                    m7 迁移（quality_gate_results 表）
 验证: backend pytest 135 passed —— 每个 FAIL 场景都真实拦截（blocked=true）
       FinalReport 门为 M11 真实报告预留结构化输入契约（ReportGateInput），已测试
 ```
-
-## 已完成 Milestone
 
 ### M6 — Research Domain（DONE，2026-08-28）
 
