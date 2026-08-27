@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M10（Valuation）
+Milestone M11（ResearchReport bilingual）
 Status: DOING
 ```
 
-M0–M9（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M10（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 – M9）
+## 已完成（M0 – M10）
 
 M0（2026-08-28）：
 

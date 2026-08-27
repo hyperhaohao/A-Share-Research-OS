@@ -16,6 +16,7 @@ from app.api.research import router as research_router
 from app.api.quality import router as quality_router
 from app.api.analysts import router as analysts_router
 from app.api.debate import router as debate_router
+from app.api.valuation import router as valuation_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(quality_router, prefix="/api/v1")
     app.include_router(analysts_router, prefix="/api/v1")
     app.include_router(debate_router, prefix="/api/v1")
+    app.include_router(valuation_router, prefix="/api/v1")
     return app
 
 

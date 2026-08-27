@@ -36,8 +36,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M7 | Quality | DONE | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
 | M8 | Structured Agents | DONE | AnalystBrief、missing_data → ResearchRequest 闭环 |
 | M9 | Debate / Scenario / Risk | DONE | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
-| M10 | Valuation | DOING | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
-| M11 | ResearchReport bilingual | PLANNED | 结构化报告、zh/en renderer、共享 Research State |
+| M10 | Valuation | DONE | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
+| M11 | ResearchReport bilingual | DOING | 结构化报告、zh/en renderer、共享 Research State |
 | M12 | Manifest / Versions | PLANNED | ResearchRun、RunManifest、不可变 ReportVersion |
 | M13 | Report Q&A | PLANNED | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
 | M14 | Audit / Revision | PLANNED | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
@@ -59,26 +59,43 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M10 — Valuation
+## 当前 DOING：M11 — ResearchReport bilingual
 
-### 范围（任务书 §36）
+### 范围（任务书 §38/§39/§10）
 
-- 确定性估值引擎：PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/历史分位/可比公司
-  —— 全部由可测试代码计算，LLM 只解释不产生无来源目标值
-- 每种方法：输入（财务数据/价格/假设）→ 确定性计算 → 单元测试固定数值
-- Scenario 绑定估值（M9 Scenario 的 valuation 字段）
-- 风险：数据缺失显式（无 EPS → PE 不可计算 → missing，不猜测）
+- 结构化 ResearchReport（§38 字段全集：metadata/executive_summary/.../disclaimer）
+- ReportCompiler：单一结构化数据 → Markdown/HTML 渲染（PDF 部署阶段补）
+- zh-CN 与 en-US renderer 共享同一 Research State（§90：数字/Claims/Citation 一致）
+- ReportVersion 不可变预留（M12 完成版本链）
+- FinalReportQualityGate 接入发布路径（FAIL 不可发布）
+- Evidence 原文不被翻译覆盖（Citation 指向原始证据）
 
-### M10 DoD
+### M11 DoD
 
 ```text
-[ ] 估值引擎核心（至少 PE/PB/DCF/DDM/历史分位 完整实现 + 单测）
-[ ] 输入缺失语义（缺数据 → 显式不可计算）
-[ ] API + Scenario 绑定
+[ ] 结构化报告域模型 + 编译器
+[ ] zh/en 渲染一致性测试（同一 Research State）
+[ ] gate 拦截发布路径
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M10 — Valuation（DONE，2026-08-28）
+
+```text
+backend/app/domain/valuation.py   八种确定性方法：PE/PB/PS/EV-EBITDA/DCF(两阶段+
+                                  Gordon 终值)/DDM(Gordon)/历史分位(百分位排名)/
+                                  可比公司(中位数倍数)；MissingInput 语义 ——
+                                  缺输入 → 显式 not computable，绝不猜测
+backend/app/storage/valuation_repo.py  持久化（含 scenario/thesis 绑定列）
+backend/app/api/valuation.py      POST /valuations/compute + GET 列表
+backend/alembic                   m10 迁移
+验证: backend pytest 164 passed —— 固定数值单测（DCF 手算终值/分位排名 30%/
+      同业中位数 19x/DDM 102 元等）；缺失输入显式落库
+```
 
 ## 已完成 Milestone
 
@@ -98,8 +115,6 @@ backend/alembic                   m9 迁移
       概率非 100 拒绝；bull/bear claims 可追溯到证据；3 轮耗尽拒绝
       风险建模：Thesis/Scenario 内嵌 risks+trigger+invalidate（§29/§37，不设重复 Risk 表）
 ```
-
-## 已完成 Milestone
 
 ### M8 — Structured Agents（DONE，2026-08-28）
 
