@@ -51,32 +51,52 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M22 | Qlib（若需要） | NOT_REQUIRED | 经审计：主工程 quant 能力满足（详见 docs/quant-audit.md） |
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
 | M24 | Workspace | DONE | Dashboard、Watchlist、Stock Workspace |
-| M25 | Research visual UI | DOING | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
-| M26 | Interactive Report | PLANNED | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
+| M25 | Research visual UI | DONE | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
+| M26 | Interactive Report | DOING | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
 | M27 | Tasks / Prediction UI | PLANNED | Tasks UI、Prediction Dashboard、完整双语主题回归 |
 | M28 | E2E / Performance / Cost | PLANNED | 多标的 E2E、性能、成本核算、安全审查 |
 | M29 | Production Delivery | PLANNED | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
 
 ---
 
-## 当前 DOING：M25 — Research visual UI
+## 当前 DOING：M26 — Interactive Report
 
-### 范围（任务书 §60/§46/§47 UI）
+### 范围（任务书 §61/§62）
 
-- Timeline UI：时间线视图（类型过滤、按时间排序）
-- Research Graph UI：溯源图可视化 + 节点点击 + 上下游追踪
-- 双语 + 主题适配沿用 tokens
+- 报告查看页升级：TOC + 分节锚点
+- Citation viewer：点击引用编号 → 弹层显示 evidence 详情（来源/权威度/
+  fact_status/available_time/原文摘录）
+- 文本动作：Explain（ask mode=explain）/ Audit（claim 审计结果）/ Refresh
+  （ask mode=refresh + 影响差集）/ Revision（提出修订 + diff + accept）
+- 双语 + 主题
 
-### M25 DoD
+### M26 DoD
 
 ```text
-[ ] Timeline UI（真实 API）
-[ ] Graph UI（真实 API + 上下游遍历交互）
+[ ] TOC + Citation viewer
+[ ] Explain/Audit/Refresh/Revision 动作接真实 API
 [ ] 测试 + 浏览器验证
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M25 — Research visual UI（DONE，2026-08-28）
+
+```text
+frontend/src/components/ResearchVisuals.tsx
+                                  TimelineTab（§46 时间线 + 类型过滤 chips）+
+                                  GraphTab（§60 图谱：按研究层分列、节点点击 →
+                                  upstream 追溯、depth 标注、关闭回视图）
+frontend/src/pages/InstrumentWorkspacePage.tsx
+                                  §58 五 Tab 工作区：总览/时间线/研究图谱/证据/预测
+验证: frontend 8 tests + build PASS；浏览器实测：
+      时间线条目（论点/主张/报告版本/行情）按时间倒序；
+      图谱 20 节点分 8 列；claim 上游追溯：0 claim → 1 evidence+snapshot →
+      2 source(tencent_quote)，深度标注正确
+```
 
 ## 已完成 Milestone
 

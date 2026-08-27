@@ -67,9 +67,18 @@
     "empty": "Watchlist is empty"
   },
   "workspace": {
+    "tabs": "Workspace views",
+    "tab": {
+      "overview": "Overview",
+      "timeline": "Timeline",
+      "graph": "Research Graph",
+      "evidence": "Evidence",
+      "predictions": "Predictions"
+    },
     "market": "Latest quote",
     "evidence": "Evidence",
     "predictions": "Predictions",
+    "evidenceCount": "Evidence items: {{count}}",
     "direction": {
       "up": "Up",
       "down": "Down",
@@ -83,5 +92,34 @@
   "label": {
     "no_data": "No data available",
     "missing": "missing"
+  },
+  "timeline": {
+    "filter": "Filter by kind",
+    "all": "All",
+    "kind": {
+      "market_event": "Market",
+      "evidence_added": "Evidence",
+      "claim_changed": "Claim",
+      "thesis_changed": "Thesis",
+      "corporate_event": "Corporate event",
+      "research_run": "Run",
+      "snapshot_built": "Snapshot",
+      "report_version": "Report version"
+    }
+  },
+  "graph": {
+    "hint": "Click a node to trace its evidence sources; columns follow research layers",
+    "trace": "Trace",
+    "close": "Close",
+    "kind": {
+      "source": "Source",
+      "evidence": "Evidence",
+      "snapshot": "Snapshot",
+      "claim": "Claim",
+      "thesis": "Thesis",
+      "research_run": "Run",
+      "report": "Report",
+      "report_version": "Report version"
+    }
   }
 }

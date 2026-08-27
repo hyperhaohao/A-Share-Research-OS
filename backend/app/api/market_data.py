@@ -15,6 +15,9 @@ router = APIRouter(tags=["market-data"])
 
 def resolve_instrument_id(raw: str) -> str | None:
     """Resolve any accepted instrument form (code/prefix/name) to an id."""
+    upper = raw.strip().upper()
+    if upper.split(":")[0] in ("SSE", "SZSE", "BSE") and ":" in upper:
+        return upper  # already a canonical instrument_id
     try:
         code, exchange, _board = normalize_code(raw)
     except InvalidInstrumentCode:

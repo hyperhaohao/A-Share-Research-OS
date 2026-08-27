@@ -153,6 +153,74 @@
   margin-bottom: 8px;
 }
 
+.workspace-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.timeline-list {
+  list-style: none;
+  padding: 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.timeline-kind {
+  color: var(--color-info);
+  min-width: 5em;
+}
+
+.kind-filters {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.graph-columns {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  align-items: flex-start;
+}
+
+.graph-column {
+  min-width: 180px;
+  flex: 1;
+}
+
+.graph-node {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 4px 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.graph-node:hover {
+  border-color: var(--color-accent);
+}
+
+.graph-node.selected {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow);
+}
+
 .search-form {
   display: flex;
   gap: 8px;

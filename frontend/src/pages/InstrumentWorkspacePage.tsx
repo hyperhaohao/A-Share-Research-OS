@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { GraphTab, TimelineTab } from "../components/ResearchVisuals";
 
 interface InstrumentProfile {
   instrument_id: string;
@@ -52,10 +54,14 @@ async function fetchPredictions(id: string): Promise<PredictionItem[]> {
   return body.results;
 }
 
-/** Stock Workspace (任务书 §58): header + Overview/Evidence/Predictions tabs. */
+const TABS = ["overview", "timeline", "graph", "evidence", "predictions"] as const;
+type WorkspaceTab = (typeof TABS)[number];
+
+/** Stock Workspace (任务书 §58): header + Overview/Timeline/Graph/Evidence/Predictions. */
 export function InstrumentWorkspacePage() {
   const { instrumentId = "" } = useParams();
   const { t } = useTranslation();
+  const [tab, setTab] = useState<WorkspaceTab>("overview");
 
   const instrumentQuery = useQuery({
     queryKey: ["instrument", instrumentId],
@@ -92,59 +98,84 @@ export function InstrumentWorkspacePage() {
         <span className="mono secondary">
           {inst ? `${inst.exchange}:${inst.code} · ${inst.market} · ${inst.board}` : instrumentId}
         </span>
-        <span className="secondary">
-          {inst?.industry ?? t("label.missing")}
-        </span>
+        <span className="secondary">{inst?.industry ?? t("label.missing")}</span>
       </header>
 
-      <section className="card">
-        <h2>{t("workspace.market")}</h2>
-        {latestQuote ? (
-          <p className="mono">
-            {String(latestQuote.metadata.price ?? "—")}
-            <span className="quote-up">
-              {" "}
-              {String(latestQuote.metadata.change_pct ?? "")}%
-            </span>
+      <div className="workspace-tabs" role="tablist" aria-label={t("workspace.tabs")}>
+        {TABS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            className={tab === key ? "control-btn active" : "control-btn"}
+            onClick={() => setTab(key)}
+          >
+            {t(`workspace.tab.${key}`)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" && (
+        <section className="card">
+          <h2>{t("workspace.market")}</h2>
+          {latestQuote ? (
+            <p className="mono">
+              {String(latestQuote.metadata.price ?? "—")}
+              <span className="quote-up">
+                {" "}
+                {String(latestQuote.metadata.change_pct ?? "")}%
+              </span>
+            </p>
+          ) : (
+            <p className="secondary">{t("label.no_data")}</p>
+          )}
+          <p className="secondary">
+            {t("workspace.evidenceCount", { count: evidence.length })}
           </p>
-        ) : (
-          <p className="secondary">{t("label.no_data")}</p>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section className="card">
-        <h2>{t("workspace.evidence")}</h2>
-        {evidence.length === 0 && <p className="secondary">{t("label.no_data")}</p>}
-        <ul className="watch-list">
-          {evidence.slice(0, 10).map((e) => (
-            <li key={e.evidence_id} className="result-row">
-              <span className="mono secondary">{e.evidence_type}</span>
-              <span>{e.title}</span>
-              <span className="mono secondary">{e.source}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {tab === "timeline" && <TimelineTab instrumentId={instrumentId} />}
+      {tab === "graph" && <GraphTab instrumentId={instrumentId} />}
 
-      <section className="card">
-        <h2>{t("workspace.predictions")}</h2>
-        {predictionsQuery.data?.length === 0 && (
-          <p className="secondary">{t("label.no_data")}</p>
-        )}
-        <ul className="watch-list">
-          {(predictionsQuery.data ?? []).map((p) => (
-            <li key={p.prediction_id} className="result-row">
-              <span className="mono">{p.horizon}</span>
-              <span>{t(`workspace.direction.${p.expected_direction}`)}</span>
-              {p.validation && (
-                <span className="mono secondary">
-                  {p.validation.instrument_return_pct}%
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {tab === "evidence" && (
+        <section className="card">
+          <h2>{t("workspace.evidence")}</h2>
+          {evidence.length === 0 && <p className="secondary">{t("label.no_data")}</p>}
+          <ul className="watch-list">
+            {evidence.slice(0, 20).map((e) => (
+              <li key={e.evidence_id} className="result-row">
+                <span className="mono secondary">{e.evidence_type}</span>
+                <span>{e.title}</span>
+                <span className="mono secondary">{e.source}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === "predictions" && (
+        <section className="card">
+          <h2>{t("workspace.predictions")}</h2>
+          {predictionsQuery.data?.length === 0 && (
+            <p className="secondary">{t("label.no_data")}</p>
+          )}
+          <ul className="watch-list">
+            {(predictionsQuery.data ?? []).map((p) => (
+              <li key={p.prediction_id} className="result-row">
+                <span className="mono">{p.horizon}</span>
+                <span>{t(`workspace.direction.${p.expected_direction}`)}</span>
+                {p.validation && (
+                  <span className="mono secondary">
+                    {p.validation.instrument_return_pct}%
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <p>
         <Link to="/" className="secondary">

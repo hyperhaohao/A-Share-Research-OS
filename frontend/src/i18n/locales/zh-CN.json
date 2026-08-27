@@ -67,9 +67,18 @@
     "empty": "关注列表为空"
   },
   "workspace": {
+    "tabs": "工作区视图",
+    "tab": {
+      "overview": "总览",
+      "timeline": "时间线",
+      "graph": "研究图谱",
+      "evidence": "证据",
+      "predictions": "预测"
+    },
     "market": "最新行情",
     "evidence": "证据",
     "predictions": "预测",
+    "evidenceCount": "证据条数：{{count}}",
     "direction": {
       "up": "看涨",
       "down": "看跌",
@@ -83,5 +92,34 @@
   "label": {
     "no_data": "暂无数据",
     "missing": "缺失"
+  },
+  "timeline": {
+    "filter": "按类型过滤",
+    "all": "全部",
+    "kind": {
+      "market_event": "行情",
+      "evidence_added": "证据",
+      "claim_changed": "主张",
+      "thesis_changed": "论点",
+      "corporate_event": "公司事件",
+      "research_run": "研究运行",
+      "snapshot_built": "证据快照",
+      "report_version": "报告版本"
+    }
+  },
+  "graph": {
+    "hint": "点击节点向上追溯证据来源；图谱按研究层排列",
+    "trace": "追溯",
+    "close": "关闭",
+    "kind": {
+      "source": "来源",
+      "evidence": "证据",
+      "snapshot": "快照",
+      "claim": "主张",
+      "thesis": "论点",
+      "research_run": "研究运行",
+      "report": "报告",
+      "report_version": "报告版本"
+    }
   }
 }
