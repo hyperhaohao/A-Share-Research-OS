@@ -26,8 +26,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 | # | Milestone | 状态 | 交付核心 |
 |---|-----------|------|----------|
-| M0 | 上游/底座源码审计 | DOING | upstream audit workspace、评估矩阵、架构审计、ADR-001 |
-| M1 | 工程基线 + i18n + theme | PLANNED | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
+| M0 | 上游/底座源码审计 | DONE | upstream audit workspace、评估矩阵、架构审计、ADR-001 |
+| M1 | 工程基线 + i18n + theme | DOING | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
 | M2 | Instrument | PLANNED | InstrumentProfile、A 股代码/名称解析、四板回归 |
 | M3 | Source Layer | PLANNED | capability-based Provider、fallback、SourceResult、source health |
 | M4 | Evidence | PLANNED | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
@@ -59,57 +59,53 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M0 — 上游/底座源码审计
+## 当前 DOING：M1 — 工程基线 + i18n + theme
 
-### 范围
+### 范围（基于 ADR-001：TideTrading 增量演进）
 
-在正式仓库之外建立 `upstreams/` workspace，对以下候选做源码级审计（不得只读 README）：
+在正式仓库 `hyperhaohao/A-Share-Research-OS` 内建立可运行工程基线：
 
 ```text
-TideTrading
-OpenAlpha CN
-觀瀾
-Qlib
-RD-Agent
-TradingAgents
+B1  正式仓库内建立最小可运行基线（backend FastAPI + frontend React/Vite/TS），
+    结构参照 TideTrading 分层，不做整体搬迁
+B2  i18n：zh-CN / en-US 资源体系 + language=system（zh*→zh-CN，其他→en-US）+ 手动覆盖
+B3  theme：system/light/dark 三态 + prefers-color-scheme 监听 + Design Tokens（§14）
+    + A 股语义色（红涨绿跌，可配置 CN/International，§15）
+B4  稳定 error/status code（后端协议用 code/enum，不把中文文本当协议值，§9）
+B5  图表主题基座（ECharts 按 Theme Context 重应用，§16）
 ```
 
-### 每个候选必须记录
+### M1 DoD
 
 ```text
-repository URL
-branch / HEAD commit / 最后提交时间
-LICENSE（文件级检查）
-关键源码定位（data / agent / api / frontend / quant）
-实际运行结果（backend 启动 / import / CLI）
-测试运行结果
-维护活跃度
-评估结论：ADOPT / ADAPT / REFERENCE_ONLY / REJECT
-```
-
-### 评估维度
-
-```text
-A-share data coverage / engineering completeness / maintainability / license
-tests / backend+API / frontend / i18n / theme / agent orchestration
-quant+backtest / PIT / evidence provenance / task scheduling / deployment / migration cost
-```
-
-### M0 DoD
-
-```text
-[ ] upstreams/ 建立在正式仓库之外
-[ ] 六个候选全部完成源码级审计并记录 branch/commit/license
-[ ] 主要候选实际启动
-[ ] 相关测试实际运行
-[ ] docs/current-architecture-audit.md 输出
-[ ] docs/upstream-evaluation.md 输出（含 ADOPT/ADAPT/REFERENCE_ONLY/REJECT 矩阵）
-[ ] docs/adr/ADR-001-main-engine-baseline.md 输出（主工程基线决策）
-[ ] PLAN/STATUS/ROADMAP 更新
+[ ] 正式仓库内 backend 启动 PASS（/health）
+[ ] 正式仓库内 frontend build PASS
+[ ] zh-CN / en-US 资源完整覆盖基线页面
+[ ] system/light/dark 三态切换 + OS 跟随 PASS
+[ ] Design Tokens 建立（light/dark 双套）
+[ ] i18n / theme 基础测试 PASS
 [ ] Git checkpoint
 ```
 
-M0 通过后自动进入 M1。
+---
+
+## 已完成 Milestone
+
+### M0 — 上游/底座源码审计（DONE，2026-08-28）
+
+六个候选完成源码级审计（结构/运行/测试/许可证）：
+
+```text
+TideTrading    ADOPT  主工程基线（live A股行情验证 PASS，102 端点，frontend build PASS）
+OpenAlpha CN   ADAPT  领域契约蓝本（105 tests PASS，25 端点验证）
+觀瀾            REFERENCE_ONLY（无 LICENSE，仅 UX 参考）
+Qlib           REFERENCE_ONLY（import PASS，闭环验证 defer M21/M22）
+RD-Agent       REJECT（import PASS，M20 后可重评）
+TradingAgents  REFERENCE_ONLY（27 tests PASS，无 A 股数据层）
+```
+
+产出：`docs/current-architecture-audit.md`、`docs/upstream-evaluation.md`、
+`docs/adr/ADR-001-main-engine-baseline.md`。
 
 ---
 

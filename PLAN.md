@@ -21,31 +21,35 @@
 M0
 ```
 
-- [ ] 确认当前目录与 canonical repository
-- [ ] `git status`
-- [ ] `git log --oneline`
-- [ ] 检查现有仓库文件
-- [ ] 在仓库外建立 upstream workspace
-- [ ] 审计 TideTrading
-- [ ] 审计 OpenAlpha CN
-- [ ] 审计觀瀾
-- [ ] 审计 Qlib
-- [ ] 审计 RD-Agent
-- [ ] 审计 TradingAgents
-- [ ] 实际启动主要候选
-- [ ] 运行相关 upstream tests
-- [ ] 检查 LICENSE
-- [ ] 输出 upstream evaluation matrix
-- [ ] 输出 current architecture audit
-- [ ] ADR：确定正式工程基线
-- [ ] Build/Test/Verification
-- [ ] Git Checkpoint
+- [x] 确认当前目录与 canonical repository（remote = hyperhaohao/A-Share-Research-OS.git）
+- [x] `git status`
+- [x] `git log --oneline`（首次执行时仓库无历史；已建立初始 commit b7f5a98）
+- [x] 检查现有仓库文件（仅文档包 → 已补齐 ROADMAP/README/docs 结构）
+- [x] 在仓库外建立 upstream workspace（`Desktop/upstreams/`）
+- [x] 审计 TideTrading（skloxo/TideTrading，HEAD 4ff21d3，live 行情验证 PASS）
+- [x] 审计 OpenAlpha CN（ss8875/openalpha-cn，HEAD 8d13065，105 tests PASS）
+- [x] 审计觀瀾（jesson-hh/financial-analyst，HEAD 98f1398，无 LICENSE）
+- [x] 审计 Qlib（microsoft/qlib，HEAD 79633dd，import PASS，闭环 defer M21/M22）
+- [x] 审计 RD-Agent（microsoft/RD-Agent，HEAD 6762f84，import PASS）
+- [x] 审计 TradingAgents（TauricResearch/TradingAgents，HEAD a33fd4c，27 tests PASS）
+- [x] 实际启动主要候选（TideTrading tide serve PASS / openalpha-cn uvicorn PASS）
+- [x] 运行相关 upstream tests（见 current-architecture-audit.md 验证记录）
+- [x] 检查 LICENSE（觀瀾无 LICENSE → REFERENCE_ONLY 约束）
+- [x] 输出 upstream evaluation matrix（docs/upstream-evaluation.md）
+- [x] 输出 current architecture audit（docs/current-architecture-audit.md）
+- [x] ADR：确定正式工程基线（docs/adr/ADR-001-main-engine-baseline.md：TideTrading 增量演进）
+- [x] Build/Test/Verification（TideTrading frontend build PASS；后端全量测试套件结果记录于 STATUS）
+- [x] Git Checkpoint
 
 Exit Criteria：
 
 ```text
 M0 DoD PASS
 ```
+
+结论：TideTrading = ADOPT（主工程基线）；OpenAlpha CN = ADAPT（领域契约）；
+觀瀾 = REFERENCE_ONLY（无 LICENSE）；Qlib = REFERENCE_ONLY（M21 再评）；
+RD-Agent = REJECT（M20 后可重评）；TradingAgents = REFERENCE_ONLY。
 
 ---
 
