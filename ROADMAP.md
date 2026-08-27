@@ -37,8 +37,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M8 | Structured Agents | DONE | AnalystBrief、missing_data → ResearchRequest 闭环 |
 | M9 | Debate / Scenario / Risk | DONE | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
 | M10 | Valuation | DONE | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
-| M11 | ResearchReport bilingual | DOING | 结构化报告、zh/en renderer、共享 Research State |
-| M12 | Manifest / Versions | PLANNED | ResearchRun、RunManifest、不可变 ReportVersion |
+| M11 | ResearchReport bilingual | DONE | 结构化报告、zh/en renderer、共享 Research State |
+| M12 | Manifest / Versions | DOING | ResearchRun、RunManifest、不可变 ReportVersion |
 | M13 | Report Q&A | PLANNED | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
 | M14 | Audit / Revision | PLANNED | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
 | M15 | Delta / Materiality | PLANNED | Monitor、Evidence delta、MaterialityJudge 三分支 |
@@ -59,27 +59,50 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M11 — ResearchReport bilingual
+## 当前 DOING：M12 — Manifest / Versions
 
-### 范围（任务书 §38/§39/§10）
+### 范围（任务书 §40/§41）
 
-- 结构化 ResearchReport（§38 字段全集：metadata/executive_summary/.../disclaimer）
-- ReportCompiler：单一结构化数据 → Markdown/HTML 渲染（PDF 部署阶段补）
-- zh-CN 与 en-US renderer 共享同一 Research State（§90：数字/Claims/Citation 一致）
-- ReportVersion 不可变预留（M12 完成版本链）
-- FinalReportQualityGate 接入发布路径（FAIL 不可发布）
-- Evidence 原文不被翻译覆盖（Citation 指向原始证据）
+- RunManifest 完整版（blueprint OpenAlpha CN domain/run.py，MIT）：code_commit/
+  config_digest/provider digests/model+prompt versions/random_seed/environment/
+  checkpoints —— 绑定 ResearchRun
+- ReportVersion 不可变链（§41）：version/parent_version/change_reason/
+  changed_sections；旧版本永不覆盖（§78：V1.0 → review → accept → V1.1 后 V1.0 仍在）
+- 中英 ReportVersion 为同一研究事实的两种 rendering（§41）
+- API：report revision 接受后自动创建新 ReportVersion
 
-### M11 DoD
+### M12 DoD
 
 ```text
-[ ] 结构化报告域模型 + 编译器
-[ ] zh/en 渲染一致性测试（同一 Research State）
-[ ] gate 拦截发布路径
+[ ] RunManifest 完整契约 + 持久化 + 绑定 run
+[ ] ReportVersion 链（不可变 + parent 链）+ 迁移
+[ ] 版本保留测试（V1.0 创建 V1.1 后仍存在）
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M11 — ResearchReport bilingual（DONE，2026-08-28）
+
+```text
+backend/app/domain/report.py     StructuredReport（§38 字段集映射到 sections）+
+                                 ReportRenderer（markdown/html × zh-CN/en-US，
+                                 HTML 全量 escape 防 XSS）
+backend/app/core/report_i18n.py  服务端双语渲染目录（仅本地化脚手架文案；
+                                 数字/claims/引用为共享数据）
+backend/app/services/report_compiler.py
+                                 从 snapshot 证据/claims/theses/debates/scenarios/
+                                 valuations 编译；缺失 section 显式「暂无数据」；
+                                 FinalReportQualityGate 接入发布路径（FAIL 阻断）
+backend/app/api/reports.py       POST /reports/compile（publish 需过门）+ GET
+backend/alembic                  m11 迁移（reports 表）
+验证: backend pytest 168 passed
+      §90 一致性：zh/en 报告数字相同（1648/100/25 等）、claim 原文逐字保留、
+      citation 集合相同；缺失数据在 data_quality 显式披露
+      不安全报告 blocked=true 且 published=false
+```
 
 ## 已完成 Milestone
 
@@ -96,8 +119,6 @@ backend/alembic                   m10 迁移
 验证: backend pytest 164 passed —— 固定数值单测（DCF 手算终值/分位排名 30%/
       同业中位数 19x/DDM 102 元等）；缺失输入显式落库
 ```
-
-## 已完成 Milestone
 
 ### M9 — Debate / Scenario / Risk（DONE，2026-08-28）
 
