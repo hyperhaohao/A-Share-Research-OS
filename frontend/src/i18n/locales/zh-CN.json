@@ -37,6 +37,10 @@
       "alias": "按别名"
     }
   },
+  "pipeline": {
+    "title": "研究管线",
+    "run": "运行一次研究"
+  },
   "settings": {
     "language": "界面语言",
     "languageSystem": "跟随系统",

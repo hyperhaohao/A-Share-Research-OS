@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../theme/ThemeProvider";
 import { InstrumentSearch } from "../components/InstrumentSearch";
+import { ResearchPipelineCard } from "../components/ResearchPipelineCard";
 import type { ResolvedTheme } from "../theme/theme";
 
 /** Health probe — real backend call, no mock data. */
@@ -64,6 +65,8 @@ export function HomePage() {
       </section>
 
       <InstrumentSearch />
+
+      <ResearchPipelineCard />
 
       <section className="card">
         <h2>{t("home.sampleQuote")}</h2>

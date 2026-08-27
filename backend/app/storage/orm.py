@@ -88,6 +88,15 @@ class ResearchRunORM(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class WatchlistORM(Base):
+    __tablename__ = "watchlist"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    instrument_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    note: Mapped[str] = mapped_column(String(500), default="")
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class SourceManifestORM(Base):
     __tablename__ = "source_manifests"
 

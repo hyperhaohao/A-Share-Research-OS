@@ -37,6 +37,10 @@
       "alias": "by alias"
     }
   },
+  "pipeline": {
+    "title": "Research pipeline",
+    "run": "Run research"
+  },
   "settings": {
     "language": "Language",
     "languageSystem": "System",

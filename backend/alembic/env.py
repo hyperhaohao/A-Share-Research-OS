@@ -9,6 +9,9 @@ from alembic import context
 from app.config import get_settings
 from app.storage.orm import Base
 
+# Import every model module so Base.metadata registers the full schema.
+from app.storage import all_models  # noqa: F401
+
 config = context.config
 
 if config.config_file_name is not None:

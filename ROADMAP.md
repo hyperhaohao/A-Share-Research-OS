@@ -50,7 +50,7 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M21 | Quant audit | DONE | 主工程 quant 能力客观审计，决定是否需要 Qlib |
 | M22 | Qlib（若需要） | NOT_REQUIRED | 经审计：主工程 quant 能力满足（详见 docs/quant-audit.md） |
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
-| M24 | Workspace | PLANNED | Dashboard、Watchlist、Stock Workspace |
+| M24 | Workspace | DOING | Dashboard、Watchlist、Stock Workspace |
 | M25 | Research visual UI | PLANNED | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
 | M26 | Interactive Report | PLANNED | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
 | M27 | Tasks / Prediction UI | PLANNED | Tasks UI、Prediction Dashboard、完整双语主题回归 |
@@ -59,27 +59,44 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M23 — Research API / SSE
+## 当前 DOING：M24 — Workspace
 
-### 范围（任务书 §66/§67）
+### 范围（任务书 §55/§57/§58）
 
-- API 合同核对与补齐：instruments ✓ / research runs ✓ / timeline ✓ / research graph ✓ /
-  evidence ✓ / claims ✓ / theses ✓ / reports ✓ / report ask ✓ / report review(revisions) ✓ /
-  tasks ✓ / predictions ✓ / validation performance ✓ / source health ✓ / settings(部分)
-- SSE：研究执行事件流（run_started/source_progress/evidence_ready/quality_gate/
-  analyst_progress/valuation_ready/report_ready/run_completed/run_failed）
-- 前端订阅 SSE 的最小接入
+- Dashboard：研究总览（标的搜索 + 管线触发 + 事件流）
+- Watchlist UI：关注列表（真实 API 增删）
+- Stock Workspace 头部：name/code/market/industry + 最新研究入口
+- 全部双语 + 三态主题
 
-### M23 DoD
+### M24 DoD
 
 ```text
-[ ] API 面核对清单完成
-[ ] SSE 事件流实现 + 前端接入
-[ ] 测试 PASS
+[ ] Watchlist UI（真实 API）
+[ ] Workspace 骨架（Header + Tabs 占位待 M25 填充真实内容）
+[ ] 测试 + 浏览器验证
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M23 — Research API / SSE（DONE，2026-08-28）
+
+```text
+§66 API 清单: instruments/research runs/timeline/graph/evidence/claims/theses/
+             reports/ask/revisions/tasks/predictions/performance/source-health/
+             watchlist 全部就位（233 tests）
+SSE:         app/core/events.py EventBus（线程安全 pub/sub）+
+             GET /events/stream（SSE 生成器，keep-alive + run_completed/failed 终止）
+管线:        POST /pipeline/run —— ResearchPipeline 全链：collect → snapshot(PIT) →
+             analyst → compile → quality_gate → report(+V1 版本) → manifest →
+             run_completed；事件序列 §67 全覆盖
+前端:        ResearchPipelineCard（EventSource 订阅 + 事件渲染）
+关键修复:    alembic 迁移链曾静默断裂（Windows 文件锁使 rm 失败 → 空迁移）；
+             已建立 all_models 注册表 + 合并迁移重建（25 表全部就位）
+验证: backend pytest 233 passed；LIVE: 管线事件序列 + watchlist 增删
+```
 
 ## 已完成 Milestone
 
