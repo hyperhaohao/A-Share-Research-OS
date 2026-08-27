@@ -135,8 +135,17 @@ class MarketAnalyst:
                 )
                 try:
                     created_claims.append(research.save_claim(claim))
-                except Exception:  # duplicate statement in same snapshot → keep brief
-                    pass
+                except Exception:
+                    # duplicate (snapshot, statement): reuse the existing claim
+                    existing = [
+                        c
+                        for c in research.list_claims(
+                            snapshot.instrument_id, snapshot_id=snapshot.snapshot_id
+                        )
+                        if c.statement == claim.statement
+                    ]
+                    if existing:
+                        created_claims.append(existing[0].claim_id)
                 evidence_refs.append(latest.evidence_id)
                 confidence = 0.85
 

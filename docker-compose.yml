@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      # Production target is PostgreSQL; see .env.example
+      ASRO_DATABASE_URL: ${ASRO_DATABASE_URL:-sqlite:///./data/asro.db}
+      ASRO_CORS_ORIGINS: ${ASRO_CORS_ORIGINS:-["http://localhost:8080"]}
+    volumes:
+      - backend_data:/app/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  backend_data:

@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.3",
     "alembic>=1.19.1",
     "sqlalchemy>=2.0.52",
+    "reportlab>=5.0.1",
 ]
 
 [dependency-groups]

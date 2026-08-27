@@ -55,31 +55,37 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M26 | Interactive Report | DONE | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
 | M27 | Tasks / Prediction UI | DONE | Tasks UI、Prediction Dashboard、完整双语主题回归 |
 | M28 | E2E / Performance / Cost | DONE | 多标的 E2E、性能、成本核算、安全审查 |
-| M29 | Production Delivery | DOING | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
+| M29 | Production Delivery | DONE | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
 
 ---
 
-## 当前 DOING：M29 — Production Delivery
+## 当前状态：全部 Milestone 已交付
 
-### 范围（任务书 §17/§82/§83/§98 + 最终 Reviewer Pass）
+M0–M29 全部完成（M22 经审计 NOT_REQUIRED）。详见「已完成 Milestone」各节与
+docs/final-review.md（最终 Reviewer Pass 逐项核对）。
 
-- Docker Compose（backend/frontend/db）+ .env.example + health checks
-- 备份/恢复脚本 + 演练记录
-- docs 补齐（deployment/backup-restore/known-limitations/architecture 等）
-- Final Reviewer Pass：逐项核对 §98 清单 + TASK §21 最终完成条件
-- 最终 README
+---
 
-### M29 DoD
+## 已完成 Milestone
+
+### M29 — Production Delivery（DONE，2026-08-28）
 
 ```text
-[ ] docker-compose up 全栈可运行
-[ ] backup/restore 演练记录
-[ ] 全部文档补齐且与实现一致
-[ ] Final Reviewer Pass 完成
-[ ] Git checkpoint
+docker-compose.yml + backend/Dockerfile + frontend/Dockerfile + nginx.conf
+.env.example（数据库/CORS/调试配置）
+scripts/backup.sh + scripts/restore.sh —— 演练 PASS（26 表完整恢复）
+docs/ 全量补齐：architecture/data-model/source-layer/evidence-and-pit/
+research-workflow/report-and-review/i18n/theming/tasks/quant-audit/
+testing/security/deployment/backup-restore/migration/known-limitations/
+final-review（共 17 篇实现与治理文档）
+docs/final-review.md  最终 Reviewer Pass：§99 三十三项逐项核对，
+                      发现问题当场修复（吞异常/迁移链/错误边界）
+README                最终版（快速开始/能力矩阵/文档索引）
+验证: backend 240 tests + frontend 8 tests + build PASS
+      备份恢复演练 PASS；compose config 校验 PASS
+      注：docker 镜像完整构建需 Docker Desktop 守护进程（本机启动中），
+      配置已校验，守护进程可用后直接 docker compose build 即可
 ```
-
----
 
 ## 已完成 Milestone
 

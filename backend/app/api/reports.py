@@ -5,8 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from fastapi.responses import Response
+
 from app.core.errors import AppError
 from app.db import get_session
+from app.services.pdf_export import markdown_to_pdf
 from app.services.report_compiler import ReportCompiler
 from app.storage.report_repo import ReportRepository
 
@@ -70,3 +73,17 @@ def get_report(report_id: str, session: Session = Depends(get_session)) -> dict:
     if report is None:
         raise AppError("report.not_found", status_code=404)
     return {"report": report}
+
+
+@router.get("/{report_id}/pdf")
+def get_report_pdf(report_id: str, session: Session = Depends(get_session)) -> Response:
+    """PDF export (light theme, CJK-capable) — content identical to HTML view."""
+    report = ReportRepository(session).get(report_id)
+    if report is None:
+        raise AppError("report.not_found", status_code=404)
+    pdf_bytes = markdown_to_pdf(report["markdown"], f"A-Share Research Report: {report['instrument_id']}")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{report_id}.pdf"'},
+    )

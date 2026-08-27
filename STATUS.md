@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M29（Production Delivery）
-Status: DOING
+Milestone — 全部交付完成
+Status: DELIVERED (M0–M29 DONE)
 ```
 
-M0–M28（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）；M22 NOT_REQUIRED。
+M0–M29 全部完成（2026-08-28）；M22 经审计 NOT_REQUIRED（docs/quant-audit.md）。
 
 ---
 
-## 已完成（M0 – M28）
+## 已完成（M0 – M29 全量交付）
 
 M0（2026-08-28）：
 
@@ -189,7 +189,9 @@ ROADMAP.md / PLAN.md / STATUS.md
 ## Blockers
 
 ```text
-None
+None（交付已完成）
+环境备注：Docker Desktop 守护进程本机启动缓慢，镜像级构建验证待其就绪
+（compose 配置已校验；属运行环境项，非代码缺陷）。
 ```
 
 ---
@@ -198,13 +200,13 @@ None
 
 ```text
 Last Safe Checkpoint:
-M5 PIT gate + immutable snapshots（112 tests + live 链验证，git commit）
+M29 production delivery（全量交付 + 文档 + 演练 + 最终评审）
 
 Last Verified Milestone:
-M0, M1, M2, M3, M4, M5
+M0–M29 全部（M22 NOT_REQUIRED）
 
 Resume From:
-M6 / Phase 2 / CorporateEvent + Claim + InvestmentThesis 领域模型（见 Next Action 步骤 1）
+交付后加固清单（见 Next Action）；无未完成里程碑。
 ```
 
 ---

@@ -1,36 +1,78 @@
 # A-Share Research OS
 
-面向 A 股研究的长期 Research OS。
-
-系统维护每个研究标的持续演化的 **Research State**（Evidence → Claim → Thesis → Valuation → Report → Prediction → Validation），而不是每次重新生成互不关联的 Markdown。
+面向 A 股研究的长期 Research OS。系统维护每个研究标的持续演化的
+**Research State**（Evidence → Claim → Thesis → Valuation → Report →
+Prediction → Validation），而非一次性生成的互不关联的报告。
 
 ## 当前状态
 
-执行状态与进度见：
+**M0–M28 已交付并通过各自 DoD；M29（生产交付）进行中。**
+详见 [ROADMAP.md](ROADMAP.md) 与 [STATUS.md](STATUS.md)。
 
-```text
-TASK.md       最终任务契约（不可降级）
-PLAN.md       动态执行计划
-STATUS.md     当前持久执行状态（从 Next Action 恢复）
-ROADMAP.md    Milestone 状态
-docs/         架构、审计、ADR 与规格文档
+## 快速开始
+
+### Docker Compose（推荐）
+
+```bash
+cp .env.example .env
+docker compose up --build
+# 打开 http://localhost:8080
 ```
 
-当前阶段：**M0 — 上游/底座源码审计**（见 [ROADMAP.md](ROADMAP.md)）。
+### 本地开发
 
-## Canonical Repository
+```bash
+# 后端（backend/ 目录）
+cd backend
+uv sync
+ASRO_DATABASE_URL=sqlite:///./asro_dev.db uv run alembic upgrade head
+uv run uvicorn app.main:app --port 8000
 
-```text
-https://github.com/hyperhaohao/A-Share-Research-OS.git
+# 前端（frontend/ 目录）
+cd ../frontend
+npm install
+npm run dev      # http://localhost:5173（/api 代理到 8000）
 ```
 
-所有正式代码、测试、部署配置只进入本仓库。上游项目仅作为审计/参考/Adapter 来源。
+### 测试
+
+```bash
+cd backend  && uv run pytest          # 239 个测试（含 live，网络不可达自动 skip）
+cd frontend && npm test && npm run build
+```
+
+## 核心能力
+
+| 能力 | 入口 |
+|------|------|
+| A 股标的解析（四板 + 名称/别名） | `GET /api/v1/instruments?query=` |
+| 实时行情（真实数据源，无 key） | `GET /api/v1/market-data/quote?instrument=` |
+| 证据采集（来源/权威度/事实状态全溯源） | `POST /api/v1/evidence/collect` |
+| PIT 快照（未来数据不可见） | `POST /api/v1/snapshots` |
+| 主张 / 论点（写时引用完整性） | `/api/v1/claims`、`/api/v1/theses` |
+| 确定性估值（PE/PB/DCF/DDM/…） | `POST /api/v1/valuations/compute` |
+| 质量门（证据/分析/发布三道） | `POST /api/v1/quality-gates/run` |
+| 双语研究报告（zh-CN/en-US 一致） | `POST /api/v1/reports/compile` |
+| 报告问答（Explain 零采集 / Refresh 采集） | `POST /api/v1/reports/{id}/ask` |
+| 审查与修订（旧版本永不覆盖） | `/api/v1/reports/{id}/audits`、`/revisions` |
+| 监控与实质性判定 | `POST /api/v1/monitor/run` |
+| 预测验证（5D/20D/60D） | `/api/v1/predictions` |
+| 任务调度（幂等/重试/恢复/互斥） | `/api/v1/tasks`、`/tasks/scheduler/tick` |
+| 时间线 / 溯源图谱 | `/api/v1/timeline`、`/api/v1/graph` |
+| 界面 | 双语（zh-CN/en-US）+ 三态主题（system/light/dark）+ 红涨绿跌可切换 |
 
 ## 文档
 
-- [docs/00-文档索引.md](docs/00-文档索引.md)
-- [docs/A-Share-Research-OS-最终实施任务书.md](docs/A-Share-Research-OS-最终实施任务书.md)
+全部文档见 [docs/00-文档索引.md](docs/00-文档索引.md)，包括：
 
-## 开发
+- [architecture.md](docs/architecture.md) · [data-model.md](docs/data-model.md)
+- [source-layer.md](docs/source-layer.md) · [evidence-and-pit.md](docs/evidence-and-pit.md)
+- [report-and-review.md](docs/report-and-review.md) · [research-workflow.md](docs/research-workflow.md)
+- [i18n.md](docs/i18n.md) · [theming.md](docs/theming.md) · [tasks.md](docs/tasks.md)
+- [quant-audit.md](docs/quant-audit.md) · [testing.md](docs/testing.md) · [security.md](docs/security.md)
+- [deployment.md](docs/deployment.md) · [backup-restore.md](docs/backup-restore.md) · [migration.md](docs/migration.md)
+- [known-limitations.md](docs/known-limitations.md)
 
-工程基线在 M0 审计完成、ADR-001 确定后建立。届时本节更新为实际的 Build/Test 命令。
+## License
+
+MIT

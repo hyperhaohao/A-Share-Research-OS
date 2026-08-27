@@ -162,3 +162,24 @@ def test_report_listing_and_fetch(client, monkeypatch):
     missing = client.get("/api/v1/reports/rpt_doesnotexist")
     assert missing.status_code == 404
     assert missing.json()["error_code"] == "report.not_found"
+
+
+def test_pdf_export(client, monkeypatch):
+    """PDF export is real, CJK-capable, and content-complete (§17/§39)."""
+    resp = httpx.Response(200, content=RAW_OK.encode("gbk"))
+    monkeypatch.setattr(httpx, "get", lambda url, timeout: resp)
+    collected = client.post("/api/v1/evidence/collect", params={"instrument": "600519"}).json()
+    snapshot = client.post(
+        "/api/v1/snapshots",
+        params={"instrument": "600519", "as_of": "2026-08-28T15:00:00+00:00"},
+    ).json()["snapshot"]
+    report = client.post(
+        "/api/v1/reports/compile",
+        params={"snapshot_id": snapshot["snapshot_id"], "language": "zh-CN"},
+    ).json()["report"]
+
+    pdf = client.get(f"/api/v1/reports/{report['report_id']}/pdf")
+    assert pdf.status_code == 200
+    assert pdf.headers["content-type"] == "application/pdf"
+    assert pdf.content.startswith(b"%PDF")  # real PDF magic
+    assert len(pdf.content) > 1000
