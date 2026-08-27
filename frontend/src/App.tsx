@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { AppHeader } from "./components/AppHeader";
 import { HomePage } from "./pages/HomePage";
 import { WatchlistPage } from "./pages/WatchlistPage";
-import { ReportsPage, ReportViewPage } from "./pages/ReportsPage";
+import { ReportsPage } from "./pages/ReportsPage";
+import { InteractiveReportPage } from "./pages/InteractiveReportPage";
 import { InstrumentWorkspacePage } from "./pages/InstrumentWorkspacePage";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
@@ -40,7 +41,7 @@ function Shell() {
         <Route path="/" element={<HomePage />} />
         <Route path="/watchlist" element={<WatchlistPage />} />
         <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/reports/:reportId" element={<ReportViewPage />} />
+        <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
         <Route path="/instrument/:instrumentId" element={<InstrumentWorkspacePage />} />
       </Routes>
       <footer className="app-footer secondary">{t("app.tagline")}</footer>

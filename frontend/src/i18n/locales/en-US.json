@@ -87,7 +87,22 @@
   },
   "report": {
     "title": "Research Report",
-    "gate": "Gate"
+    "gate": "Gate",
+    "toc": "Table of contents",
+    "actions": "Report actions",
+    "explain": "Explain",
+    "explainQuestion": "What supports this report's judgments?",
+    "audit": "Audit",
+    "refresh": "Refresh data",
+    "refreshNew": "New evidence",
+    "refreshRemoved": "Removed evidence",
+    "refreshAffected": "Affected claims",
+    "citations": "Citations",
+    "citation": "Evidence detail",
+    "citSource": "Source",
+    "citAuthority": "Authority",
+    "citFactStatus": "Fact status",
+    "citAvailable": "Available at"
   },
   "label": {
     "no_data": "No data available",
@@ -121,5 +136,16 @@
       "report": "Report",
       "report_version": "Report version"
     }
-  }
+  },
+  "section.executive_summary": "Executive Summary",
+  "section.market_and_capital": "Market & Capital",
+  "section.key_theses": "Key Theses",
+  "section.corporate_events": "Corporate Events",
+  "section.valuation": "Valuation",
+  "section.scenarios": "Scenarios",
+  "section.bull_bear": "Bull / Bear",
+  "section.risks": "Risks",
+  "section.data_quality": "Data Quality",
+  "section.source_manifest": "Source Manifest",
+  "section.disclaimer": "Disclaimer"
 }

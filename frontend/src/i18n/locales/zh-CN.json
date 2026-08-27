@@ -87,7 +87,22 @@
   },
   "report": {
     "title": "研究报告",
-    "gate": "发布门"
+    "gate": "发布门",
+    "toc": "目录",
+    "actions": "报告动作",
+    "explain": "解释",
+    "explainQuestion": "这份报告的判断依据是什么？",
+    "audit": "审查",
+    "refresh": "刷新数据",
+    "refreshNew": "新增证据",
+    "refreshRemoved": "移除证据",
+    "refreshAffected": "受影响主张",
+    "citations": "引用",
+    "citation": "证据详情",
+    "citSource": "来源",
+    "citAuthority": "权威度",
+    "citFactStatus": "事实状态",
+    "citAvailable": "可得时间"
   },
   "label": {
     "no_data": "暂无数据",
@@ -121,5 +136,16 @@
       "report": "报告",
       "report_version": "报告版本"
     }
-  }
+  },
+  "section.executive_summary": "摘要",
+  "section.market_and_capital": "行情与资金",
+  "section.key_theses": "核心论点",
+  "section.corporate_events": "公司事件",
+  "section.valuation": "估值",
+  "section.scenarios": "情景假设",
+  "section.bull_bear": "多空辩论",
+  "section.risks": "风险提示",
+  "section.data_quality": "数据质量",
+  "section.source_manifest": "来源清单",
+  "section.disclaimer": "免责声明"
 }

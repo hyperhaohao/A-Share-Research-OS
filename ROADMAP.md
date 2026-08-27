@@ -52,34 +52,47 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
 | M24 | Workspace | DONE | Dashboard、Watchlist、Stock Workspace |
 | M25 | Research visual UI | DONE | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
-| M26 | Interactive Report | DOING | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
-| M27 | Tasks / Prediction UI | PLANNED | Tasks UI、Prediction Dashboard、完整双语主题回归 |
+| M26 | Interactive Report | DONE | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
+| M27 | Tasks / Prediction UI | DOING | Tasks UI、Prediction Dashboard、完整双语主题回归 |
 | M28 | E2E / Performance / Cost | PLANNED | 多标的 E2E、性能、成本核算、安全审查 |
 | M29 | Production Delivery | PLANNED | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
 
 ---
 
-## 当前 DOING：M26 — Interactive Report
+## 当前 DOING：M27 — Tasks / Prediction UI
 
-### 范围（任务书 §61/§62）
+### 范围（任务书 §48 UI + §56）
 
-- 报告查看页升级：TOC + 分节锚点
-- Citation viewer：点击引用编号 → 弹层显示 evidence 详情（来源/权威度/
-  fact_status/available_time/原文摘录）
-- 文本动作：Explain（ask mode=explain）/ Audit（claim 审计结果）/ Refresh
-  （ask mode=refresh + 影响差集）/ Revision（提出修订 + diff + accept）
-- 双语 + 主题
+- Tasks UI：创建 monitor/prediction_validation 任务、启用/停用、tick 触发
+- Prediction UI：预测列表 + 验证结果 + 性能统计（Direction Accuracy 等）
+- 双语完整 + 三态主题回归
 
-### M26 DoD
+### M27 DoD
 
 ```text
-[ ] TOC + Citation viewer
-[ ] Explain/Audit/Refresh/Revision 动作接真实 API
-[ ] 测试 + 浏览器验证
+[ ] Tasks UI（创建/启停/tick）
+[ ] Prediction 列表 + 性能统计 UI
+[ ] 双语 + 主题最终回归
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M26 — Interactive Report（DONE，2026-08-28）
+
+```text
+frontend/src/pages/InteractiveReportPage.tsx
+                                  报告动作组（Explain→ask explain / Audit→full_report
+                                  审计 / Refresh→ask refresh）+ TOC（11 节锚点滚动）+
+                                  Citation viewer（点击引用 → GET /evidence/{id} 弹层：
+                                  来源/权威度/fact_status/可得时间/摘要）
+backend                           GET /api/v1/evidence/{evidence_id} 引用详情端点
+验证: frontend 8 tests + build PASS；浏览器实测：
+      Explain 面板（主张+引用）、TOC 11 节、Citation viewer 全字段、
+      Refresh（新增证据 2 / 移除 0 / 受影响主张——真实采集差集）
+```
 
 ## 已完成 Milestone
 

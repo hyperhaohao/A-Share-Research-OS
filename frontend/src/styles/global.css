@@ -221,6 +221,40 @@
   box-shadow: var(--shadow);
 }
 
+.report-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.report-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+}
+
+.report-toc ul {
+  list-style: none;
+  padding: 0;
+}
+
+.report-toc li {
+  padding: 4px 0;
+}
+
+.report-toc a {
+  color: var(--color-info);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .report-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .search-form {
   display: flex;
   gap: 8px;

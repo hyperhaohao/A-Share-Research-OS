@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError
 from app.db import get_session
 from app.services.evidence_collector import collect_capability_evidence
-from app.storage.repository import EvidenceRepository
+from app.storage.orm import EvidenceORM
+from app.storage.repository import EvidenceRepository, _row_to_domain
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
@@ -68,6 +70,34 @@ def collect_evidence(
         "deduped": outcome.deduped_count,
         "evidence": [_evidence_payload(e) for e in outcome.evidence],
     }
+
+
+@router.get("/{evidence_id}")
+def get_evidence(evidence_id: str, session: Session = Depends(get_session)) -> dict:
+    """Citation viewer backing endpoint: one evidence with full provenance."""
+    row = session.scalars(
+        select(EvidenceORM).where(EvidenceORM.evidence_id == evidence_id)
+    ).first()
+    if row is None:
+        raise AppError("evidence.not_found", status_code=404)
+    record = _row_to_domain(row)
+    return {"evidence": {
+        "evidence_id": record.evidence_id,
+        "instrument_id": record.instrument_id,
+        "evidence_type": record.evidence_type.value,
+        "title": record.title,
+        "summary": record.summary,
+        "excerpt": record.excerpt,
+        "source": record.source,
+        "source_type": record.source_type,
+        "source_url": record.source_url,
+        "authority_level": record.authority_level.value,
+        "fact_status": record.fact_status.value,
+        "event_time": record.event_time.isoformat(),
+        "available_time": record.available_time.isoformat(),
+        "confidence": record.confidence,
+        "metadata": record.metadata,
+    }}
 
 
 @router.get("")
