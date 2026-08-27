@@ -39,8 +39,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M10 | Valuation | DONE | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
 | M11 | ResearchReport bilingual | DONE | 结构化报告、zh/en renderer、共享 Research State |
 | M12 | Manifest / Versions | DONE | ResearchRun、RunManifest、不可变 ReportVersion |
-| M13 | Report Q&A | DOING | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
-| M14 | Audit / Revision | PLANNED | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
+| M13 | Report Q&A | DONE | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
+| M14 | Audit / Revision | DOING | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
 | M15 | Delta / Materiality | PLANNED | Monitor、Evidence delta、MaterialityJudge 三分支 |
 | M16 | Timeline | PLANNED | 统一事件时间线 |
 | M17 | Research Graph | PLANNED | 溯源图、upstream/downstream 遍历 |
@@ -59,28 +59,43 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M13 — Report Q&A
+## 当前 DOING：M14 — Audit / Revision
 
-### 范围（任务书 §42）
+### 范围（任务书 §43/§44）
 
-- Explain：为什么报告有此判断 —— 只用当前 ReportVersion/EvidenceSnapshot/
-  Claim/Thesis/SourceManifest，零新数据（含网络层零调用）
-- Refresh：用最新数据重新检查 —— 允许 Source Layer 新采集 → 新 Snapshot →
-  Impact 分析（新旧证据差集）
-- 两种行为 UI/API 语义严格区分：mode=explain 禁止采集；mode=refresh 必然采集
-- API：POST /reports/{id}/ask（question + mode）；explain 路径确定性回答
-  （结论 + 证据链引用），LLM 增强后续接入
+- Audit：sentence/claim/thesis 级审查 —— unsupported/outdated/conflicting/
+  missing evidence/logic leap/numeric inconsistency 检测（基于引用链确定性规则）
+- RevisionProposal（§44）：original/proposed/reason/added_evidence/
+  invalidated_evidence/affected_claims/confidence_change —— LLM 不直接改写
+- Accept → 新 ReportVersion（M12 链）；Reject → 记录；旧版本永久保留
+- API：POST /reports/{id}/audits、/revisions、POST /revisions/{id}/accept
 
-### M13 DoD
+### M14 DoD
 
 ```text
-[ ] ask API（explain/refresh 严格分离）
-[ ] explain 零采集（测试断言无新 manifest/evidence 产生）
-[ ] refresh 采集 + 新快照 + 影响差集
+[ ] 审计服务（claim 级确定性规则）
+[ ] RevisionProposal 模型 + Accept 流程（产生新版本 + 原因）
+[ ] 旧版本保留回归（复用 §78 测试）
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M13 — Report Q&A（DONE，2026-08-28）
+
+```text
+backend/app/services/report_qa.py  Explain（冻结态回答：关键词路由 claims/theses、
+                                   引用 evidence 链、零新数据 —— 测试断言证据/manifest
+                                   计数前后不变）vs Refresh（fresh=True 旁路 TTL 缓存 →
+                                   采集 → 新快照 → 影响差集：新增/移除证据、受影响 claims）
+backend/app/api/report_qa.py       POST /reports/{id}/ask {question, mode}
+backend/app/storage + alembic      report_asks 审计日志
+验证: backend pytest 177 passed
+      explain 零采集断言；refresh 新报价 → 新内容寻址证据 → 新快照
+      缓存旁路设计：refresh 语义要求绕过 TTL 缓存（已记录）
+```
 
 ## 已完成 Milestone
 
@@ -100,8 +115,6 @@ backend/alembic                   m12 迁移
       §78 测试：V1 播种 → V1.1（parent+reason）→ V1.0 仍存在且内容未变
       终态缺 finished_at → 422；修订缺 change_reason → 422
 ```
-
-## 已完成 Milestone
 
 ### M11 — ResearchReport bilingual（DONE，2026-08-28）
 

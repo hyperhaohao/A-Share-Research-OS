@@ -46,16 +46,23 @@ def collect_capability_evidence(
     *,
     runtime: SourceRuntime | None = None,
     repo: EvidenceRepository,
+    fresh: bool = False,
 ) -> CollectionOutcome:
     """Resolve a capability through the source layer and store evidence.
 
     Failure semantics: a failed collection still records its SourceManifest
     (with the final failure status) so the UI can show *why* nothing is there
     — a failed source is never presented as "no data" (任务书 §20).
+
+    ``fresh=True`` bypasses the TTL cache — used by Refresh flows (任务书 §42)
+    whose entire purpose is to re-check against new source data.
     """
     rt = runtime or get_runtime()
     request = SourceRequest(capability=capability, instrument_id=instrument_id, as_of=utc_now())
-    result = rt.resolve_cached(request)
+    if fresh:
+        result = rt.registry.resolve(request)
+    else:
+        result = rt.resolve_cached(request)
     return store_result_as_evidence(result, repo=repo)
 
 

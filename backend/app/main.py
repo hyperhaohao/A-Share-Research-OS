@@ -19,6 +19,7 @@ from app.api.debate import router as debate_router
 from app.api.valuation import router as valuation_router
 from app.api.reports import router as reports_router
 from app.api.manifest import router as manifest_router
+from app.api.report_qa import router as report_qa_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(valuation_router, prefix="/api/v1")
     app.include_router(reports_router, prefix="/api/v1")
     app.include_router(manifest_router, prefix="/api/v1")
+    app.include_router(report_qa_router, prefix="/api/v1")
     return app
 
 
