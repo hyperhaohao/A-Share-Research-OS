@@ -21,6 +21,7 @@ from app.api.reports import router as reports_router
 from app.api.manifest import router as manifest_router
 from app.api.report_qa import router as report_qa_router
 from app.api.audit import router as audit_router, revisions_router
+from app.api.timeline import router as timeline_router
 from app.api.monitor import router as monitor_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(report_qa_router, prefix="/api/v1")
     app.include_router(audit_router, prefix="/api/v1")
     app.include_router(revisions_router, prefix="/api/v1")
+    app.include_router(timeline_router, prefix="/api/v1")
     app.include_router(monitor_router, prefix="/api/v1")
     return app
 

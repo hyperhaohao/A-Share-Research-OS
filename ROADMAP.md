@@ -42,8 +42,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M13 | Report Q&A | DONE | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
 | M14 | Audit / Revision | DONE | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
 | M15 | Delta / Materiality | DONE | Monitor、Evidence delta、MaterialityJudge 三分支 |
-| M16 | Timeline | DOING | 统一事件时间线 |
-| M17 | Research Graph | PLANNED | 溯源图、upstream/downstream 遍历 |
+| M16 | Timeline | DONE | 统一事件时间线 |
+| M17 | Research Graph | DOING | 溯源图、upstream/downstream 遍历 |
 | M18 | Tasks / Scheduler | PLANNED | ResearchTask、scheduler、worker、retry、idempotency、recovery |
 | M19 | Prediction / Validation | PLANNED | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
 | M20 | Regression / Experience | PLANNED | RegressionReview 归因、ResearchExperience 沉淀 |
@@ -59,26 +59,38 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M16 — Timeline
+## 当前 DOING：M17 — Research Graph
 
-### 范围（任务书 §46）
+### 范围（任务书 §47）
 
-- 统一时间线：market_event/announcement/financial_release/evidence_added/
-  claim_changed/thesis_changed/research_run/report_version/prediction/validation
-  —— 从现有领域对象派生（不建重复存储）
-- API：GET /api/v1/timeline?instrument_id=（按时间排序、类型过滤、分页）
-- 回答「何时发生了什么」
+- 派生图：Source → Evidence → Event → Claim → Thesis → Report → (Prediction → Validation 后续)
+- 节点：id/kind/label；边：parent→child 引用关系（全部从现有对象派生）
+- upstream/downstream 遍历：任一节点向上（证据来源）与向下（影响面）
+- API：GET /api/v1/graph?instrument_id= + GET /api/v1/graph/{kind}/{id}/trace?direction=
+- 回答「这条结论来自哪里、影响了什么」
 
-### M16 DoD
+### M17 DoD
 
 ```text
-[ ] Timeline 派生服务（多源聚合排序）
-[ ] API + 类型过滤
-[ ] 测试 PASS
+[ ] 图构建 + 节点/边派生
+[ ] upstream/downstream 遍历 API
+[ ] 追溯测试（thesis → report 全链在图中）
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M16 — Timeline（DONE，2026-08-28）
+
+```text
+backend/app/services/timeline.py  派生读模型：从 evidence/claims/theses/corporate
+                                  events/research runs/report versions/snapshots
+                                  聚合排序（不建重复存储），kind 过滤 + 分页
+backend/app/api/timeline.py       GET /api/v1/timeline?instrument=&kinds=&limit=&offset=
+验证: backend pytest 195 passed —— 聚合/排序/过滤/分页/404
+```
 
 ## 已完成 Milestone
 
@@ -97,8 +109,6 @@ backend/alembic                  m15 迁移（materiality_decisions 表）
       调试记录：测试曾未打补丁导致真实行情进入（1292.3）→ 30% 跳变 → FULL 判定
       正确，证明判定器对真实数据的鲁棒性
 ```
-
-## 已完成 Milestone
 
 ### M14 — Audit / Revision（DONE，2026-08-28）
 
