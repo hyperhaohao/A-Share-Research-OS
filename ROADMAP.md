@@ -38,8 +38,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M9 | Debate / Scenario / Risk | DONE | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
 | M10 | Valuation | DONE | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
 | M11 | ResearchReport bilingual | DONE | 结构化报告、zh/en renderer、共享 Research State |
-| M12 | Manifest / Versions | DOING | ResearchRun、RunManifest、不可变 ReportVersion |
-| M13 | Report Q&A | PLANNED | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
+| M12 | Manifest / Versions | DONE | ResearchRun、RunManifest、不可变 ReportVersion |
+| M13 | Report Q&A | DOING | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
 | M14 | Audit / Revision | PLANNED | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
 | M15 | Delta / Materiality | PLANNED | Monitor、Evidence delta、MaterialityJudge 三分支 |
 | M16 | Timeline | PLANNED | 统一事件时间线 |
@@ -59,28 +59,47 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M12 — Manifest / Versions
+## 当前 DOING：M13 — Report Q&A
 
-### 范围（任务书 §40/§41）
+### 范围（任务书 §42）
 
-- RunManifest 完整版（blueprint OpenAlpha CN domain/run.py，MIT）：code_commit/
-  config_digest/provider digests/model+prompt versions/random_seed/environment/
-  checkpoints —— 绑定 ResearchRun
-- ReportVersion 不可变链（§41）：version/parent_version/change_reason/
-  changed_sections；旧版本永不覆盖（§78：V1.0 → review → accept → V1.1 后 V1.0 仍在）
-- 中英 ReportVersion 为同一研究事实的两种 rendering（§41）
-- API：report revision 接受后自动创建新 ReportVersion
+- Explain：为什么报告有此判断 —— 只用当前 ReportVersion/EvidenceSnapshot/
+  Claim/Thesis/SourceManifest，零新数据（含网络层零调用）
+- Refresh：用最新数据重新检查 —— 允许 Source Layer 新采集 → 新 Snapshot →
+  Impact 分析（新旧证据差集）
+- 两种行为 UI/API 语义严格区分：mode=explain 禁止采集；mode=refresh 必然采集
+- API：POST /reports/{id}/ask（question + mode）；explain 路径确定性回答
+  （结论 + 证据链引用），LLM 增强后续接入
 
-### M12 DoD
+### M13 DoD
 
 ```text
-[ ] RunManifest 完整契约 + 持久化 + 绑定 run
-[ ] ReportVersion 链（不可变 + parent 链）+ 迁移
-[ ] 版本保留测试（V1.0 创建 V1.1 后仍存在）
+[ ] ask API（explain/refresh 严格分离）
+[ ] explain 零采集（测试断言无新 manifest/evidence 产生）
+[ ] refresh 采集 + 新快照 + 影响差集
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M12 — Manifest / Versions（DONE，2026-08-28）
+
+```text
+backend/app/domain/manifest.py    RunManifest（§40 契约全集：code_commit/config_digest/
+                                  provider digests/model+prompt versions/random_seed/
+                                  environment/checkpoints；终态须 finished_at）、
+                                  ReportVersion（append-only，V>1 须 parent+reason）
+backend/app/storage/manifest_repo.py  两仓储 + (report_id, version_no) 唯一
+backend/app/api/manifest.py       POST /run-manifests、GET /run-manifests?run_id=
+                                  POST /reports/{id}/versions（无链时从已存报告播种 V1）
+                                  GET 版本链/单版本
+backend/alembic                   m12 迁移
+验证: backend pytest 173 passed
+      §78 测试：V1 播种 → V1.1（parent+reason）→ V1.0 仍存在且内容未变
+      终态缺 finished_at → 422；修订缺 change_reason → 422
+```
 
 ## 已完成 Milestone
 
@@ -103,8 +122,6 @@ backend/alembic                  m11 迁移（reports 表）
       citation 集合相同；缺失数据在 data_quality 显式披露
       不安全报告 blocked=true 且 published=false
 ```
-
-## 已完成 Milestone
 
 ### M10 — Valuation（DONE，2026-08-28）
 

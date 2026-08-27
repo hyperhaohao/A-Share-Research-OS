@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M12（Manifest / Versions）
+Milestone M13（Report Q&A）
 Status: DOING
 ```
 
-M0–M11（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M12（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 – M11）
+## 已完成（M0 – M12）
 
 M0（2026-08-28）：
 
