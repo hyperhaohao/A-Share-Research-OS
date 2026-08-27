@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M6（Research Domain）
+Milestone M7（Quality）
 Status: DOING
 ```
 
-M0–M5（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M6（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 – M5）
+## 已完成（M0 – M6）
 
 M0（2026-08-28）：
 

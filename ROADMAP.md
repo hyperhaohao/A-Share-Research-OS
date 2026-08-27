@@ -32,8 +32,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M3 | Source Layer | DONE | capability-based Provider、fallback、SourceResult、source health |
 | M4 | Evidence | DONE | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
 | M5 | PIT / Snapshot | DONE | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
-| M6 | Research Domain | DOING | CorporateEvent、Claim、InvestmentThesis |
-| M7 | Quality | PLANNED | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
+| M6 | Research Domain | DONE | CorporateEvent、Claim、InvestmentThesis |
+| M7 | Quality | DOING | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
 | M8 | Structured Agents | PLANNED | AnalystBrief、missing_data → ResearchRequest 闭环 |
 | M9 | Debate / Scenario / Risk | PLANNED | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
 | M10 | Valuation | PLANNED | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
@@ -59,31 +59,46 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M6 — Research Domain
+## 当前 DOING：M7 — Quality
 
-### 范围（任务书 §27-29）
+### 范围（任务书 §31）
 
-- CorporateEvent：通用研究对象（earnings/guidance/dividend/buyback/shareholding_change/
-  financing/M&A/restructuring/contract/litigation/regulation/governance/product/
-  capacity/industry_event/corporate_action —— 不让某类事件主导模型，§27）
-- Claim（§28：claim_id/statement/claim_type/supporting+opposing_evidence_refs/
-  fact_status/confidence/status）—— 引用必须真实存在（可追溯起点）
-- InvestmentThesis（§29：thesis_id/title/description/supporting+opposing_claims/
-  confidence/catalysts/risks/trigger+invalidate_conditions/status）
-- 持久化 + API + 追溯测试（Claim→Evidence、Thesis→Claim 全链存在）
+- EvidenceQualityGate：PIT 合规 / 来源权威度 / 新鲜度 / 关键数据覆盖 /
+  冲突证据 / source failures —— 真实业务规则，不是字数检查
+- AnalysisQualityGate：Claim 是否有证据 / 事实越界 / 事实-预测混用 /
+  冲突证据是否说明 / missing_data 是否披露
+- FinalReportQualityGate：无效 citation / unsupported claim / 估值无假设 /
+  风险缺失 / 数据质量未披露 / disclaimer 缺失 —— FAIL 不得发布正式报告
+- Gate 结果持久化 + API 可见
 
-### M6 DoD
+### M7 DoD
 
 ```text
-[ ] 三个领域模型 + 枚举 + 校验
-[ ] 持久化 + 迁移
-[ ] 引用完整性（Claim 的 evidence 引用必须真实存在）
-[ ] API（claims/theses CRUD 最小集）
-[ ] 追溯测试 PASS
+[ ] 三类 Gate 实现为真实业务校验
+[ ] Gate 拦截测试（FAIL 场景确实拦截）
+[ ] snapshot 级评估入口 + API
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M6 — Research Domain（DONE，2026-08-28）
+
+```text
+backend/app/domain/research.py    CorporateEvent（§27 事件类型全集/announce>=occur 校验）、
+                                  Claim（§28 字段全集 + 至少一条证据引用的域约束）、
+                                  InvestmentThesis（§29 字段全集 + 至少一条主张引用）
+backend/app/storage/research_orm.py + research_repo.py
+                                  ORM/仓储 + 写时引用完整性（引用不存在的
+                                  evidence/claim → ReferenceNotFoundError 拒绝）
+backend/app/api/research.py       POST/GET claims、theses、corporate-events
+backend/alembic                   m6 迁移（三表真实建表）
+验证: backend pytest 121 passed
+      追溯链测试：Thesis → Claim → Evidence → source 全链存在
+      假引用 422（claim.evidence_not_found / thesis.claims_not_found）
+```
 
 ## 已完成 Milestone
 
