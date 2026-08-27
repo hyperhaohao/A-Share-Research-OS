@@ -40,8 +40,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M11 | ResearchReport bilingual | DONE | 结构化报告、zh/en renderer、共享 Research State |
 | M12 | Manifest / Versions | DONE | ResearchRun、RunManifest、不可变 ReportVersion |
 | M13 | Report Q&A | DONE | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
-| M14 | Audit / Revision | DOING | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
-| M15 | Delta / Materiality | PLANNED | Monitor、Evidence delta、MaterialityJudge 三分支 |
+| M14 | Audit / Revision | DONE | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
+| M15 | Delta / Materiality | DOING | Monitor、Evidence delta、MaterialityJudge 三分支 |
 | M16 | Timeline | PLANNED | 统一事件时间线 |
 | M17 | Research Graph | PLANNED | 溯源图、upstream/downstream 遍历 |
 | M18 | Tasks / Scheduler | PLANNED | ResearchTask、scheduler、worker、retry、idempotency、recovery |
@@ -59,27 +59,44 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M14 — Audit / Revision
+## 当前 DOING：M15 — Delta / Materiality
 
-### 范围（任务书 §43/§44）
+### 范围（任务书 §45）
 
-- Audit：sentence/claim/thesis 级审查 —— unsupported/outdated/conflicting/
-  missing evidence/logic leap/numeric inconsistency 检测（基于引用链确定性规则）
-- RevisionProposal（§44）：original/proposed/reason/added_evidence/
-  invalidated_evidence/affected_claims/confidence_change —— LLM 不直接改写
-- Accept → 新 ReportVersion（M12 链）；Reject → 记录；旧版本永久保留
-- API：POST /reports/{id}/audits、/revisions、POST /revisions/{id}/accept
+- Monitor：低成本事实更新（行情采集 + 快照对比，不跑完整研究）
+- Evidence delta：新旧快照证据差集（added/removed/changed content_hash）
+- MaterialityJudge 三分支：NO_MATERIAL_CHANGE / DELTA_RESEARCH / FULL_RESEARCH
+  —— 确定性规则（新增证据数量/涉及能力/价格变动幅度阈值）
+- 判定结果持久化 + API；DELTA/FULL 触发对应研究动作入口
 
-### M14 DoD
+### M15 DoD
 
 ```text
-[ ] 审计服务（claim 级确定性规则）
-[ ] RevisionProposal 模型 + Accept 流程（产生新版本 + 原因）
-[ ] 旧版本保留回归（复用 §78 测试）
+[ ] Monitor + delta 计算
+[ ] MaterialityJudge（确定性阈值规则）+ 持久化
+[ ] 三分支触发测试
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M14 — Audit / Revision（DONE，2026-08-28）
+
+```text
+backend/app/domain/audit.py      audit_claim 确定性规则：unsupported（引用不可解析）/
+                                 outdated（证据过期）/ conflicting（反证未解释）/
+                                 numeric_inconsistency（陈述数字不可追溯到证据载荷）
+backend/app/domain + storage     RevisionProposal（§44 字段全集：original/proposed/
+                                 reason/added+invalidated evidence/affected claims/
+                                 confidence_change；original≠proposed 强制）
+backend/app/services + api       accept → 新 ReportVersion（parent+reason+changed_sections）
+                                 reject → 记录；旧版本保留（§78 回归复用）
+backend/alembic                  m14 迁移（revision_proposals 表）
+验证: backend pytest 182 passed
+      accept 双重执行 → 422；假证据修订 → 422；reject 后无新版本
+```
 
 ## 已完成 Milestone
 
@@ -96,8 +113,6 @@ backend/app/storage + alembic      report_asks 审计日志
       explain 零采集断言；refresh 新报价 → 新内容寻址证据 → 新快照
       缓存旁路设计：refresh 语义要求绕过 TTL 缓存（已记录）
 ```
-
-## 已完成 Milestone
 
 ### M12 — Manifest / Versions（DONE，2026-08-28）
 
