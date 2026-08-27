@@ -41,8 +41,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M12 | Manifest / Versions | DONE | ResearchRun、RunManifest、不可变 ReportVersion |
 | M13 | Report Q&A | DONE | Explain（无新数据）与 Refresh（允许新数据）严格区分 |
 | M14 | Audit / Revision | DONE | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
-| M15 | Delta / Materiality | DOING | Monitor、Evidence delta、MaterialityJudge 三分支 |
-| M16 | Timeline | PLANNED | 统一事件时间线 |
+| M15 | Delta / Materiality | DONE | Monitor、Evidence delta、MaterialityJudge 三分支 |
+| M16 | Timeline | DOING | 统一事件时间线 |
 | M17 | Research Graph | PLANNED | 溯源图、upstream/downstream 遍历 |
 | M18 | Tasks / Scheduler | PLANNED | ResearchTask、scheduler、worker、retry、idempotency、recovery |
 | M19 | Prediction / Validation | PLANNED | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
@@ -59,26 +59,44 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M15 — Delta / Materiality
+## 当前 DOING：M16 — Timeline
 
-### 范围（任务书 §45）
+### 范围（任务书 §46）
 
-- Monitor：低成本事实更新（行情采集 + 快照对比，不跑完整研究）
-- Evidence delta：新旧快照证据差集（added/removed/changed content_hash）
-- MaterialityJudge 三分支：NO_MATERIAL_CHANGE / DELTA_RESEARCH / FULL_RESEARCH
-  —— 确定性规则（新增证据数量/涉及能力/价格变动幅度阈值）
-- 判定结果持久化 + API；DELTA/FULL 触发对应研究动作入口
+- 统一时间线：market_event/announcement/financial_release/evidence_added/
+  claim_changed/thesis_changed/research_run/report_version/prediction/validation
+  —— 从现有领域对象派生（不建重复存储）
+- API：GET /api/v1/timeline?instrument_id=（按时间排序、类型过滤、分页）
+- 回答「何时发生了什么」
 
-### M15 DoD
+### M16 DoD
 
 ```text
-[ ] Monitor + delta 计算
-[ ] MaterialityJudge（确定性阈值规则）+ 持久化
-[ ] 三分支触发测试
+[ ] Timeline 派生服务（多源聚合排序）
+[ ] API + 类型过滤
+[ ] 测试 PASS
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M15 — Delta / Materiality（DONE，2026-08-28）
+
+```text
+backend/app/services/monitor.py  MonitorService：fresh 采集 → 新快照 → 与前一快照
+                                 的证据差集 + 价格变动 → MaterialityJudge；
+                                 MaterialityJudge 确定性规则：
+                                 首扫→FULL；无变化→NO；纯行情重观测价格未动→NO；
+                                 价格变动 <5% → DELTA；≥5% → FULL；
+                                 非行情类新增（公告/财报/新闻）→ DELTA（阈值可配）
+backend/app/api/monitor.py       POST /monitor/run + GET /monitor/decisions
+backend/alembic                  m15 迁移（materiality_decisions 表）
+验证: backend pytest 191 passed —— 三分支全部触发
+      调试记录：测试曾未打补丁导致真实行情进入（1292.3）→ 30% 跳变 → FULL 判定
+      正确，证明判定器对真实数据的鲁棒性
+```
 
 ## 已完成 Milestone
 
@@ -97,8 +115,6 @@ backend/alembic                  m14 迁移（revision_proposals 表）
 验证: backend pytest 182 passed
       accept 双重执行 → 422；假证据修订 → 422；reject 后无新版本
 ```
-
-## 已完成 Milestone
 
 ### M13 — Report Q&A（DONE，2026-08-28）
 

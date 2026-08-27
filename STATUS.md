@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M15（Delta / Materiality）
+Milestone M16（Timeline）
 Status: DOING
 ```
 
-M0–M14（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M15（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 – M14）
+## 已完成（M0 – M15）
 
 M0（2026-08-28）：
 
