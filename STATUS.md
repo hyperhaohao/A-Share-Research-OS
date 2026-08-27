@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M20（Regression / Experience）
+Milestone M21（Quant audit）
 Status: DOING
 ```
 
-M0–M19（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M20（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 – M19）
+## 已完成（M0 – M20）
 
 M0（2026-08-28）：
 

@@ -46,8 +46,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M17 | Research Graph | DONE | 溯源图、upstream/downstream 遍历 |
 | M18 | Tasks / Scheduler | DONE | ResearchTask、scheduler、worker、retry、idempotency、recovery |
 | M19 | Prediction / Validation | DONE | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
-| M20 | Regression / Experience | DOING | RegressionReview 归因、ResearchExperience 沉淀 |
-| M21 | Quant audit | PLANNED | 主工程 quant 能力客观审计，决定是否需要 Qlib |
+| M20 | Regression / Experience | DONE | RegressionReview 归因、ResearchExperience 沉淀 |
+| M21 | Quant audit | DOING | 主工程 quant 能力客观审计，决定是否需要 Qlib |
 | M22 | Qlib（若需要） | PLANNED | 若需要：真实 A 股 Data→Factor→Model→Backtest→Metrics 闭环；否则 NOT_REQUIRED |
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
 | M24 | Workspace | PLANNED | Dashboard、Watchlist、Stock Workspace |
@@ -59,27 +59,40 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M20 — Regression / Experience
+## 当前 DOING：M21 — Quant audit
 
-### 范围（任务书 §52/§53）
+### 范围（任务书 §54）
 
-- RegressionReview：验证失败归因 —— evidence/claim/thesis/valuation/catalyst/
-  risk/timing/market_regime 至少判定一维，不能只说「市场变化」
-- ResearchExperience（§53）：experience_id/context/lesson/related_research_type/
-  confidence/supporting_validations —— 第一版只沉淀，禁止自动改 Prompt
-- 长期统计：Direction Accuracy / Avg Excess / Range Hit Rate 聚合 API
-- API：POST /regression-reviews + GET experience 列表
+- 源码级审计主工程（TideTrading）已有 quant 能力：alpha/factor/backtest/model/optimizer
+- 与本系统研究闭环的需求对比（估值引擎 M10 已覆盖确定性估值）
+- 决定：现有能力足够 → M22 NOT_REQUIRED；不足 → Qlib Adapter
+- 输出 docs/quant-audit.md（证据 + 结论）
 
-### M20 DoD
+### M21 DoD
 
 ```text
-[ ] RegressionReview 归因模型（多维度判定）
-[ ] ResearchExperience 沉淀（只写不改）
-[ ] 聚合统计 API
+[ ] TideTrading quant 模块源码审计记录
+[ ] 需求对比 + 决定（含理由）
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M20 — Regression / Experience（DONE，2026-08-28）
+
+```text
+backend/app/domain/regression.py  RegressionReview：确定性归因（market_regime 需基准
+                                  同向佐证、证据过期→evidence、低置信→claim、
+                                  方向对但区间miss→timing、兜底 thesis；≥1 维强制）；
+                                  ResearchExperience append-only（只沉淀不自动改 Prompt）
+backend/app/api/regression.py     POST /regression/reviews + experiences + GET 列表 +
+                                  GET /regression/performance（Direction Accuracy /
+                                  Avg Excess / Range Hit Rate 聚合）
+backend/alembic                   m20 迁移
+验证: backend pytest 226 passed
+```
 
 ## 已完成 Milestone
 
