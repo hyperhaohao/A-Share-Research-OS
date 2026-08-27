@@ -43,8 +43,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M14 | Audit / Revision | DONE | sentence/claim/thesis audit、RevisionProposal、Diff、Accept |
 | M15 | Delta / Materiality | DONE | Monitor、Evidence delta、MaterialityJudge 三分支 |
 | M16 | Timeline | DONE | 统一事件时间线 |
-| M17 | Research Graph | DOING | 溯源图、upstream/downstream 遍历 |
-| M18 | Tasks / Scheduler | PLANNED | ResearchTask、scheduler、worker、retry、idempotency、recovery |
+| M17 | Research Graph | DONE | 溯源图、upstream/downstream 遍历 |
+| M18 | Tasks / Scheduler | DOING | ResearchTask、scheduler、worker、retry、idempotency、recovery |
 | M19 | Prediction / Validation | PLANNED | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
 | M20 | Regression / Experience | PLANNED | RegressionReview 归因、ResearchExperience 沉淀 |
 | M21 | Quant audit | PLANNED | 主工程 quant 能力客观审计，决定是否需要 Qlib |
@@ -59,26 +59,44 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M17 — Research Graph
+## 当前 DOING：M18 — Tasks / Scheduler
 
-### 范围（任务书 §47）
+### 范围（任务书 §48/§49）
 
-- 派生图：Source → Evidence → Event → Claim → Thesis → Report → (Prediction → Validation 后续)
-- 节点：id/kind/label；边：parent→child 引用关系（全部从现有对象派生）
-- upstream/downstream 遍历：任一节点向上（证据来源）与向下（影响面）
-- API：GET /api/v1/graph?instrument_id= + GET /api/v1/graph/{kind}/{id}/trace?direction=
-- 回答「这条结论来自哪里、影响了什么」
+- ResearchTask（§48 字段全集）：task_id/instrument_id/task_type/schedule/
+  research_level/filters/enabled/last_run_at/next_run_at/status
+- task_type：monitor / periodic_full_research / event_trigger / prediction_validation
+- Scheduler 只负责「何时执行」；业务逻辑是可独立测试的函数（run_monitor/
+  run_full_research/validate_prediction）
+- retry / idempotency / restart recovery / concurrency control（§49）
+- SSE 进度推送预留（M23 正式 API）
 
-### M17 DoD
+### M18 DoD
 
 ```text
-[ ] 图构建 + 节点/边派生
-[ ] upstream/downstream 遍历 API
-[ ] 追溯测试（thesis → report 全链在图中）
+[ ] ResearchTask 模型 + 持久化 + CRUD API
+[ ] Scheduler 循环（due → claim → run → retry/backoff）
+[ ] idempotency（同 task 同周期不重复执行）
+[ ] restart recovery（中断任务恢复）
+[ ] 并发控制（同 instrument 互斥）
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M17 — Research Graph（DONE，2026-08-28）
+
+```text
+backend/app/services/research_graph.py
+                                  派生图：source→evidence→snapshot→claim→thesis→
+                                  report_version + research_run 节点/边全从现有对象构建；
+                                  BFS upstream/downstream 遍历（max_depth）
+backend/app/api/graph.py          GET /graph?instrument= + GET /graph/trace?instrument=&node_id=&direction=
+验证: backend pytest 199 passed
+      §95 测试：thesis 上游追溯达 source/evidence；evidence 下游达 thesis/report_version
+```
 
 ## 已完成 Milestone
 
@@ -91,8 +109,6 @@ backend/app/services/timeline.py  派生读模型：从 evidence/claims/theses/c
 backend/app/api/timeline.py       GET /api/v1/timeline?instrument=&kinds=&limit=&offset=
 验证: backend pytest 195 passed —— 聚合/排序/过滤/分页/404
 ```
-
-## 已完成 Milestone
 
 ### M15 — Delta / Materiality（DONE，2026-08-28）
 
