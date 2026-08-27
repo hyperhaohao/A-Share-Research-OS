@@ -119,6 +119,47 @@
   border-top: 1px solid var(--color-border);
 }
 
+.search-form {
+  display: flex;
+  gap: 8px;
+}
+
+.search-form input {
+  flex: 1;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+
+.search-form input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.result-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.result-row:last-child {
+  border-bottom: none;
+}
+
+.result-code {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.result-name {
+  min-width: 8em;
+}
+
 @media (max-width: 768px) {
   .app-header {
     padding: 12px 16px;

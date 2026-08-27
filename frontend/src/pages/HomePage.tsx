@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../theme/ThemeProvider";
+import { InstrumentSearch } from "../components/InstrumentSearch";
 import type { ResolvedTheme } from "../theme/theme";
 
 /** Health probe — real backend call, no mock data. */
@@ -61,6 +62,8 @@ export function HomePage() {
             : t("home.currentThemeValue", { theme: resolved })}
         </p>
       </section>
+
+      <InstrumentSearch />
 
       <section className="card">
         <h2>{t("home.sampleQuote")}</h2>

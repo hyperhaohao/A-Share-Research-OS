@@ -28,16 +28,16 @@ Current Commit:
 ## 当前阶段
 
 ```text
-Phase 1 — Engineering Foundation
-Milestone M2（Instrument）
+Phase 2 — Data / Evidence Foundation
+Milestone M3（Source Layer）
 Status: DOING
 ```
 
-M0（2026-08-28）、M1（2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0（2026-08-28）、M1（2026-08-28）、M2（2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 + M1）
+## 已完成（M0 + M1 + M2）
 
 M0（2026-08-28）：
 
@@ -61,43 +61,60 @@ M1（2026-08-28）：
 - 浏览器真实验证（Chrome DevTools 实测，见 ROADMAP M1 节）：
   后端连通 / 三态主题 / OS 跟随 / 手动覆盖 / 语言切换 / 涨跌语义色 全部 PASS。
 
+M2（2026-08-28）：
+
+- `backend/app/domain/instrument.py`：InstrumentProfile（任务书 §19 字段全集）。
+- `backend/app/domain/code_norm.py`：A 股代码规范化 + 板块分类
+  （沪主板/科创板/深主板/创业板/北交所；前缀变体 SH600519、000001.SZ 等；
+  矛盾提示拒绝；未知前缀抛 InvalidInstrumentCode）。
+- `backend/app/domain/catalog.py`：seed 目录（12 只真实标的：四板 × 金融/消费/科技/新能源/周期/制造）。
+- `backend/app/api/instruments.py`：GET /api/v1/instruments?query=（code/name/alias 三路解析）
+  + GET /{instrument_id}；缺失分析字段显式 null。
+- 前端 InstrumentSearch 卡片接真实 API。
+- 验证：backend pytest 49 passed（四板回归/前缀变体/名称别名/缺数据契约）；
+  frontend 8 passed + build PASS；浏览器实测 600519/茅台/CATL/未知 四场景全 PASS。
+
 ---
 
 ## 正在进行
 
 ```text
-M2 — Instrument（正式仓库内）
+M3 — Source Layer（SourceResult 语义 / capability provider / fallback / source health）
 ```
 
 ---
 
 ## 下一步（Next Action）
 
-1. `backend/app/domain/instrument.py`：InstrumentProfile（任务书 §19 字段全集）。
-2. A 股代码规范化与板块识别：`code_norm`（6 位数字 → SSE/SZSE 主板、创业板 300/301、
-   科创板 688/689；支持 600519 / 000001 / 300750 / 688981 / sh600519 / 600519.SH 等输入）。
-3. 名称解析：先建静态 seed 数据（四板代表性标的：沪主板大市值、深主板、创业板成长、
-   科创板科技），M3 Source Layer 接入后再由 provider 动态补全名称/行业。
-4. API：`GET /api/v1/instruments?query=600519|茅台`（code+name 双路解析，缺数据显示缺失）。
-5. 四板回归测试（task书 §72：code/name/exchange/market 全部断言）+ API 测试。
-6. 前端：Header 搜索框接解析 API（最小可用），双语 key 补齐。
-7. Build/Test → 更新 PLAN/STATUS/ROADMAP → Git checkpoint。
-
-M2 完成后进入 M3（Source Layer）。
+1. `backend/app/sources/base.py`：SourceResult 契约（status: success/no_data/partial/
+   network_error/rate_limit/parse_error/auth_error/source_unavailable + error_type/retryable/
+   attempted_at/as_of/metadata）与 SourceProvider Protocol（capability-based，注明 OpenAlpha CN
+   MIT 契约蓝本出处）。
+2. capability registry + fallback 链（同能力多 provider 依序 fallback，结构化失败不伪装空成功）。
+3. source health 记录 + GET /api/v1/source-health。
+4. 第一个真实 provider：instrument profile 补全（接入上游验证过的真实 A 股行情源读取器，
+   或静态 seed 扩展 —— 以能真实运行为准）。
+5. 缓存语义骨架（分 TTL）+ dedup 预留。
+6. 单元 + 集成测试（fallback 顺序、失败分类、no_data 语义、health 状态机）。
+7. Build/Test → 更新状态 → Git checkpoint。M3 后进入 M4（Evidence）。
 
 ---
 
 ## 已验证
 
 ```text
-M1 Build:
-  backend:  uv sync PASS；pytest 8 passed；uvicorn /api/v1/health 实测 {"status":"ok","version":"0.1.0"}
-  frontend: npm install PASS；vitest 8 passed；vite build PASS（1.14s）
-M1 Live（浏览器实测）:
-  前端→后端真实调用 PASS（health ok · v0.1.0）
-  三态主题 + OS 跟随 + 手动覆盖: PASS（§77 两语义均验证）
-  语言 system/zh-CN/en-US 切换: PASS
-  涨跌语义色（CN 默认红涨绿跌 + intl 翻转）: PASS
+M2 Backend Tests:
+  uv run pytest → 49 passed
+  （含四板回归、前缀变体、矛盾提示拒绝、名称/别名解析、缺数据显式 null、错误信封）
+M2 Frontend:
+  vitest 8 passed；vite build PASS
+M2 Live（浏览器实测，真实 API）:
+  600519 → 贵州茅台 SSE 按代码 PASS
+  茅台   → 贵州茅台 按名称 PASS
+  CATL   → 宁德时代 按别名 PASS
+  zzz999 → 空结果（不编造）PASS
+M1（延续）:
+  后端连通 / 三态主题 / OS 跟随 / 手动覆盖 / 语言切换 / 涨跌语义色 PASS
 ```
 
 ---
@@ -131,17 +148,12 @@ TASK / PLAN / STATUS / ROADMAP 四文件职责分工（见 AGENTS.md §5）。
 ## 最近修改文件
 
 ```text
-M1 checkpoint:
-backend/pyproject.toml, app/{__init__,config,main}.py,
-        app/api/{__init__,health}.py, app/core/{__init__,errors,i18n}.py,
-        tests/{__init__,test_health,test_error_envelope,test_i18n}.py
-frontend/package.json, vite.config.ts, tsconfig.json, index.html,
-        src/main.tsx, src/App.tsx, src/i18n/{index.ts,LanguageProvider.tsx},
-        src/i18n/locales/{zh-CN,en-US}.json,
-        src/theme/{theme.ts,ThemeProvider.tsx},
-        src/components/{AppHeader,AppearanceControls}.tsx, src/pages/HomePage.tsx,
-        src/styles/{tokens.css,global.css}, tests/{i18n-theme.test.ts,app.test.tsx}
-.claude/launch.json（dev server 配置）
+M2 checkpoint:
+backend/app/domain/{__init__,instrument,code_norm,catalog}.py
+backend/app/api/instruments.py
+backend/tests/{test_code_norm,test_instrument_resolution,test_instruments_api}.py
+frontend/src/components/InstrumentSearch.tsx（新增）
+frontend/src/pages/HomePage.tsx、src/i18n/locales/*.json（搜索接入）
 ROADMAP.md / PLAN.md / STATUS.md
 ```
 
@@ -159,13 +171,13 @@ None
 
 ```text
 Last Safe Checkpoint:
-M1 engineering foundation（backend/frontend/i18n/theme + 浏览器实测，git commit）
+M2 instrument resolution（四板回归 + 三模式解析实测，git commit）
 
 Last Verified Milestone:
-M0, M1
+M0, M1, M2
 
 Resume From:
-M2 / Phase 1 / Instrument 领域模型与解析服务（见 Next Action 步骤 1）
+M3 / Phase 2 / SourceResult 契约与 capability provider（见 Next Action 步骤 1）
 ```
 
 ---

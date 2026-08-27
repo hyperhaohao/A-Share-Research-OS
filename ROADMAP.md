@@ -28,8 +28,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 |---|-----------|------|----------|
 | M0 | 上游/底座源码审计 | DONE | upstream audit workspace、评估矩阵、架构审计、ADR-001 |
 | M1 | 工程基线 + i18n + theme | DONE | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
-| M2 | Instrument | DOING | InstrumentProfile、A 股代码/名称解析、四板回归 |
-| M3 | Source Layer | PLANNED | capability-based Provider、fallback、SourceResult、source health |
+| M2 | Instrument | DONE | InstrumentProfile、A 股代码/名称解析、四板回归 |
+| M3 | Source Layer | DOING | capability-based Provider、fallback、SourceResult、source health |
 | M4 | Evidence | PLANNED | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
 | M5 | PIT / Snapshot | PLANNED | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
 | M6 | Research Domain | PLANNED | CorporateEvent、Claim、InvestmentThesis |
@@ -59,28 +59,71 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M2 — Instrument
+## 当前 DOING：M3 — Source Layer
 
-### 范围
+### 范围（契约蓝本：OpenAlpha CN providers/base.py，MIT 注明出处）
 
-- InstrumentProfile 领域模型（instrument_id/market/code/exchange/name/aliases/currency/
-  industry/sector/concept_tags/listed_status/market_cap/data_availability/created_at/updated_at）
-- 通过代码或名称解析标的（不依赖 UI Session 保存股票名字）
-- 四板回归：沪市主板 / 深市主板 / 创业板 / 科创板（code/name/exchange/market）
+- SourceResult 统一语义：success / no_data / partial / network_error / rate_limit /
+  parse_error / auth_error / source_unavailable（禁止失败伪装为空成功，任务书 §21）
+- capability-based Provider：instrument / market_data / announcements / financials / news /
+  capital_flow / industry / macro / research / corporate_actions（不强制全实现，任务书 §20）
+- Provider fallback 链与 source health 记录
+- 缓存语义（分 TTL，不破坏 PIT）与 dedup
+- 至少一个 provider 能力做真实数据验证（延续 M0 live 验证）
 
-### M2 DoD
+### M3 DoD
 
 ```text
-[ ] Instrument 模型 + 解析服务实现
-[ ] 四板标的解析回归测试 PASS
-[ ] API 暴露（/api/v1/instruments 查询）
-[ ] 名称解析（中文简称）可用
+[ ] SourceResult / Provider 契约 + 结构化失败实现
+[ ] capability registry + fallback 链实现
+[ ] source health 状态可查询（API）
+[ ] 至少一个能力真实数据验证 PASS（如 instrument profile 补全）
+[ ] PIT 字段预留（四时钟在 M5 完整强制）
+[ ] 单元 + 集成测试 PASS
 [ ] Git checkpoint
 ```
 
 ---
 
 ## 已完成 Milestone
+
+### M2 — Instrument（DONE，2026-08-28）
+
+```text
+backend/app/domain/instrument.py   InstrumentProfile（任务书 §19 字段全集）
+backend/app/domain/code_norm.py    A 股代码规范化 + 板块分类
+                                   （沪主板60/科创板688-689/深主板000-003/创业板300-302/北交所43-92）
+backend/app/domain/catalog.py      seed 目录（12 只真实标的，覆盖四板 + 五大研究风格）
+backend/app/api/instruments.py     GET /api/v1/instruments?query= / GET /instruments/{id}
+frontend                           标的搜索卡片（真实 API 调用）
+验证: backend pytest 49 passed（四板回归/前缀变体/矛盾提示拒绝/名称别名/缺数据契约）
+      浏览器实测: 600519→按代码 / 茅台→按名称 / CATL→按别名 / 未知→空
+```
+
+### M1 — 工程基线 + i18n + theme（DONE，2026-08-28）
+
+正式仓库内建立（非搬迁 TideTrading，见 ADR-001 D1/D4）：
+
+```text
+backend/   FastAPI + Pydantic v2；/api/v1/health；稳定 error_code 信封
+           （common.not_found/validation_error/internal_error…）；
+           message_code + Accept-Language normalize（zh*→zh-CN）
+frontend/  Vite + React 19 + TS；TanStack Query 接真实后端；react-i18next
+           （zh-CN/en-US 资源、system 解析、手动覆盖持久化）；三态主题
+           （data-theme + prefers-color-scheme 跟随 + 手动覆盖）；
+           Design Tokens（tokens.css light/dark 双套，语义色与主题解耦，
+           A股红涨绿跌 CN 默认 + data-updown=intl 可配置）
+```
+
+真实验证（浏览器实测）：
+
+```text
+后端连通 PASS（/api/v1/health → ok · v0.1.0）
+三态主题切换 PASS；OS 深浅跟随 PASS；手动覆盖不被系统覆盖 PASS
+语言三态（system/zh-CN/en-US）切换 PASS（h1/lang 属性/localStorage）
+涨跌语义色实测：light up=#c23a2f(红) down=#2e7d54(绿)；dark 同语义提亮；intl 惯例翻转 PASS
+frontend build PASS（vite）
+```
 
 ### M0 — 上游/底座源码审计（DONE，2026-08-28）
 
@@ -97,31 +140,6 @@ TradingAgents  REFERENCE_ONLY（27 tests PASS，无 A 股数据层）
 
 产出：`docs/current-architecture-audit.md`、`docs/upstream-evaluation.md`、
 `docs/adr/ADR-001-main-engine-baseline.md`。
-
-### M1 — 工程基线 + i18n + theme（DONE，2026-08-28）
-
-正式仓库内建立（非搬迁 TideTrading，见 ADR-001 D1/D4）：
-
-```text
-backend/   FastAPI + Pydantic v2；/api/v1/health；稳定 error_code 信封
-           （common.not_found/validation_error/internal_error…）；
-           message_code + Accept-Language normalize（zh*→zh-CN）；pytest 8 passed
-frontend/  Vite + React 19 + TS；TanStack Query 接真实后端；react-i18next
-           （zh-CN/en-US 资源、system 解析、手动覆盖持久化）；三态主题
-           （data-theme + prefers-color-scheme 跟随 + 手动覆盖）；
-           Design Tokens（tokens.css light/dark 双套，语义色与主题解耦，
-           A股红涨绿跌 CN 默认 + data-updown=intl 可配置）；vitest 8 passed
-```
-
-真实验证（浏览器实测）：
-
-```text
-后端连通 PASS（/api/v1/health → ok · v0.1.0）
-三态主题切换 PASS；OS 深浅跟随 PASS；手动覆盖不被系统覆盖 PASS
-语言三态（system/zh-CN/en-US）切换 PASS（h1/lang 属性/localStorage）
-涨跌语义色实测：light up=#c23a2f(红) down=#2e7d54(绿)；dark 同语义提亮；intl 惯例翻转 PASS
-frontend build PASS（vite, 1.14s）
-```
 
 ---
 

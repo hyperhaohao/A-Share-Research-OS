@@ -83,19 +83,21 @@ M1 部分（2026-08-28 完成）：
 
 M1 DoD：PASS（详见 STATUS.md 已验证节）
 
-M2 部分（未开始）：
+M2 部分（2026-08-28 完成）：
 
-- [ ] Instrument model
-- [ ] A-share code/name resolution
-- [ ] SSE/SZSE/STAR/ChiNext regression
-- [ ] Build/Test/Verification
-- [ ] Git Checkpoint
+- [x] Instrument model（InstrumentProfile，任务书 §19 字段全集）
+- [x] A-share code/name resolution（code_norm 规范化 + catalog 名称/别名解析）
+- [x] SSE/SZSE/STAR/ChiNext regression（四板回归测试 + 北交所分类，49 tests PASS）
+- [x] API 暴露（/api/v1/instruments?query= + /{instrument_id}，缺数据显式 null）
+- [x] 前端最小搜索（真实 API）
+- [x] Build/Test/Verification（backend pytest 49 passed；frontend 8 passed + build PASS；浏览器实测三模式解析）
+- [x] Git Checkpoint
 
 Exit Criteria：
 
 ```text
 M1 PASS（已达成）
-M2 PASS（未开始）
+M2 PASS（已达成）
 ```
 
 ---

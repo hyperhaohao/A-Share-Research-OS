@@ -27,7 +27,15 @@
     "downSample": "Down sample -1.20%",
     "updownConvention": "Up/down color convention",
     "updownCn": "China (red up, green down)",
-    "updownIntl": "International (green up, red down)"
+    "updownIntl": "International (green up, red down)",
+    "instrumentSearch": "Instrument search",
+    "searchPlaceholder": "Code or name, e.g. 600519 / 茅台 / CATL",
+    "searchEmpty": "No matching instruments",
+    "matchedBy": {
+      "code": "by code",
+      "name": "by name",
+      "alias": "by alias"
+    }
   },
   "settings": {
     "language": "Language",

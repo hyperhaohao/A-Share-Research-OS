@@ -27,7 +27,15 @@
     "downSample": "下跌示例 -1.20%",
     "updownConvention": "涨跌配色惯例",
     "updownCn": "中国（红涨绿跌）",
-    "updownIntl": "国际（绿涨红跌）"
+    "updownIntl": "国际（绿涨红跌）",
+    "instrumentSearch": "标的搜索",
+    "searchPlaceholder": "输入代码或名称，如 600519 / 茅台 / CATL",
+    "searchEmpty": "暂无匹配标的",
+    "matchedBy": {
+      "code": "按代码",
+      "name": "按名称",
+      "alias": "按别名"
+    }
   },
   "settings": {
     "language": "界面语言",

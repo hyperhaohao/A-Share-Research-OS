@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.health import router as health_router
+from app.api.instruments import router as instruments_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
 
     register_error_handlers(app)
     app.include_router(health_router, prefix="/api/v1")
+    app.include_router(instruments_router, prefix="/api/v1")
     return app
 
 
