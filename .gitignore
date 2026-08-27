@@ -20,3 +20,6 @@ upstreams/
 # OS
 Thumbs.db
 .DS_Store
+
+# TS build artifacts
+*.tsbuildinfo

@@ -1,0 +1,52 @@
+{
+  "app": {
+    "title": "A-Share Research OS",
+    "tagline": "面向 A 股的长期研究操作系统"
+  },
+  "nav": {
+    "dashboard": "总览",
+    "watchlist": "关注列表",
+    "research": "研究",
+    "tasks": "研究任务",
+    "reports": "报告",
+    "predictions": "预测",
+    "evidence": "证据",
+    "settings": "设置"
+  },
+  "home": {
+    "title": "研究总览",
+    "description": "系统正在建设（M1 工程基线）。研究闭环：证据 → 主张 → 论点 → 估值 → 报告。",
+    "backendStatus": "后端状态",
+    "backendUnreachable": "后端不可达",
+    "checkAgain": "重试",
+    "currentTheme": "当前主题",
+    "currentThemeValue": "{{theme, upperCase}}",
+    "themeFollowsSystem": "跟随系统（系统当前为 {{theme, upperCase}}）",
+    "sampleQuote": "示例涨跌语义",
+    "upSample": "上涨示例 +2.35%",
+    "downSample": "下跌示例 -1.20%",
+    "updownConvention": "涨跌配色惯例",
+    "updownCn": "中国（红涨绿跌）",
+    "updownIntl": "国际（绿涨红跌）"
+  },
+  "settings": {
+    "language": "界面语言",
+    "languageSystem": "跟随系统",
+    "appearance": "外观",
+    "appearanceSystem": "跟随系统",
+    "appearanceLight": "浅色",
+    "appearanceDark": "深色"
+  },
+  "common": {
+    "loading": "加载中…",
+    "error": "出错了",
+    "retry": "重试"
+  },
+  "errors": {
+    "common.not_found": "资源不存在",
+    "common.method_not_allowed": "请求方法不允许",
+    "common.validation_error": "请求参数无效",
+    "common.internal_error": "服务器内部错误",
+    "network.unreachable": "无法连接后端服务"
+  }
+}

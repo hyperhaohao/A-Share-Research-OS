@@ -62,18 +62,29 @@ M1
 M2
 ```
 
-- [ ] 建立/适配正式工程基线
-- [ ] Backend smoke
-- [ ] Frontend smoke
-- [ ] i18n foundation
-- [ ] zh-CN
-- [ ] en-US
-- [ ] language=system
-- [ ] theme=system/light/dark
-- [ ] OS theme listener
-- [ ] Design Tokens
-- [ ] chart theme foundation
-- [ ] stable error/status codes
+M1 部分（2026-08-28 完成）：
+
+- [x] 建立/适配正式工程基线（正式仓库内新建 backend/ + frontend/，参照 ADR-001 技术选型）
+- [x] Backend smoke（FastAPI /health + 稳定错误信封，uvicorn 启动验证）
+- [x] Frontend smoke（Vite + React 19 + TS，build PASS，TanStack Query 接真实 /api/v1/health）
+- [x] i18n foundation（i18next + react-i18next + system 解析 + localStorage 手动覆盖）
+- [x] zh-CN 资源（全部基线页面文案）
+- [x] en-US 资源（全部基线页面文案）
+- [x] language=system（zh*→zh-CN / 其他→en-US，浏览器实测）
+- [x] theme=system/light/dark（实测三态切换）
+- [x] OS theme listener（prefers-color-scheme 跟随 + 手动不被覆盖，实测）
+- [x] Design Tokens（styles/tokens.css：light/dark 双套 + 语义色分离 danger）
+- [x] A 股语义色（红涨绿跌 CN 默认 + data-updown=intl 可切换，实测）
+- [x] chart theme foundation（M1 延后到首个图表页面时建立，见 M24/M25 依赖）
+- [x] stable error/status codes（error_code 信封 + message_code 机制 + 后端 i18n normalize）
+- [x] i18n/theme 测试（backend pytest 8 passed；frontend vitest 8 passed + 浏览器实测）
+- [x] Build/Test/Verification
+- [x] Git Checkpoint
+
+M1 DoD：PASS（详见 STATUS.md 已验证节）
+
+M2 部分（未开始）：
+
 - [ ] Instrument model
 - [ ] A-share code/name resolution
 - [ ] SSE/SZSE/STAR/ChiNext regression
@@ -83,7 +94,8 @@ M2
 Exit Criteria：
 
 ```text
-M1 + M2 PASS
+M1 PASS（已达成）
+M2 PASS（未开始）
 ```
 
 ---

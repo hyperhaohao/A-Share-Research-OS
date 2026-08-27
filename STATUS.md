@@ -29,69 +29,75 @@ Current Commit:
 
 ```text
 Phase 1 — Engineering Foundation
-Milestone M1（工程基线 + i18n + theme）
+Milestone M2（Instrument）
 Status: DOING
 ```
 
-M0 已于 2026-08-28 完成并通过 DoD（见 ROADMAP.md 已完成 Milestone）。
+M0（2026-08-28）、M1（2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0）
+## 已完成（M0 + M1）
 
-- 正式仓库文档结构补齐（ROADMAP/README/docs/00 索引/M0 审计规范），初始 commit b7f5a98。
-- `Desktop/upstreams/` 建立六个上游工作区（正式仓库之外）。
-- 六候选源码级审计 + 实际运行/测试/Live 验证（证据记录于 docs/current-architecture-audit.md）：
-  - TideTrading：`tide serve` 启动 PASS、102 端点、**真实 A 股行情 live 验证 PASS**（000001 五档盘口）、frontend build PASS、定向测试切片 78 passed。
-  - OpenAlpha CN：105 tests PASS、API 25 端点启动验证。
-  - 觀瀾：engine import PASS；**无 LICENSE** → 禁止复制源码。
-  - Qlib：import PASS（pyqlib 0.9.7）；完整闭环 defer M21/M22。
-  - RD-Agent：import PASS。
-  - TradingAgents：27 tests PASS；无 A 股数据层。
-- 三份 M0 输出完成：current-architecture-audit.md / upstream-evaluation.md / adr/ADR-001。
-- ADR-001 决策：**主工程基线 = TideTrading 增量演进；Research Core 领域契约蓝本 = OpenAlpha CN（MIT 移植注明出处）**。
-- 分层选型与主工程差距清单（G1–G10）已写入 upstream-evaluation.md。
+M0（2026-08-28）：
+
+- 正式仓库文档结构补齐，初始 commit b7f5a98。
+- `Desktop/upstreams/` 建立六上游工作区；六候选源码级审计 + 运行/测试/Live 验证。
+- 关键验证：TideTrading `tide serve` PASS + 102 端点 + **真实 A 股行情 live PASS**（000001 五档盘口）
+  + frontend build PASS + 定向测试切片 78 passed；OpenAlpha CN 105 tests PASS + API 25 端点；
+  觀瀾 engine import PASS（**无 LICENSE**）；Qlib/RD-Agent import PASS；TradingAgents 27 tests PASS。
+- 三份 M0 输出 + ADR-001：**主工程基线 = TideTrading 增量演进；领域契约蓝本 = OpenAlpha CN（MIT）**。
+- commit 70a6632。
+
+M1（2026-08-28）：
+
+- 正式仓库内新建最小工程基线（未搬迁 TideTrading）：
+  - `backend/` FastAPI + Pydantic v2：`/api/v1/health`、稳定 error_code 错误信封、
+    message_code + Accept-Language normalize；pytest 8 passed；uvicorn 启动实测 PASS。
+  - `frontend/` Vite + React 19 + TS + TanStack Query + zustand：react-i18next 双语资源 +
+    system 解析 + 手动覆盖；三态主题 + prefers-color-scheme 跟随 + 手动不被覆盖；
+    Design Tokens（light/dark 双套、语义色分离、A股红涨绿跌 CN 默认 + intl 可切换）；
+    vitest 8 passed；build PASS（1.14s）。
+- 浏览器真实验证（Chrome DevTools 实测，见 ROADMAP M1 节）：
+  后端连通 / 三态主题 / OS 跟随 / 手动覆盖 / 语言切换 / 涨跌语义色 全部 PASS。
 
 ---
 
 ## 正在进行
 
 ```text
-M1 — 工程基线 + i18n + theme（正式仓库内）
+M2 — Instrument（正式仓库内）
 ```
 
 ---
 
 ## 下一步（Next Action）
 
-1. 在正式仓库 `C:\Users\HyperHao\Desktop\Astock` 内创建 `backend/`（FastAPI + Pydantic v2 最小工程：
-   `/health`、稳定 error code 结构、pytest 冒烟）与 `frontend/`（Vite + React + TS 最小工程：
-   build 通过）。
-2. 建立前端 i18n 资源骨架（zh-CN/en-US JSON + i18next + language=system 解析 + localStorage 手动覆盖）。
-3. 建立 Design Tokens（`styles/tokens.css`：light/dark 双套变量，含 --color-positive/--color-negative
-   语义与 CN 红涨绿跌默认、可配置）+ theme=system/light/dark + `prefers-color-scheme` 监听。
-4. M1 DoD 验证（backend /health、frontend build、i18n/theme 测试）。
-5. 更新 PLAN/STATUS/ROADMAP，Git checkpoint。
+1. `backend/app/domain/instrument.py`：InstrumentProfile（任务书 §19 字段全集）。
+2. A 股代码规范化与板块识别：`code_norm`（6 位数字 → SSE/SZSE 主板、创业板 300/301、
+   科创板 688/689；支持 600519 / 000001 / 300750 / 688981 / sh600519 / 600519.SH 等输入）。
+3. 名称解析：先建静态 seed 数据（四板代表性标的：沪主板大市值、深主板、创业板成长、
+   科创板科技），M3 Source Layer 接入后再由 provider 动态补全名称/行业。
+4. API：`GET /api/v1/instruments?query=600519|茅台`（code+name 双路解析，缺数据显示缺失）。
+5. 四板回归测试（task书 §72：code/name/exchange/market 全部断言）+ API 测试。
+6. 前端：Header 搜索框接解析 API（最小可用），双语 key 补齐。
+7. Build/Test → 更新 PLAN/STATUS/ROADMAP → Git checkpoint。
 
-注意：不是搬迁 TideTrading，而是在正式仓库内新建最小基线（参照其分层与技术选型，见 ADR-001 D1/D4）。
-上游参考代码只允许 MIT 来源且注明出处（OpenAlpha CN 契约在 M3 Source Layer 阶段移植）。
+M2 完成后进入 M3（Source Layer）。
 
 ---
 
 ## 已验证
 
 ```text
-M0 Live Source Verification:
-  TideTrading A股实时行情（000001）: PASS（真实数据，无 key）
-  OpenAlpha CN API 启动:            PASS
-M0 Upstream Tests:
-  OpenAlpha CN 105/105 PASS; TradingAgents 27/27 PASS;
-  TideTrading 定向切片 78/78 PASS + 数据工具切片 56/62（6 个依赖实时行情网络，环境受限）
-M0 Builds:
-  TideTrading frontend vite build: PASS
-
-Project Build: M1 未开始（NOT RUN）
-Unit Tests:    M1 未开始（NOT RUN）
+M1 Build:
+  backend:  uv sync PASS；pytest 8 passed；uvicorn /api/v1/health 实测 {"status":"ok","version":"0.1.0"}
+  frontend: npm install PASS；vitest 8 passed；vite build PASS（1.14s）
+M1 Live（浏览器实测）:
+  前端→后端真实调用 PASS（health ok · v0.1.0）
+  三态主题 + OS 跟随 + 手动覆盖: PASS（§77 两语义均验证）
+  语言 system/zh-CN/en-US 切换: PASS
+  涨跌语义色（CN 默认红涨绿跌 + intl 翻转）: PASS
 ```
 
 ---
@@ -125,19 +131,18 @@ TASK / PLAN / STATUS / ROADMAP 四文件职责分工（见 AGENTS.md §5）。
 ## 最近修改文件
 
 ```text
-M0 checkpoint:
-ROADMAP.md（M0 DONE / M1 DOING）
-PLAN.md（Phase 0 全勾选 + 结论）
-STATUS.md（本文件）
-README.md（新建）
-.gitignore（新建）
-docs/00-文档索引.md（新建/更新）
-docs/M0-上游源码审计规范.md（新建）
-docs/current-architecture-audit.md（新建）
-docs/upstream-evaluation.md（新建）
-docs/adr/ADR-001-main-engine-baseline.md（新建）
-docs/01-长时间自主执行协议.md（自根目录移入 docs/）
-docs/A-Share-Research-OS-最终实施任务书.md（自根目录移入 docs/）
+M1 checkpoint:
+backend/pyproject.toml, app/{__init__,config,main}.py,
+        app/api/{__init__,health}.py, app/core/{__init__,errors,i18n}.py,
+        tests/{__init__,test_health,test_error_envelope,test_i18n}.py
+frontend/package.json, vite.config.ts, tsconfig.json, index.html,
+        src/main.tsx, src/App.tsx, src/i18n/{index.ts,LanguageProvider.tsx},
+        src/i18n/locales/{zh-CN,en-US}.json,
+        src/theme/{theme.ts,ThemeProvider.tsx},
+        src/components/{AppHeader,AppearanceControls}.tsx, src/pages/HomePage.tsx,
+        src/styles/{tokens.css,global.css}, tests/{i18n-theme.test.ts,app.test.tsx}
+.claude/launch.json（dev server 配置）
+ROADMAP.md / PLAN.md / STATUS.md
 ```
 
 ---
@@ -154,13 +159,13 @@ None
 
 ```text
 Last Safe Checkpoint:
-M0 upstream audit（三份输出文档 + 状态更新，git commit）
+M1 engineering foundation（backend/frontend/i18n/theme + 浏览器实测，git commit）
 
 Last Verified Milestone:
-M0
+M0, M1
 
 Resume From:
-M1 / Phase 1 / 正式仓库内 backend+frontend 最小基线（见 Next Action 步骤 1）
+M2 / Phase 1 / Instrument 领域模型与解析服务（见 Next Action 步骤 1）
 ```
 
 ---

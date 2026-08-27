@@ -1,0 +1,129 @@
+/* Layout + components built on tokens only (no hardcoded colors). */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-right: 12px;
+}
+
+.app-tagline {
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.header-controls {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.control-label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.control-btn {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 4px;
+}
+
+.control-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.control-btn.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.page {
+  flex: 1;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page h1 {
+  font-size: 22px;
+  margin: 0 0 6px;
+}
+
+.secondary {
+  color: var(--color-text-secondary);
+}
+
+.card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+
+.card h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: var(--color-text-secondary);
+  text-transform: none;
+}
+
+.status-ok {
+  color: var(--color-info);
+}
+
+.status-error {
+  color: var(--color-danger);
+}
+
+/* A股涨跌语义色 — 永远通过 token 引用（任务书 §15） */
+.quote-up {
+  color: var(--color-positive);
+  margin-right: 12px;
+}
+
+.quote-down {
+  color: var(--color-negative);
+}
+
+.app-footer {
+  padding: 12px 24px;
+  font-size: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 12px 16px;
+  }
+  .page {
+    padding: 16px;
+  }
+}

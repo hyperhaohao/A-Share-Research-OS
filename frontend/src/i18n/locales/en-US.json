@@ -1,0 +1,52 @@
+{
+  "app": {
+    "title": "A-Share Research OS",
+    "tagline": "A long-running research operating system for A-shares"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "watchlist": "Watchlist",
+    "research": "Research",
+    "tasks": "Tasks",
+    "reports": "Reports",
+    "predictions": "Predictions",
+    "evidence": "Evidence",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "Dashboard",
+    "description": "Under construction (M1 foundation). Research loop: evidence → claims → theses → valuation → report.",
+    "backendStatus": "Backend status",
+    "backendUnreachable": "Backend unreachable",
+    "checkAgain": "Retry",
+    "currentTheme": "Current theme",
+    "currentThemeValue": "{{theme, upperCase}}",
+    "themeFollowsSystem": "Follows system (system currently {{theme, upperCase}})",
+    "sampleQuote": "Sample up/down semantics",
+    "upSample": "Up sample +2.35%",
+    "downSample": "Down sample -1.20%",
+    "updownConvention": "Up/down color convention",
+    "updownCn": "China (red up, green down)",
+    "updownIntl": "International (green up, red down)"
+  },
+  "settings": {
+    "language": "Language",
+    "languageSystem": "System",
+    "appearance": "Appearance",
+    "appearanceSystem": "System",
+    "appearanceLight": "Light",
+    "appearanceDark": "Dark"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry"
+  },
+  "errors": {
+    "common.not_found": "Resource not found",
+    "common.method_not_allowed": "Method not allowed",
+    "common.validation_error": "Invalid request parameters",
+    "common.internal_error": "Internal server error",
+    "network.unreachable": "Cannot reach the backend service"
+  }
+}

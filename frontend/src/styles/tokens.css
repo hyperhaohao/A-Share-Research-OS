@@ -1,0 +1,88 @@
+/*
+ * Design Tokens — task书 §14.
+ * Colors never appear as scattered hardcodes; every component reads tokens.
+ * Light and dark define their own token values (task书 §14).
+ *
+ * A-share color semantics (task书 §15):
+ *   CN convention (default): 上涨 = 红 (positive=red), 下跌 = 绿 (negative=green)
+ *   International convention: flipped.
+ *   Red never doubles as error/danger/delete — errors use --color-danger.
+ *   Semantic set switchable via <html data-updown="cn|intl">.
+ */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #f7f6f2;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #f1efe9;
+  --color-border: #d9d5cb;
+  --color-text: #1d1c18;
+  --color-text-secondary: #6d685c;
+
+  --color-positive: #c23a2f; /* CN: 上涨=红 */
+  --color-negative: #2e7d54; /* CN: 下跌=绿 */
+  --color-danger: #b3261e;
+  --color-warning: #9a6b00;
+  --color-info: #2f6fa3;
+  --color-accent: #8a6f3f;
+
+  --shadow: 0 1px 3px rgba(29, 28, 24, 0.12);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #14130f;
+  --color-bg-elevated: #201e18;
+  --color-surface: #2a2820;
+  --color-border: #3d3a30;
+  --color-text: #ece7d9;
+  --color-text-secondary: #a09a8a;
+
+  --color-positive: #e0705f; /* CN: 上涨=红（暗色调提亮） */
+  --color-negative: #5ba47e; /* CN: 下跌=绿（暗色调提亮） */
+  --color-danger: #e5726a;
+  --color-warning: #d9a53f;
+  --color-info: #6aa3cf;
+  --color-accent: #d4ad6f;
+
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+/* International convention: flip up/down semantics only. */
+:root[data-updown="intl"],
+:root[data-updown="intl"][data-theme="light"],
+:root[data-updown="intl"][data-theme="dark"] {
+  --color-positive: #2e7d54;
+  --color-negative: #c23a2f;
+}
+
+:root[data-updown="intl"][data-theme="dark"] {
+  --color-positive: #5ba47e;
+  --color-negative: #e0705f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family:
+    "Noto Sans SC",
+    -apple-system,
+    "Segoe UI",
+    "PingFang SC",
+    "Microsoft YaHei",
+    system-ui,
+    sans-serif;
+}
+
+.mono {
+  font-family: "JetBrains Mono", Consolas, "Cascadia Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}

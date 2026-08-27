@@ -27,8 +27,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | # | Milestone | 状态 | 交付核心 |
 |---|-----------|------|----------|
 | M0 | 上游/底座源码审计 | DONE | upstream audit workspace、评估矩阵、架构审计、ADR-001 |
-| M1 | 工程基线 + i18n + theme | DOING | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
-| M2 | Instrument | PLANNED | InstrumentProfile、A 股代码/名称解析、四板回归 |
+| M1 | 工程基线 + i18n + theme | DONE | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
+| M2 | Instrument | DOING | InstrumentProfile、A 股代码/名称解析、四板回归 |
 | M3 | Source Layer | PLANNED | capability-based Provider、fallback、SourceResult、source health |
 | M4 | Evidence | PLANNED | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
 | M5 | PIT / Snapshot | PLANNED | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
@@ -59,31 +59,22 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M1 — 工程基线 + i18n + theme
+## 当前 DOING：M2 — Instrument
 
-### 范围（基于 ADR-001：TideTrading 增量演进）
+### 范围
 
-在正式仓库 `hyperhaohao/A-Share-Research-OS` 内建立可运行工程基线：
+- InstrumentProfile 领域模型（instrument_id/market/code/exchange/name/aliases/currency/
+  industry/sector/concept_tags/listed_status/market_cap/data_availability/created_at/updated_at）
+- 通过代码或名称解析标的（不依赖 UI Session 保存股票名字）
+- 四板回归：沪市主板 / 深市主板 / 创业板 / 科创板（code/name/exchange/market）
 
-```text
-B1  正式仓库内建立最小可运行基线（backend FastAPI + frontend React/Vite/TS），
-    结构参照 TideTrading 分层，不做整体搬迁
-B2  i18n：zh-CN / en-US 资源体系 + language=system（zh*→zh-CN，其他→en-US）+ 手动覆盖
-B3  theme：system/light/dark 三态 + prefers-color-scheme 监听 + Design Tokens（§14）
-    + A 股语义色（红涨绿跌，可配置 CN/International，§15）
-B4  稳定 error/status code（后端协议用 code/enum，不把中文文本当协议值，§9）
-B5  图表主题基座（ECharts 按 Theme Context 重应用，§16）
-```
-
-### M1 DoD
+### M2 DoD
 
 ```text
-[ ] 正式仓库内 backend 启动 PASS（/health）
-[ ] 正式仓库内 frontend build PASS
-[ ] zh-CN / en-US 资源完整覆盖基线页面
-[ ] system/light/dark 三态切换 + OS 跟随 PASS
-[ ] Design Tokens 建立（light/dark 双套）
-[ ] i18n / theme 基础测试 PASS
+[ ] Instrument 模型 + 解析服务实现
+[ ] 四板标的解析回归测试 PASS
+[ ] API 暴露（/api/v1/instruments 查询）
+[ ] 名称解析（中文简称）可用
 [ ] Git checkpoint
 ```
 
@@ -106,6 +97,31 @@ TradingAgents  REFERENCE_ONLY（27 tests PASS，无 A 股数据层）
 
 产出：`docs/current-architecture-audit.md`、`docs/upstream-evaluation.md`、
 `docs/adr/ADR-001-main-engine-baseline.md`。
+
+### M1 — 工程基线 + i18n + theme（DONE，2026-08-28）
+
+正式仓库内建立（非搬迁 TideTrading，见 ADR-001 D1/D4）：
+
+```text
+backend/   FastAPI + Pydantic v2；/api/v1/health；稳定 error_code 信封
+           （common.not_found/validation_error/internal_error…）；
+           message_code + Accept-Language normalize（zh*→zh-CN）；pytest 8 passed
+frontend/  Vite + React 19 + TS；TanStack Query 接真实后端；react-i18next
+           （zh-CN/en-US 资源、system 解析、手动覆盖持久化）；三态主题
+           （data-theme + prefers-color-scheme 跟随 + 手动覆盖）；
+           Design Tokens（tokens.css light/dark 双套，语义色与主题解耦，
+           A股红涨绿跌 CN 默认 + data-updown=intl 可配置）；vitest 8 passed
+```
+
+真实验证（浏览器实测）：
+
+```text
+后端连通 PASS（/api/v1/health → ok · v0.1.0）
+三态主题切换 PASS；OS 深浅跟随 PASS；手动覆盖不被系统覆盖 PASS
+语言三态（system/zh-CN/en-US）切换 PASS（h1/lang 属性/localStorage）
+涨跌语义色实测：light up=#c23a2f(红) down=#2e7d54(绿)；dark 同语义提亮；intl 惯例翻转 PASS
+frontend build PASS（vite, 1.14s）
+```
 
 ---
 
