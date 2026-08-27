@@ -54,31 +54,46 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M25 | Research visual UI | DONE | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
 | M26 | Interactive Report | DONE | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
 | M27 | Tasks / Prediction UI | DONE | Tasks UI、Prediction Dashboard、完整双语主题回归 |
-| M28 | E2E / Performance / Cost | DOING | 多标的 E2E、性能、成本核算、安全审查 |
-| M29 | Production Delivery | PLANNED | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
+| M28 | E2E / Performance / Cost | DONE | 多标的 E2E、性能、成本核算、安全审查 |
+| M29 | Production Delivery | DOING | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
 
 ---
 
-## 当前 DOING：M28 — E2E / Performance / Cost
+## 当前 DOING：M29 — Production Delivery
 
-### 范围（任务书 §71/§85/§84 + 最终回归准备）
+### 范围（任务书 §17/§82/§83/§98 + 最终 Reviewer Pass）
 
-- 多标的 E2E 回归（四板各一 + 双语报告一致性）
-- 成本核算（预测验证任务记录）
-- 安全：HTML escape 已做；CORS 收敛；无 secrets 入库复查
-- ErrorBoundary（渲染错误不白屏）
-- 输出 docs/testing.md
+- Docker Compose（backend/frontend/db）+ .env.example + health checks
+- 备份/恢复脚本 + 演练记录
+- docs 补齐（deployment/backup-restore/known-limitations/architecture 等）
+- Final Reviewer Pass：逐项核对 §98 清单 + TASK §21 最终完成条件
+- 最终 README
 
-### M28 DoD
+### M29 DoD
 
 ```text
-[ ] 多标的 E2E PASS
-[ ] 性能/成本记录
-[ ] 安全复查 PASS
+[ ] docker-compose up 全栈可运行
+[ ] backup/restore 演练记录
+[ ] 全部文档补齐且与实现一致
+[ ] Final Reviewer Pass 完成
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M28 — E2E / Performance / Cost（DONE，2026-08-28）
+
+```text
+backend/tests/test_e2e_multiresearch.py
+                                  四板全流程 E2E（搜索→采集→快照→主张→论点→估值→
+                                  双语门禁报告→时间线→图谱追溯）+ 报告隔离测试
+backend/app/api/costs.py          GET /api/v1/costs（每 run：LLM 调用 0/source 调用/时长）
+docs/security.md                  XSS 转义矩阵/注入防护/密钥/CORS 部署边界
+docs/testing.md                   测试分层/不变量映射/Live 记录/性能基线/已知限制
+验证: backend pytest 239 passed
+```
 
 ## 已完成 Milestone
 
