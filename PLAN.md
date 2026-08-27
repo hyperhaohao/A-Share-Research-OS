@@ -114,34 +114,38 @@ M6
 M7
 ```
 
-- [ ] capability-based Source Layer
-- [ ] Provider fallback
-- [ ] structured failures
-- [ ] cache semantics
-- [ ] source health
-- [ ] EvidenceRecord
-- [ ] SourceManifest
+M3 部分（2026-08-28 完成）：
+
+- [x] capability-based Source Layer（SourceResult 八态契约 + SourceProvider Protocol）
+- [x] Provider fallback（有序链 + 异常防护 + 耗尽显式 unavailable）
+- [x] structured failures（八类错误映射，失败永不伪装空成功）
+- [x] cache semantics（分能力 TTL，from_cache 透明标注）
+- [x] source health（状态机 + GET /api/v1/source-health）
+- [x] 真实数据验证（腾讯行情 provider live PASS：茅台/平安银行）
+- [x] 单元 + 集成测试（83 passed）
+- [x] Git Checkpoint（f25858e 后）
+
+M4–M7（未开始）：
+
+- [ ] EvidenceRecord（任务书 §22 字段全集 + content_hash 幂等）
+- [ ] SourceManifest（每次采集来源台账）
 - [ ] source dedup
-- [ ] authority_level
-- [ ] fact_status
-- [ ] PIT four clocks
-- [ ] historical future-data blocking
+- [ ] authority_level（§25 枚举）+ fact_status（§26 枚举）
+- [ ] PIT four clocks（四时钟完整强制）
+- [ ] historical future-data blocking（available_time <= as_of 强制）
 - [ ] immutable EvidenceSnapshot
-- [ ] CorporateEvent
-- [ ] Claim
-- [ ] InvestmentThesis
-- [ ] EvidenceQualityGate
-- [ ] AnalysisQualityGate
-- [ ] FinalReportQualityGate skeleton only when used by real flow
-- [ ] live-source validation
-- [ ] PIT tests
-- [ ] traceability tests
+- [ ] CorporateEvent / Claim / InvestmentThesis（§27-29）
+- [ ] EvidenceQualityGate / AnalysisQualityGate（§31）
+- [ ] FinalReportQualityGate（真实流程使用时）
+- [ ] live-source validation（延续真实采集链）
+- [ ] PIT tests / traceability tests
 - [ ] Git Checkpoints by verified slice
 
 Exit Criteria：
 
 ```text
-M3–M7 PASS
+M3 PASS（已达成）
+M4–M7 PASS（未开始）
 ```
 
 ---

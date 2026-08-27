@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M3（Source Layer）
+Milestone M4（Evidence）
 Status: DOING
 ```
 
-M0（2026-08-28）、M1（2026-08-28）、M2（2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M3（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 + M1 + M2）
+## 已完成（M0 + M1 + M2 + M3）
 
 M0（2026-08-28）：
 
@@ -79,42 +79,45 @@ M2（2026-08-28）：
 ## 正在进行
 
 ```text
-M3 — Source Layer（SourceResult 语义 / capability provider / fallback / source health）
+M4 — Evidence（EvidenceRecord / authority/fact_status / dedup / SourceManifest / 持久化）
 ```
 
 ---
 
 ## 下一步（Next Action）
 
-1. `backend/app/sources/base.py`：SourceResult 契约（status: success/no_data/partial/
-   network_error/rate_limit/parse_error/auth_error/source_unavailable + error_type/retryable/
-   attempted_at/as_of/metadata）与 SourceProvider Protocol（capability-based，注明 OpenAlpha CN
-   MIT 契约蓝本出处）。
-2. capability registry + fallback 链（同能力多 provider 依序 fallback，结构化失败不伪装空成功）。
-3. source health 记录 + GET /api/v1/source-health。
-4. 第一个真实 provider：instrument profile 补全（接入上游验证过的真实 A 股行情源读取器，
-   或静态 seed 扩展 —— 以能真实运行为准）。
-5. 缓存语义骨架（分 TTL）+ dedup 预留。
-6. 单元 + 集成测试（fallback 顺序、失败分类、no_data 语义、health 状态机）。
-7. Build/Test → 更新状态 → Git checkpoint。M3 后进入 M4（Evidence）。
+1. 持久化基线：`backend/` 引入 SQLAlchemy 2 + Alembic（开发 SQLite，目标 PostgreSQL），
+   建初始迁移并真实运行。
+2. `backend/app/domain/evidence.py`：EvidenceRecord（任务书 §22 字段全集）、
+   EvidenceType、authority_level（§25 A1–D）、fact_status（§26 八态）、四时钟字段、
+   content_hash 内容寻址 evidence_id（蓝本 OpenAlpha CN domain/evidence.py，MIT）。
+3. dedup：同一 (instrument, source, content_hash) 幂等入库测试。
+4. SourceManifest：每次采集生成来源台账（providers used、statuses、attempted_at）。
+5. 采集服务：market_data quote → Evidence（authority/fact_status 映射）→ 入库。
+6. API：GET /api/v1/evidence?instrument_id=（含缺失数据显式语义）。
+7. 真实采集回归：live quote → Evidence 落库 → 查询断言（含 dedup 幂等）。
+8. Build/Test → 更新状态 → Git checkpoint。M4 后进入 M5（PIT 强制 + Snapshot）。
 
 ---
 
 ## 已验证
 
 ```text
-M2 Backend Tests:
-  uv run pytest → 49 passed
-  （含四板回归、前缀变体、矛盾提示拒绝、名称/别名解析、缺数据显式 null、错误信封）
-M2 Frontend:
-  vitest 8 passed；vite build PASS
-M2 Live（浏览器实测，真实 API）:
-  600519 → 贵州茅台 SSE 按代码 PASS
-  茅台   → 贵州茅台 按名称 PASS
-  CATL   → 宁德时代 按别名 PASS
-  zzz999 → 空结果（不编造）PASS
+M3 Backend Tests:
+  uv run pytest → 83 passed
+  （SourceResult 契约不变量 13 项 / fallback 链 6 场景 / health 状态机 /
+   TTL 缓存 / 腾讯报文解析（真实字段布局）/ API 集成 / live 测试）
+M3 Live（真实网络）:
+  GET /api/v1/market-data/quote?instrument=600519
+    → SSE:600519 贵州茅台 1292.30 -0.81% 总市值 1.615万亿
+      event_time 2026-08-27T16:14:55 source=tencent_quote
+  GET /api/v1/market-data/quote?instrument=平安银行
+    → SZSE:000001 平安银行 11.59（名称→解析→行情全链）
+  GET /api/v1/source-health → tencent_quote available=true
+M2（延续）:
+  backend 49 passed；frontend 8 passed + build PASS；浏览器实测四场景 PASS
 M1（延续）:
-  后端连通 / 三态主题 / OS 跟随 / 手动覆盖 / 语言切换 / 涨跌语义色 PASS
+  主题/语言/涨跌语义色浏览器实测 PASS
 ```
 
 ---
@@ -148,12 +151,12 @@ TASK / PLAN / STATUS / ROADMAP 四文件职责分工（见 AGENTS.md §5）。
 ## 最近修改文件
 
 ```text
-M2 checkpoint:
-backend/app/domain/{__init__,instrument,code_norm,catalog}.py
-backend/app/api/instruments.py
-backend/tests/{test_code_norm,test_instrument_resolution,test_instruments_api}.py
-frontend/src/components/InstrumentSearch.tsx（新增）
-frontend/src/pages/HomePage.tsx、src/i18n/locales/*.json（搜索接入）
+M3 checkpoint:
+backend/app/sources/{__init__,base,provider,registry,health,cache,runtime}.py
+backend/app/sources/providers/{__init__,tencent_quote}.py
+backend/app/api/{market_data,source_health}.py
+backend/tests/{test_source_contract,test_source_registry,test_tencent_quote,test_market_data_api}.py
+backend/app/main.py（路由挂载）
 ROADMAP.md / PLAN.md / STATUS.md
 ```
 
@@ -171,13 +174,13 @@ None
 
 ```text
 Last Safe Checkpoint:
-M2 instrument resolution（四板回归 + 三模式解析实测，git commit）
+M3 source layer（真实行情采集链 + 83 tests，git commit）
 
 Last Verified Milestone:
-M0, M1, M2
+M0, M1, M2, M3
 
 Resume From:
-M3 / Phase 2 / SourceResult 契约与 capability provider（见 Next Action 步骤 1）
+M4 / Phase 2 / SQLAlchemy 持久化基线 + EvidenceRecord（见 Next Action 步骤 1）
 ```
 
 ---

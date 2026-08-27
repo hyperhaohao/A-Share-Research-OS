@@ -29,8 +29,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M0 | 上游/底座源码审计 | DONE | upstream audit workspace、评估矩阵、架构审计、ADR-001 |
 | M1 | 工程基线 + i18n + theme | DONE | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
 | M2 | Instrument | DONE | InstrumentProfile、A 股代码/名称解析、四板回归 |
-| M3 | Source Layer | DOING | capability-based Provider、fallback、SourceResult、source health |
-| M4 | Evidence | PLANNED | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
+| M3 | Source Layer | DONE | capability-based Provider、fallback、SourceResult、source health |
+| M4 | Evidence | DOING | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
 | M5 | PIT / Snapshot | PLANNED | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
 | M6 | Research Domain | PLANNED | CorporateEvent、Claim、InvestmentThesis |
 | M7 | Quality | PLANNED | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
@@ -59,33 +59,53 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M3 — Source Layer
+## 当前 DOING：M4 — Evidence
 
-### 范围（契约蓝本：OpenAlpha CN providers/base.py，MIT 注明出处）
+### 范围
 
-- SourceResult 统一语义：success / no_data / partial / network_error / rate_limit /
-  parse_error / auth_error / source_unavailable（禁止失败伪装为空成功，任务书 §21）
-- capability-based Provider：instrument / market_data / announcements / financials / news /
-  capital_flow / industry / macro / research / corporate_actions（不强制全实现，任务书 §20）
-- Provider fallback 链与 source health 记录
-- 缓存语义（分 TTL，不破坏 PIT）与 dedup
-- 至少一个 provider 能力做真实数据验证（延续 M0 live 验证）
+- EvidenceRecord 领域模型（任务书 §22 字段全集：evidence_id/instrument_id/evidence_type/
+  title/summary/excerpt/source*/authority_level/fact_status/四时钟/confidence/content_hash）
+- authority_level 枚举（A1/A2/B1/B2/C1/C2/D，任务书 §25）与 fact_status 枚举（任务书 §26）
+- Evidence dedup（content_hash 幂等入库）
+- SourceManifest（一次采集的来源台账）
+- 持久化：SQLAlchemy 2 + SQLite（开发）/ PostgreSQL（生产目标）+ Alembic 迁移
+- Quote → Evidence 的真实采集链（live 数据入库验证）
 
-### M3 DoD
+### M4 DoD
 
 ```text
-[ ] SourceResult / Provider 契约 + 结构化失败实现
-[ ] capability registry + fallback 链实现
-[ ] source health 状态可查询（API）
-[ ] 至少一个能力真实数据验证 PASS（如 instrument profile 补全）
-[ ] PIT 字段预留（四时钟在 M5 完整强制）
-[ ] 单元 + 集成测试 PASS
+[ ] EvidenceRecord 模型 + 枚举体系 + 内容寻址 id
+[ ] dedup 幂等测试 PASS
+[ ] SourceManifest 记录每次采集
+[ ] SQLAlchemy 迁移可运行（sqlite 真实建表）
+[ ] 真实行情 → Evidence 入库 → 查询回归 PASS
 [ ] Git checkpoint
 ```
 
 ---
 
 ## 已完成 Milestone
+
+### M3 — Source Layer（DONE，2026-08-28）
+
+```text
+backend/app/sources/base.py          SourceResult 契约（八态 status、错误分类、retryable、
+                                     as_of/attempted_at；成功必须带记录、no_data 必须带原因；
+                                     契约蓝本 OpenAlpha CN providers/base.py，MIT 已注明）
+backend/app/sources/provider.py      BaseProvider 显式结果构造器
+backend/app/sources/registry.py      capability registry + 有序 fallback（异常防护，
+                                     耗尽后合成 SOURCE_UNAVAILABLE，永不静默空返回）
+backend/app/sources/health.py        source health 状态机（连续失败→unavailable）
+backend/app/sources/cache.py         分能力 TTL 缓存（market_data 5s … instrument 24h）
+backend/app/sources/runtime.py       进程级 runtime（resolve_cached）
+backend/app/sources/providers/tencent_quote.py
+                                     腾讯实时行情 provider（GBK 报文解析、真实字段布局）
+backend/app/api/market_data.py       GET /api/v1/market-data/quote?instrument=…
+backend/app/api/source_health.py     GET /api/v1/source-health
+验证: backend pytest 83 passed（契约不变量/fallback/health/缓存/mock 报文/live）
+      LIVE: 茅台 1292.30(-0.81%) 总市值 1.615万亿 event_time 2026-08-27T16:14:55
+            平安银行 11.59 按名称解析 → SZSE:000001；health available=true
+```
 
 ### M2 — Instrument（DONE，2026-08-28）
 
