@@ -147,5 +147,26 @@
   "section.risks": "Risks",
   "section.data_quality": "Data Quality",
   "section.source_manifest": "Source Manifest",
-  "section.disclaimer": "Disclaimer"
+  "section.disclaimer": "Disclaimer",
+  "tasks": {
+    "create": "Create research task",
+    "type": "Task type",
+    "typeMonitor": "Market monitor",
+    "typeValidation": "Prediction validation",
+    "add": "Create",
+    "scheduler": "Scheduler",
+    "tick": "Run one tick",
+    "tickRan": "Claimed {{claimed}} · Succeeded {{ok}}",
+    "list": "Task list",
+    "disable": "Disable",
+    "enable": "Enable"
+  },
+  "predictions": {
+    "performance": "Prediction performance",
+    "total": "Validated predictions",
+    "directionAccuracy": "Direction accuracy",
+    "avgExcess": "Average excess return",
+    "rangeHit": "Range hit rate",
+    "pending": "Pending"
+  }
 }

@@ -147,5 +147,26 @@
   "section.risks": "风险提示",
   "section.data_quality": "数据质量",
   "section.source_manifest": "来源清单",
-  "section.disclaimer": "免责声明"
+  "section.disclaimer": "免责声明",
+  "tasks": {
+    "create": "创建研究任务",
+    "type": "任务类型",
+    "typeMonitor": "行情监控",
+    "typeValidation": "预测验证",
+    "add": "创建",
+    "scheduler": "调度器",
+    "tick": "执行一轮调度",
+    "tickRan": "已认领 {{claimed}} · 成功 {{ok}}",
+    "list": "任务列表",
+    "disable": "停用",
+    "enable": "启用"
+  },
+  "predictions": {
+    "performance": "预测表现统计",
+    "total": "已验证预测数",
+    "directionAccuracy": "方向准确率",
+    "avgExcess": "平均超额收益",
+    "rangeHit": "区间命中率",
+    "pending": "待验证"
+  }
 }

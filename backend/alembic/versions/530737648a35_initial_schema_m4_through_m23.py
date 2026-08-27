@@ -1,8 +1,8 @@
 """initial schema m4 through m23
 
-Revision ID: 0f8802656fc2
+Revision ID: 530737648a35
 Revises: 
-Create Date: 2026-08-28 04:35:05.134843
+Create Date: 2026-08-28 05:22:49.213169
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0f8802656fc2'
+revision: str = '530737648a35'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -158,6 +158,25 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_evidence_snapshots_as_of'), ['as_of'], unique=False)
         batch_op.create_index(batch_op.f('ix_evidence_snapshots_instrument_id'), ['instrument_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_evidence_snapshots_snapshot_id'), ['snapshot_id'], unique=True)
+
+    op.create_table('materiality_decisions',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('decision_id', sa.String(length=24), nullable=False),
+    sa.Column('instrument_id', sa.String(length=32), nullable=False),
+    sa.Column('old_snapshot_id', sa.String(length=32), nullable=True),
+    sa.Column('new_snapshot_id', sa.String(length=32), nullable=False),
+    sa.Column('decision', sa.String(length=24), nullable=False),
+    sa.Column('added_count', sa.Integer(), nullable=False),
+    sa.Column('removed_count', sa.Integer(), nullable=False),
+    sa.Column('price_change_pct', sa.Float(), nullable=True),
+    sa.Column('reasons_json', sa.JSON(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('materiality_decisions', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_materiality_decisions_decision'), ['decision'], unique=False)
+        batch_op.create_index(batch_op.f('ix_materiality_decisions_decision_id'), ['decision_id'], unique=True)
+        batch_op.create_index(batch_op.f('ix_materiality_decisions_instrument_id'), ['instrument_id'], unique=False)
 
     op.create_table('predictions',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -641,6 +660,12 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_predictions_due_at'))
 
     op.drop_table('predictions')
+    with op.batch_alter_table('materiality_decisions', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_materiality_decisions_instrument_id'))
+        batch_op.drop_index(batch_op.f('ix_materiality_decisions_decision_id'))
+        batch_op.drop_index(batch_op.f('ix_materiality_decisions_decision'))
+
+    op.drop_table('materiality_decisions')
     with op.batch_alter_table('evidence_snapshots', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_evidence_snapshots_snapshot_id'))
         batch_op.drop_index(batch_op.f('ix_evidence_snapshots_instrument_id'))

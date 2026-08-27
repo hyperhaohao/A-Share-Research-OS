@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M27（Tasks / Prediction UI）
+Milestone M28（E2E / Performance / Cost）
 Status: DOING
 ```
 
-M0–M26（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）；M22 NOT_REQUIRED。
+M0–M27（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）；M22 NOT_REQUIRED。
 
 ---
 
-## 已完成（M0 – M26）
+## 已完成（M0 – M27）
 
 M0（2026-08-28）：
 

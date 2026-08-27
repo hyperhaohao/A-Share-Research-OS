@@ -13,6 +13,7 @@ from app.storage.revision_repo import RevisionProposalORM  # noqa: F401
 from app.storage.prediction_repo import PredictionORM, ValidationORM  # noqa: F401
 from app.api.regression import RegressionReviewORM, ResearchExperienceORM  # noqa: F401
 from app.scheduler.tasks import ResearchTaskORM  # noqa: F401
+from app.services.monitor import MaterialityDecisionORM  # noqa: F401
 from app.services.report_qa import ReportAskORM  # noqa: F401
 
 _ = Base

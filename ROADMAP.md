@@ -53,30 +53,49 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M24 | Workspace | DONE | Dashboard、Watchlist、Stock Workspace |
 | M25 | Research visual UI | DONE | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
 | M26 | Interactive Report | DONE | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
-| M27 | Tasks / Prediction UI | DOING | Tasks UI、Prediction Dashboard、完整双语主题回归 |
-| M28 | E2E / Performance / Cost | PLANNED | 多标的 E2E、性能、成本核算、安全审查 |
+| M27 | Tasks / Prediction UI | DONE | Tasks UI、Prediction Dashboard、完整双语主题回归 |
+| M28 | E2E / Performance / Cost | DOING | 多标的 E2E、性能、成本核算、安全审查 |
 | M29 | Production Delivery | PLANNED | Docker Compose、migration、health check、backup/restore、最终 Reviewer Pass |
 
 ---
 
-## 当前 DOING：M27 — Tasks / Prediction UI
+## 当前 DOING：M28 — E2E / Performance / Cost
 
-### 范围（任务书 §48 UI + §56）
+### 范围（任务书 §71/§85/§84 + 最终回归准备）
 
-- Tasks UI：创建 monitor/prediction_validation 任务、启用/停用、tick 触发
-- Prediction UI：预测列表 + 验证结果 + 性能统计（Direction Accuracy 等）
-- 双语完整 + 三态主题回归
+- 多标的 E2E 回归（四板各一 + 双语报告一致性）
+- 成本核算（预测验证任务记录）
+- 安全：HTML escape 已做；CORS 收敛；无 secrets 入库复查
+- ErrorBoundary（渲染错误不白屏）
+- 输出 docs/testing.md
 
-### M27 DoD
+### M28 DoD
 
 ```text
-[ ] Tasks UI（创建/启停/tick）
-[ ] Prediction 列表 + 性能统计 UI
-[ ] 双语 + 主题最终回归
+[ ] 多标的 E2E PASS
+[ ] 性能/成本记录
+[ ] 安全复查 PASS
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M27 — Tasks / Prediction UI（DONE，2026-08-28）
+
+```text
+frontend/src/pages/TasksPage.tsx       任务创建（monitor/prediction_validation）+
+                                       启停 + 调度器 tick 按钮 + 结果显示
+frontend/src/pages/PredictionsPage.tsx 预测表现统计（Direction Accuracy / Avg Excess /
+                                       Range Hit）+ 预测列表（含验证结果）
+frontend/src/components/ErrorBoundary.tsx  渲染错误不白屏
+导航                                    dashboard/watchlist/tasks/predictions/reports
+验证: frontend 8 tests + build PASS；浏览器实测：任务创建（宁德时代）+
+      tick 执行（claimed 1 succeeded 1）+ 预测页统计渲染
+      后端修复：resolve_instrument_id 支持全格式 instrument id；all_models
+      注册表补 MaterialityDecisionORM；25 表全量迁移重建
+```
 
 ## 已完成 Milestone
 

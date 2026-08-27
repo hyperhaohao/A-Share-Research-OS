@@ -2,11 +2,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppHeader } from "./components/AppHeader";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HomePage } from "./pages/HomePage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { InteractiveReportPage } from "./pages/InteractiveReportPage";
 import { InstrumentWorkspacePage } from "./pages/InstrumentWorkspacePage";
+import { TasksPage } from "./pages/TasksPage";
+import { PredictionsPage } from "./pages/PredictionsPage";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 
@@ -17,6 +20,8 @@ const queryClient = new QueryClient({
 const NAV_ITEMS: Array<{ to: string; key: string }> = [
   { to: "/", key: "nav.dashboard" },
   { to: "/watchlist", key: "nav.watchlist" },
+  { to: "/tasks", key: "nav.tasks" },
+  { to: "/predictions", key: "nav.predictions" },
   { to: "/reports", key: "nav.reports" },
 ];
 
@@ -40,6 +45,8 @@ function Shell() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/watchlist" element={<WatchlistPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/predictions" element={<PredictionsPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
         <Route path="/instrument/:instrumentId" element={<InstrumentWorkspacePage />} />
@@ -55,7 +62,9 @@ export default function App() {
       <BrowserRouter>
         <ThemeProvider>
           <LanguageProvider>
-            <Shell />
+            <ErrorBoundary>
+              <Shell />
+            </ErrorBoundary>
           </LanguageProvider>
         </ThemeProvider>
       </BrowserRouter>
