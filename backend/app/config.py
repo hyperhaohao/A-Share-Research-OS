@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     debug: bool = False
     # CORS origins for the frontend dev server / deployment. Empty list = same-origin only.
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # Development default is file SQLite; production target is PostgreSQL (任务书 §5).
+    database_url: str = "sqlite:///./asro_dev.db"
 
 
 @lru_cache

@@ -30,8 +30,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M1 | 工程基线 + i18n + theme | DONE | 可运行的 backend/frontend 基线、zh-CN/en-US、system/light/dark |
 | M2 | Instrument | DONE | InstrumentProfile、A 股代码/名称解析、四板回归 |
 | M3 | Source Layer | DONE | capability-based Provider、fallback、SourceResult、source health |
-| M4 | Evidence | DOING | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
-| M5 | PIT / Snapshot | PLANNED | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
+| M4 | Evidence | DONE | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
+| M5 | PIT / Snapshot | DOING | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
 | M6 | Research Domain | PLANNED | CorporateEvent、Claim、InvestmentThesis |
 | M7 | Quality | PLANNED | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
 | M8 | Structured Agents | PLANNED | AnalystBrief、missing_data → ResearchRequest 闭环 |
@@ -59,32 +59,50 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M4 — Evidence
+## 当前 DOING：M5 — PIT / Snapshot
 
 ### 范围
 
-- EvidenceRecord 领域模型（任务书 §22 字段全集：evidence_id/instrument_id/evidence_type/
-  title/summary/excerpt/source*/authority_level/fact_status/四时钟/confidence/content_hash）
-- authority_level 枚举（A1/A2/B1/B2/C1/C2/D，任务书 §25）与 fact_status 枚举（任务书 §26）
-- Evidence dedup（content_hash 幂等入库）
-- SourceManifest（一次采集的来源台账）
-- 持久化：SQLAlchemy 2 + SQLite（开发）/ PostgreSQL（生产目标）+ Alembic 迁移
-- Quote → Evidence 的真实采集链（live 数据入库验证）
+- 四时钟强制：Evidence 的 available_time <= ResearchRun.as_of（任务书 §23）
+- 违反 PIT 的数据不能进入 EvidenceSnapshot
+- 不可变 EvidenceSnapshot（snapshot_id/instrument_id/as_of/evidence_ids/content_hash，§24）
+- 历史快照不因后续数据修订而变化
+- PIT 强制测试（§74：构造 available_time > as_of 必须不可见）
 
-### M4 DoD
+### M5 DoD
 
 ```text
-[ ] EvidenceRecord 模型 + 枚举体系 + 内容寻址 id
-[ ] dedup 幂等测试 PASS
-[ ] SourceManifest 记录每次采集
-[ ] SQLAlchemy 迁移可运行（sqlite 真实建表）
-[ ] 真实行情 → Evidence 入库 → 查询回归 PASS
+[ ] PIT gate 实现（collection 与查询两端强制）
+[ ] EvidenceSnapshot 不可变模型 + 内容寻址
+[ ] PIT 强制测试 PASS（含 snapshot 层）
+[ ] snapshot 幂等与可复现测试
 [ ] Git checkpoint
 ```
 
 ---
 
 ## 已完成 Milestone
+
+### M4 — Evidence（DONE，2026-08-28）
+
+```text
+backend/app/domain/evidence.py     EvidenceRecord（§22 字段全集 + 内容寻址 evidence_id +
+                                   content_hash）、AuthorityLevel（§25 A1-D）、
+                                   FactStatus（§26 八态）、EvidenceType、SourceManifest
+backend/app/storage/orm.py         SQLAlchemy 2 ORM（evidence_records + source_manifests，
+                                   唯一约束 (source, content_hash) 实现去重）
+backend/app/storage/repository.py  幂等 save（同源同内容 → created=False）、
+                                   PIT 可见性过滤 list、manifest 台账
+backend/app/services/evidence_collector.py
+                                   SourceResult → Evidence 采集服务（失败记录 manifest，
+                                   不伪造数据）
+backend/app/api/evidence.py        POST /api/v1/evidence/collect + GET /api/v1/evidence
+backend/alembic/                   初始迁移（真实建表 asro_dev.db，autogenerate 生成）
+验证: backend pytest 100 passed（含 live 采集入库回归）
+      失败采集 → manifest 记录 network_error、evidence 为空（不伪装）
+```
+
+---
 
 ### M3 — Source Layer（DONE，2026-08-28）
 

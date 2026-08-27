@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M4（Evidence）
+Milestone M5（PIT / Snapshot）
 Status: DOING
 ```
 
-M0–M3（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M4（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 + M1 + M2 + M3）
+## 已完成（M0 + M1 + M2 + M3 + M4）
 
 M0（2026-08-28）：
 
@@ -79,31 +79,40 @@ M2（2026-08-28）：
 ## 正在进行
 
 ```text
-M4 — Evidence（EvidenceRecord / authority/fact_status / dedup / SourceManifest / 持久化）
+M5 — PIT / Snapshot（四时钟强制 / 不可变 EvidenceSnapshot）
 ```
 
 ---
 
 ## 下一步（Next Action）
 
-1. 持久化基线：`backend/` 引入 SQLAlchemy 2 + Alembic（开发 SQLite，目标 PostgreSQL），
-   建初始迁移并真实运行。
-2. `backend/app/domain/evidence.py`：EvidenceRecord（任务书 §22 字段全集）、
-   EvidenceType、authority_level（§25 A1–D）、fact_status（§26 八态）、四时钟字段、
-   content_hash 内容寻址 evidence_id（蓝本 OpenAlpha CN domain/evidence.py，MIT）。
-3. dedup：同一 (instrument, source, content_hash) 幂等入库测试。
-4. SourceManifest：每次采集生成来源台账（providers used、statuses、attempted_at）。
-5. 采集服务：market_data quote → Evidence（authority/fact_status 映射）→ 入库。
-6. API：GET /api/v1/evidence?instrument_id=（含缺失数据显式语义）。
-7. 真实采集回归：live quote → Evidence 落库 → 查询断言（含 dedup 幂等）。
-8. Build/Test → 更新状态 → Git checkpoint。M4 后进入 M5（PIT 强制 + Snapshot）。
+1. `backend/app/domain/snapshot.py`：EvidenceSnapshot（snapshot_id/instrument_id/as_of/
+   evidence_ids/content_hash，任务书 §24），frozen + 内容寻址，blueprint OpenAlpha CN。
+2. `backend/app/storage/snapshot_repo.py`：snapshot 持久化 + 幂等（同 instrument+as_of+
+   内容 → 同 snapshot_id）；快照行含 evidence 明细冻结。
+3. PIT gate：`snapshot.build(instrument_id, as_of)` 只纳入 available_time <= as_of 的
+   Evidence；违反 → 不可见（§74 强制测试：构造未来证据断言被排除）。
+4. ResearchRun 最小骨架（run_id/instrument_id/as_of/run_type/status）绑定 snapshot_id，
+   为 M6 Claim/Thesis 与 M12 完整 Manifest 做承载。
+5. API：POST /api/v1/snapshots（按 as_of 构建）+ GET /api/v1/snapshots/{id}。
+6. 测试：PIT 排除（含边界=精确 as_of）、snapshot 幂等/可复现、历史快照不受后续修订影响。
+7. Build/Test → 更新状态 → Git checkpoint。M5 后进入 M6（Research Domain）。
 
 ---
 
 ## 已验证
 
 ```text
-M3 Backend Tests:
+M4 Backend Tests:
+  uv run pytest → 100 passed
+  （Evidence 域不变量/内容寻址/时钟校验/PIT 可见性/幂等 dedup/manifest 台账/
+   collect+list API/失败采集不伪造/live 采集入库）
+M4 Alembic:
+  autogenerate 初始迁移 + upgrade head 真实建表（asro_dev.db）PASS
+M4 Live:
+  POST /api/v1/evidence/collect?instrument=600519 → created>=1，
+  GET /api/v1/evidence?instrument_id=SSE:600519 可追溯（source/authority/fact_status/时钟）
+M3 Backend Tests（延续）:
   uv run pytest → 83 passed
   （SourceResult 契约不变量 13 项 / fallback 链 6 场景 / health 状态机 /
    TTL 缓存 / 腾讯报文解析（真实字段布局）/ API 集成 / live 测试）
@@ -151,12 +160,15 @@ TASK / PLAN / STATUS / ROADMAP 四文件职责分工（见 AGENTS.md §5）。
 ## 最近修改文件
 
 ```text
-M3 checkpoint:
-backend/app/sources/{__init__,base,provider,registry,health,cache,runtime}.py
-backend/app/sources/providers/{__init__,tencent_quote}.py
-backend/app/api/{market_data,source_health}.py
-backend/tests/{test_source_contract,test_source_registry,test_tencent_quote,test_market_data_api}.py
-backend/app/main.py（路由挂载）
+M4 checkpoint:
+backend/app/domain/evidence.py（新）
+backend/app/storage/{__init__,orm,repository}.py（新）
+backend/app/services/{__init__,evidence_collector}.py（新）
+backend/app/api/evidence.py（新）
+backend/app/db.py（新）
+backend/alembic/ + alembic.ini（初始迁移）
+backend/tests/{test_evidence_domain,test_evidence_repository,test_evidence_api}.py（新）
+backend/app/{config,main}.py、app/api/market_data.py、sources/providers/tencent_quote.py（扩展）
 ROADMAP.md / PLAN.md / STATUS.md
 ```
 
@@ -174,13 +186,13 @@ None
 
 ```text
 Last Safe Checkpoint:
-M3 source layer（真实行情采集链 + 83 tests，git commit）
+M4 evidence foundation（持久化+dedup+manifest+live 采集，git commit）
 
 Last Verified Milestone:
-M0, M1, M2, M3
+M0, M1, M2, M3, M4
 
 Resume From:
-M4 / Phase 2 / SQLAlchemy 持久化基线 + EvidenceRecord（见 Next Action 步骤 1）
+M5 / Phase 2 / PIT gate 与不可变 EvidenceSnapshot（见 Next Action 步骤 1）
 ```
 
 ---

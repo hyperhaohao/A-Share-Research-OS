@@ -13,10 +13,14 @@ Failure mapping (任务书 §21):
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, ClassVar
 
 import httpx
+
+# Quote timestamps from the source are Beijing wall-clock time; China has no
+# DST, so a fixed +08:00 offset is a faithful, dependency-free localization.
+_CN_MARKET_TZ = timezone(timedelta(hours=8))
 
 from app.domain.instrument import Exchange, instrument_id_for
 from app.sources.base import (
@@ -119,7 +123,11 @@ class TencentQuoteProvider(BaseProvider):
 
         quote_time_raw = fields[30] if len(fields) > 30 else ""
         try:
-            quote_dt = datetime.strptime(quote_time_raw, "%Y%m%d%H%M%S") if quote_time_raw else None
+            quote_dt = (
+                datetime.strptime(quote_time_raw, "%Y%m%d%H%M%S").replace(tzinfo=_CN_MARKET_TZ)
+                if quote_time_raw
+                else None
+            )
         except ValueError:
             quote_dt = None
 

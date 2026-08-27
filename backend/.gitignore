@@ -8,3 +8,8 @@ __pycache__/
 .pytest_cache/
 ruff_cache/
 uv.lock.orig
+
+# dev database
+*.db
+*.db-wal
+*.db-shm

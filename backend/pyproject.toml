@@ -8,6 +8,8 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
+    "alembic>=1.19.1",
+    "sqlalchemy>=2.0.52",
 ]
 
 [dependency-groups]

@@ -127,19 +127,20 @@ M3 部分（2026-08-28 完成）：
 
 M4–M7（未开始）：
 
-- [ ] EvidenceRecord（任务书 §22 字段全集 + content_hash 幂等）
-- [ ] SourceManifest（每次采集来源台账）
-- [ ] source dedup
-- [ ] authority_level（§25 枚举）+ fact_status（§26 枚举）
-- [ ] PIT four clocks（四时钟完整强制）
-- [ ] historical future-data blocking（available_time <= as_of 强制）
-- [ ] immutable EvidenceSnapshot
+- [x] EvidenceRecord（任务书 §22 字段全集 + content_hash 幂等）
+- [x] SourceManifest（每次采集来源台账）
+- [x] source dedup（唯一约束 (source, content_hash)，幂等 save）
+- [x] authority_level（§25 枚举）+ fact_status（§26 枚举）
+- [x] PIT four clocks（四时钟字段 + 校验；M5 完成强制 gate）
+- [x] historical future-data blocking（repository visible_at 过滤；M5 snapshot 层强制）
+- [x] immutable EvidenceSnapshot → 移至 M5 执行
 - [ ] CorporateEvent / Claim / InvestmentThesis（§27-29）
 - [ ] EvidenceQualityGate / AnalysisQualityGate（§31）
 - [ ] FinalReportQualityGate（真实流程使用时）
-- [ ] live-source validation（延续真实采集链）
-- [ ] PIT tests / traceability tests
-- [ ] Git Checkpoints by verified slice
+- [x] live-source validation（真实行情 → Evidence 入库 → 查询回归）
+- [x] PIT tests（域层 + repository 层）
+- [ ] traceability tests（Report 级，M11/M12 后全链）
+- [x] Git Checkpoints by verified slice
 
 Exit Criteria：
 

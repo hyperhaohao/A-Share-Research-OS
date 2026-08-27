@@ -13,21 +13,26 @@ from app.sources.runtime import get_runtime
 router = APIRouter(tags=["market-data"])
 
 
+def resolve_instrument_id(raw: str) -> str | None:
+    """Resolve any accepted instrument form (code/prefix/name) to an id."""
+    try:
+        code, exchange, _board = normalize_code(raw)
+    except InvalidInstrumentCode:
+        results = default_catalog().resolve(raw, limit=1)
+        if not results:
+            return None
+        return results[0].instrument.instrument_id
+    return f"{exchange.value}:{code}"
+
+
 @router.get("/market-data/quote")
 def quote(
     instrument: str = Query(min_length=4, max_length=32, description="code or instrument_id"),
 ) -> dict:
     """Realtime quote resolved through the source layer (fallback + cache)."""
-    # Accept any instrument form; resolve to a canonical instrument_id.
-    try:
-        code, exchange, _board = normalize_code(instrument)
-    except InvalidInstrumentCode:
-        results = default_catalog().resolve(instrument, limit=1)
-        if not results:
-            raise AppError("instrument.not_found", status_code=404) from None
-        instrument_id = results[0].instrument.instrument_id
-    else:
-        instrument_id = f"{exchange.value}:{code}"
+    instrument_id = resolve_instrument_id(instrument)
+    if instrument_id is None:
+        raise AppError("instrument.not_found", status_code=404)
 
     runtime = get_runtime()
     request = SourceRequest(capability="market_data", instrument_id=instrument_id, as_of=utc_now())
