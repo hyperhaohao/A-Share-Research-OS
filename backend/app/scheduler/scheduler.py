@@ -61,11 +61,24 @@ def run_periodic_full_research(session: Session, task) -> None:
     )
 
 
-# Registry: task type → business function. prediction_validation is
-# registered in M19 when the prediction domain exists.
+def run_prediction_validation(session: Session, task) -> None:
+    """Business function: validate all due, unvalidated predictions."""
+    from app.services.validation_service import ValidationService
+
+    service = ValidationService(session)
+    for prediction in service.due_unvalidated():
+        try:
+            service.validate(prediction.prediction_id)
+        except ValueError:
+            # premature (no prices yet) — stays due for the next tick
+            continue
+
+
+# Registry: task type → business function.
 HANDLERS: dict[TaskType, Callable[[Session, object], None]] = {
     TaskType.MONITOR: run_monitor_task,
     TaskType.PERIODIC_FULL_RESEARCH: run_periodic_full_research,
+    TaskType.PREDICTION_VALIDATION: run_prediction_validation,
 }
 
 

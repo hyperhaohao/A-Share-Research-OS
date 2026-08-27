@@ -45,8 +45,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M16 | Timeline | DONE | 统一事件时间线 |
 | M17 | Research Graph | DONE | 溯源图、upstream/downstream 遍历 |
 | M18 | Tasks / Scheduler | DONE | ResearchTask、scheduler、worker、retry、idempotency、recovery |
-| M19 | Prediction / Validation | DOING | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
-| M20 | Regression / Experience | PLANNED | RegressionReview 归因、ResearchExperience 沉淀 |
+| M19 | Prediction / Validation | DONE | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
+| M20 | Regression / Experience | DOING | RegressionReview 归因、ResearchExperience 沉淀 |
 | M21 | Quant audit | PLANNED | 主工程 quant 能力客观审计，决定是否需要 Qlib |
 | M22 | Qlib（若需要） | PLANNED | 若需要：真实 A 股 Data→Factor→Model→Backtest→Metrics 闭环；否则 NOT_REQUIRED |
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
@@ -59,28 +59,46 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M19 — Prediction / Validation
+## 当前 DOING：M20 — Regression / Experience
 
-### 范围（任务书 §50/§51）
+### 范围（任务书 §52/§53）
 
-- PredictionRecord（§50 字段全集）：创建后不可修改（append-only）
-- horizon：5D/20D/60D（交易日）；benchmark（沪深300/中证500 或指定）
-- expected_direction/expected_return_range/expected_excess_return_range
-- ValidationRecord（§51）：instrument_return/benchmark_return/excess_return/
-  direction_correct/range_hit —— 由行情确定性计算（固定数值单测，§80）
-- 到期验证任务（task_type=prediction_validation 接入 M18 调度器）
-- API：POST /predictions + GET + POST /predictions/{id}/validate
+- RegressionReview：验证失败归因 —— evidence/claim/thesis/valuation/catalyst/
+  risk/timing/market_regime 至少判定一维，不能只说「市场变化」
+- ResearchExperience（§53）：experience_id/context/lesson/related_research_type/
+  confidence/supporting_validations —— 第一版只沉淀，禁止自动改 Prompt
+- 长期统计：Direction Accuracy / Avg Excess / Range Hit Rate 聚合 API
+- API：POST /regression-reviews + GET experience 列表
 
-### M19 DoD
+### M20 DoD
 
 ```text
-[ ] Prediction 不可变模型（禁改测试）
-[ ] Validation 数学（收益率/超额/方向/range hit 固定单测）
-[ ] 验证任务接入调度器
+[ ] RegressionReview 归因模型（多维度判定）
+[ ] ResearchExperience 沉淀（只写不改）
+[ ] 聚合统计 API
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M19 — Prediction / Validation（DONE，2026-08-28）
+
+```text
+backend/app/domain/prediction.py  PredictionRecord（§50 字段全集，frozen 不可变）、
+                                  Horizon 5D/20D/60D、交易日 due 计算（周末跳过，
+                                  假日历为已知限制）、ValidationRecord
+backend/app/services/validation_service.py
+                                  compute_validation 纯数学（§80 固定数值单测：
+                                  收益/超额/方向/区间命中，取整后一致性），
+                                  validate 单次性（重复验证返回同记录）
+backend/app/storage/prediction_repo.py + API + 调度器 prediction_validation 处理器
+验证: backend pytest 219 passed
+      §80 固定数值（1648→1730.4 = +5.0% 方向正确/区间命中）
+      不可变（frozen 赋值拒绝）；premature 验证 422
+      调度器集成：prediction_validation 任务跑到期预测
+```
 
 ## 已完成 Milestone
 
