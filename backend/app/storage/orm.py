@@ -55,6 +55,39 @@ class EvidenceORM(Base):
     )
 
 
+class SnapshotORM(Base):
+    __tablename__ = "evidence_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    snapshot_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    content_hash: Mapped[str] = mapped_column(String(64))
+
+    instrument_id: Mapped[str] = mapped_column(String(32), index=True)
+    as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    items_json: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        # A stored snapshot is immutable: one row per (instrument, as_of).
+        UniqueConstraint("instrument_id", "as_of", name="uq_snapshot_instrument_asof"),
+    )
+
+
+class ResearchRunORM(Base):
+    __tablename__ = "research_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+
+    instrument_id: Mapped[str] = mapped_column(String(32), index=True)
+    as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    run_type: Mapped[str] = mapped_column(String(32), default="full_research")
+    status: Mapped[str] = mapped_column(String(16), default="pending", index=True)
+    snapshot_id: Mapped[str | None] = mapped_column(String(32), index=True, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class SourceManifestORM(Base):
     __tablename__ = "source_manifests"
 

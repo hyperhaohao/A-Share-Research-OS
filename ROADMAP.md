@@ -31,8 +31,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M2 | Instrument | DONE | InstrumentProfile、A 股代码/名称解析、四板回归 |
 | M3 | Source Layer | DONE | capability-based Provider、fallback、SourceResult、source health |
 | M4 | Evidence | DONE | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
-| M5 | PIT / Snapshot | DOING | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
-| M6 | Research Domain | PLANNED | CorporateEvent、Claim、InvestmentThesis |
+| M5 | PIT / Snapshot | DONE | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
+| M6 | Research Domain | DOING | CorporateEvent、Claim、InvestmentThesis |
 | M7 | Quality | PLANNED | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
 | M8 | Structured Agents | PLANNED | AnalystBrief、missing_data → ResearchRequest 闭环 |
 | M9 | Debate / Scenario / Risk | PLANNED | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
@@ -59,29 +59,49 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M5 — PIT / Snapshot
+## 当前 DOING：M6 — Research Domain
 
-### 范围
+### 范围（任务书 §27-29）
 
-- 四时钟强制：Evidence 的 available_time <= ResearchRun.as_of（任务书 §23）
-- 违反 PIT 的数据不能进入 EvidenceSnapshot
-- 不可变 EvidenceSnapshot（snapshot_id/instrument_id/as_of/evidence_ids/content_hash，§24）
-- 历史快照不因后续数据修订而变化
-- PIT 强制测试（§74：构造 available_time > as_of 必须不可见）
+- CorporateEvent：通用研究对象（earnings/guidance/dividend/buyback/shareholding_change/
+  financing/M&A/restructuring/contract/litigation/regulation/governance/product/
+  capacity/industry_event/corporate_action —— 不让某类事件主导模型，§27）
+- Claim（§28：claim_id/statement/claim_type/supporting+opposing_evidence_refs/
+  fact_status/confidence/status）—— 引用必须真实存在（可追溯起点）
+- InvestmentThesis（§29：thesis_id/title/description/supporting+opposing_claims/
+  confidence/catalysts/risks/trigger+invalidate_conditions/status）
+- 持久化 + API + 追溯测试（Claim→Evidence、Thesis→Claim 全链存在）
 
-### M5 DoD
+### M6 DoD
 
 ```text
-[ ] PIT gate 实现（collection 与查询两端强制）
-[ ] EvidenceSnapshot 不可变模型 + 内容寻址
-[ ] PIT 强制测试 PASS（含 snapshot 层）
-[ ] snapshot 幂等与可复现测试
+[ ] 三个领域模型 + 枚举 + 校验
+[ ] 持久化 + 迁移
+[ ] 引用完整性（Claim 的 evidence 引用必须真实存在）
+[ ] API（claims/theses CRUD 最小集）
+[ ] 追溯测试 PASS
 [ ] Git checkpoint
 ```
 
 ---
 
 ## 已完成 Milestone
+
+### M5 — PIT / Snapshot（DONE，2026-08-28）
+
+```text
+backend/app/domain/snapshot.py     EvidenceSnapshot（frozen 语义、内容寻址 snapshot_id、
+                                   §24 字段全集）、SnapshotItem、ResearchRun 最小骨架
+backend/app/storage/snapshot_repo.py
+                                   build = PIT gate（available_time <= as_of 双重强制）+
+                                   get-or-create 幂等（同 (instrument, as_of) 永不改写历史）
+backend/app/api/snapshots.py       POST /snapshots + GET /snapshots/{id} + POST /research-runs
+backend/alembic                    m5 迁移（evidence_snapshots + research_runs 真实建表）
+验证: backend pytest 112 passed
+      §74 强制测试：未来证据不可见（> as_of）、边界 == as_of 可见、
+      幂等重建同快照、后续新数据不改历史快照、不同 as_of 产生新快照
+      LIVE: collect(1) → snapshot snap_c5d14844(1 item) → run 绑定 PASS
+```
 
 ### M4 — Evidence（DONE，2026-08-28）
 

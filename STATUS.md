@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M5（PIT / Snapshot）
+Milestone M6（Research Domain）
 Status: DOING
 ```
 
-M0–M4（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M5（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 + M1 + M2 + M3 + M4）
+## 已完成（M0 – M5）
 
 M0（2026-08-28）：
 
@@ -79,31 +79,37 @@ M2（2026-08-28）：
 ## 正在进行
 
 ```text
-M5 — PIT / Snapshot（四时钟强制 / 不可变 EvidenceSnapshot）
+M6 — Research Domain（CorporateEvent / Claim / InvestmentThesis + 引用完整性）
 ```
 
 ---
 
 ## 下一步（Next Action）
 
-1. `backend/app/domain/snapshot.py`：EvidenceSnapshot（snapshot_id/instrument_id/as_of/
-   evidence_ids/content_hash，任务书 §24），frozen + 内容寻址，blueprint OpenAlpha CN。
-2. `backend/app/storage/snapshot_repo.py`：snapshot 持久化 + 幂等（同 instrument+as_of+
-   内容 → 同 snapshot_id）；快照行含 evidence 明细冻结。
-3. PIT gate：`snapshot.build(instrument_id, as_of)` 只纳入 available_time <= as_of 的
-   Evidence；违反 → 不可见（§74 强制测试：构造未来证据断言被排除）。
-4. ResearchRun 最小骨架（run_id/instrument_id/as_of/run_type/status）绑定 snapshot_id，
-   为 M6 Claim/Thesis 与 M12 完整 Manifest 做承载。
-5. API：POST /api/v1/snapshots（按 as_of 构建）+ GET /api/v1/snapshots/{id}。
-6. 测试：PIT 排除（含边界=精确 as_of）、snapshot 幂等/可复现、历史快照不受后续修订影响。
-7. Build/Test → 更新状态 → Git checkpoint。M5 后进入 M6（Research Domain）。
+1. `backend/app/domain/research.py`：CorporateEvent（§27 事件类型全集）、
+   Claim（§28 字段 + claim_type 枚举 + 引用 evidence_ids）、
+   InvestmentThesis（§29 字段 + status/catalysts/risks/trigger+invalidate）。
+2. 引用完整性：Claim 引用的 evidence_id 必须真实存在于库（repository 校验 + 测试）；
+   Thesis 引用的 claim 同理 —— Traceability 从源头强制（§75 前置）。
+3. ORM + 迁移（corporate_events/claims/theses 表）+ repository。
+4. API：POST/GET /api/v1/claims、/api/v1/theses、/api/v1/corporate-events（最小集，
+   Claim/Thesis 绑定 instrument_id 与 snapshot_id）。
+5. 追溯测试：Thesis → Claim → Evidence → (M3 source) 全链存在断言。
+6. Build/Test → 更新状态 → Git checkpoint。M6 后进入 M7（Quality Gates）。
 
 ---
 
 ## 已验证
 
 ```text
-M4 Backend Tests:
+M5 Backend Tests:
+  uv run pytest → 112 passed
+  （PIT gate：未来证据不可见/边界可见/naive as_of 拒绝；快照幂等重建；
+   后续新数据不改历史快照；内容寻址身份；run 绑定 snapshot；API 集成）
+M5 Live:
+  collect(1 created) → snapshot snap_c5d14844f1be24d (1 item) →
+  run_1d6af330d463 running 绑定该 snapshot PASS
+M4 Backend Tests（延续）:
   uv run pytest → 100 passed
   （Evidence 域不变量/内容寻址/时钟校验/PIT 可见性/幂等 dedup/manifest 台账/
    collect+list API/失败采集不伪造/live 采集入库）
@@ -160,6 +166,12 @@ TASK / PLAN / STATUS / ROADMAP 四文件职责分工（见 AGENTS.md §5）。
 ## 最近修改文件
 
 ```text
+M5 checkpoint:
+backend/app/domain/snapshot.py（新）
+backend/app/storage/snapshot_repo.py（新）
+backend/app/api/snapshots.py（新）
+backend/alembic/versions/63951c2ef1c1_m5_snapshots_and_research_runs.py（新）
+backend/tests/{test_snapshot_pit,test_snapshot_api}.py（新）
 M4 checkpoint:
 backend/app/domain/evidence.py（新）
 backend/app/storage/{__init__,orm,repository}.py（新）
@@ -186,13 +198,13 @@ None
 
 ```text
 Last Safe Checkpoint:
-M4 evidence foundation（持久化+dedup+manifest+live 采集，git commit）
+M5 PIT gate + immutable snapshots（112 tests + live 链验证，git commit）
 
 Last Verified Milestone:
-M0, M1, M2, M3, M4
+M0, M1, M2, M3, M4, M5
 
 Resume From:
-M5 / Phase 2 / PIT gate 与不可变 EvidenceSnapshot（见 Next Action 步骤 1）
+M6 / Phase 2 / CorporateEvent + Claim + InvestmentThesis 领域模型（见 Next Action 步骤 1）
 ```
 
 ---

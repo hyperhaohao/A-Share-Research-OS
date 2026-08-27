@@ -11,6 +11,7 @@ from app.api.instruments import router as instruments_router
 from app.api.market_data import router as market_data_router
 from app.api.source_health import router as source_health_router
 from app.api.evidence import router as evidence_router
+from app.api.snapshots import router as snapshots_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(market_data_router, prefix="/api/v1")
     app.include_router(source_health_router, prefix="/api/v1")
     app.include_router(evidence_router, prefix="/api/v1")
+    app.include_router(snapshots_router, prefix="/api/v1")
     return app
 
 
