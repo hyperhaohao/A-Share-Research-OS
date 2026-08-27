@@ -107,6 +107,7 @@ class Claim(BaseModel):
     fact_status: FactStatus
     confidence: float = Field(ge=0.0, le=1.0)
     status: ClaimStatus = ClaimStatus.PROPOSED
+    metadata: dict = Field(default_factory=dict)  # e.g. conflict_note explanations
 
     created_at: datetime = Field(default_factory=utc_now)
 

@@ -33,8 +33,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M4 | Evidence | DONE | EvidenceRecord、authority/fact_status、dedup、SourceManifest |
 | M5 | PIT / Snapshot | DONE | 四时钟、available_time <= as_of 强制、不可变 EvidenceSnapshot |
 | M6 | Research Domain | DONE | CorporateEvent、Claim、InvestmentThesis |
-| M7 | Quality | DOING | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
-| M8 | Structured Agents | PLANNED | AnalystBrief、missing_data → ResearchRequest 闭环 |
+| M7 | Quality | DONE | EvidenceQualityGate、AnalysisQualityGate、FinalReportQualityGate |
+| M8 | Structured Agents | DOING | AnalystBrief、missing_data → ResearchRequest 闭环 |
 | M9 | Debate / Scenario / Risk | PLANNED | Thesis-based Bull/Bear、Bear/Base/Bull Scenario、Risk trigger |
 | M10 | Valuation | PLANNED | 确定性估值引擎（PE/PB/PS/EV/EBITDA/DCF/DDM/SOTP/NAV/percentile/comps） |
 | M11 | ResearchReport bilingual | PLANNED | 结构化报告、zh/en renderer、共享 Research State |
@@ -59,28 +59,45 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M7 — Quality
+## 当前 DOING：M8 — Structured Agents
 
-### 范围（任务书 §31）
+### 范围（任务书 §30）
 
-- EvidenceQualityGate：PIT 合规 / 来源权威度 / 新鲜度 / 关键数据覆盖 /
-  冲突证据 / source failures —— 真实业务规则，不是字数检查
-- AnalysisQualityGate：Claim 是否有证据 / 事实越界 / 事实-预测混用 /
-  冲突证据是否说明 / missing_data 是否披露
-- FinalReportQualityGate：无效 citation / unsupported claim / 估值无假设 /
-  风险缺失 / 数据质量未披露 / disclaimer 缺失 —— FAIL 不得发布正式报告
-- Gate 结果持久化 + API 可见
+- AnalystBrief 契约：analyst_type/conclusions/claim_refs/evidence_refs/
+  missing_data/confidence/key_questions/risks —— Agent 输出的统一形态
+- Agent 事实来源强制：从 EvidenceSnapshot 取证（不可自带事实库）
+- missing_data → ResearchRequest → EvidenceCollector 闭环（缺数据触发补采）
+- LLM 驱动与确定性双模式（无 LLM 时按规则产出 brief，不伪造结论）
+- 拦截测试：引用不存在的 evidence/claim 的 brief 被拒绝
 
-### M7 DoD
+### M8 DoD
 
 ```text
-[ ] 三类 Gate 实现为真实业务校验
-[ ] Gate 拦截测试（FAIL 场景确实拦截）
-[ ] snapshot 级评估入口 + API
+[ ] AnalystBrief + ResearchRequest 契约
+[ ] 至少一个真实 analyst（基于 quote evidence 的估值/行情 brief，确定性规则）
+[ ] missing_data → 补采闭环测试
+[ ] brief 引用完整性测试
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M7 — Quality（DONE，2026-08-28）
+
+```text
+backend/app/domain/quality.py      GateResult/GateFinding + 三类 Gate：
+                                   Evidence（empty/PIT 违规/权威度不足/过期/来源失败）、
+                                   Analysis（悬空引用/事实-预测混用/冲突未解释/薄证据高置信）、
+                                   FinalReport（无效 citation/未支撑主张/估值无假设/
+                                   风险缺失/数据质量未披露/disclaimer 缺失）
+backend/app/services/quality_service.py   快照级评估 + 结果持久化
+backend/app/api/quality.py         POST /quality-gates/run + /final-report + GET history
+backend/alembic                    m7 迁移（quality_gate_results 表）
+验证: backend pytest 135 passed —— 每个 FAIL 场景都真实拦截（blocked=true）
+      FinalReport 门为 M11 真实报告预留结构化输入契约（ReportGateInput），已测试
+```
 
 ## 已完成 Milestone
 
@@ -99,8 +116,6 @@ backend/alembic                   m6 迁移（三表真实建表）
       追溯链测试：Thesis → Claim → Evidence → source 全链存在
       假引用 422（claim.evidence_not_found / thesis.claims_not_found）
 ```
-
-## 已完成 Milestone
 
 ### M5 — PIT / Snapshot（DONE，2026-08-28）
 
