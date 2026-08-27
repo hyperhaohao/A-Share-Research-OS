@@ -47,8 +47,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M18 | Tasks / Scheduler | DONE | ResearchTask、scheduler、worker、retry、idempotency、recovery |
 | M19 | Prediction / Validation | DONE | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
 | M20 | Regression / Experience | DONE | RegressionReview 归因、ResearchExperience 沉淀 |
-| M21 | Quant audit | DOING | 主工程 quant 能力客观审计，决定是否需要 Qlib |
-| M22 | Qlib（若需要） | PLANNED | 若需要：真实 A 股 Data→Factor→Model→Backtest→Metrics 闭环；否则 NOT_REQUIRED |
+| M21 | Quant audit | DONE | 主工程 quant 能力客观审计，决定是否需要 Qlib |
+| M22 | Qlib（若需要） | NOT_REQUIRED | 经审计：主工程 quant 能力满足（详见 docs/quant-audit.md） |
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
 | M24 | Workspace | PLANNED | Dashboard、Watchlist、Stock Workspace |
 | M25 | Research visual UI | PLANNED | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
@@ -59,24 +59,41 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M21 — Quant audit
+## 当前 DOING：M23 — Research API / SSE
 
-### 范围（任务书 §54）
+### 范围（任务书 §66/§67）
 
-- 源码级审计主工程（TideTrading）已有 quant 能力：alpha/factor/backtest/model/optimizer
-- 与本系统研究闭环的需求对比（估值引擎 M10 已覆盖确定性估值）
-- 决定：现有能力足够 → M22 NOT_REQUIRED；不足 → Qlib Adapter
-- 输出 docs/quant-audit.md（证据 + 结论）
+- API 合同核对与补齐：instruments ✓ / research runs ✓ / timeline ✓ / research graph ✓ /
+  evidence ✓ / claims ✓ / theses ✓ / reports ✓ / report ask ✓ / report review(revisions) ✓ /
+  tasks ✓ / predictions ✓ / validation performance ✓ / source health ✓ / settings(部分)
+- SSE：研究执行事件流（run_started/source_progress/evidence_ready/quality_gate/
+  analyst_progress/valuation_ready/report_ready/run_completed/run_failed）
+- 前端订阅 SSE 的最小接入
 
-### M21 DoD
+### M23 DoD
 
 ```text
-[ ] TideTrading quant 模块源码审计记录
-[ ] 需求对比 + 决定（含理由）
+[ ] API 面核对清单完成
+[ ] SSE 事件流实现 + 前端接入
+[ ] 测试 PASS
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M21 — Quant audit（DONE，2026-08-28）
+
+```text
+证据: TideTrading agent/src/factors（约2.8万行：alpha101 104 / gtja191 194 /
+     qlib158 158 / academic；registry + IC bench_runner + analysis core）+
+     agent/backtest（约1.26万行：ChinaAEngine T+1/印花税/佣金/涨跌停 + 多市场
+     引擎 + 优化器 + metrics/validation/scorecard）+ quant 真实性测试
+决定: M22 = NOT_REQUIRED —— Qlib 158 因子集已移植进主工程；ChinaAEngine 覆盖
+     A股规则；引入 Qlib 违反「不维护两套重复量化底层」（§12）
+产出: docs/quant-audit.md（证据矩阵 + 重评触发条件）
+```
 
 ## 已完成 Milestone
 
