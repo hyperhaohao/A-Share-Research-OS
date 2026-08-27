@@ -60,5 +60,28 @@
     "common.validation_error": "Invalid request parameters",
     "common.internal_error": "Internal server error",
     "network.unreachable": "Cannot reach the backend service"
+  },
+  "watchlist": {
+    "add": "Add to watchlist",
+    "remove": "Remove",
+    "empty": "Watchlist is empty"
+  },
+  "workspace": {
+    "market": "Latest quote",
+    "evidence": "Evidence",
+    "predictions": "Predictions",
+    "direction": {
+      "up": "Up",
+      "down": "Down",
+      "neutral": "Neutral"
+    }
+  },
+  "report": {
+    "title": "Research Report",
+    "gate": "Gate"
+  },
+  "label": {
+    "no_data": "No data available",
+    "missing": "missing"
   }
 }

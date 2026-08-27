@@ -60,5 +60,28 @@
     "common.validation_error": "请求参数无效",
     "common.internal_error": "服务器内部错误",
     "network.unreachable": "无法连接后端服务"
+  },
+  "watchlist": {
+    "add": "添加关注",
+    "remove": "移除关注",
+    "empty": "关注列表为空"
+  },
+  "workspace": {
+    "market": "最新行情",
+    "evidence": "证据",
+    "predictions": "预测",
+    "direction": {
+      "up": "看涨",
+      "down": "看跌",
+      "neutral": "中性"
+    }
+  },
+  "report": {
+    "title": "研究报告",
+    "gate": "发布门"
+  },
+  "label": {
+    "no_data": "暂无数据",
+    "missing": "缺失"
   }
 }

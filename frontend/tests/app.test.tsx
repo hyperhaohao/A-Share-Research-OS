@@ -24,7 +24,10 @@ describe("App smoke", () => {
       configurable: true,
     });
     const { unmount } = render(<App />);
-    expect(await screen.findByText("Dashboard")).toBeTruthy();
+    // nav link + h1 both say Dashboard; scope to the heading
+    const headings = await screen.findAllByRole("heading", { name: "Dashboard" });
+    expect(headings.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Appearance")).toBeTruthy();
     unmount();
   });
 

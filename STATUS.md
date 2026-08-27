@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M24（Workspace）
+Milestone M25（Research visual UI）
 Status: DOING
 ```
 
-M0–M23（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）；M22 NOT_REQUIRED。
+M0–M24（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）；M22 NOT_REQUIRED。
 
 ---
 
-## 已完成（M0 – M23）
+## 已完成（M0 – M24）
 
 M0（2026-08-28）：
 

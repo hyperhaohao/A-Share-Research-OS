@@ -50,8 +50,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M21 | Quant audit | DONE | 主工程 quant 能力客观审计，决定是否需要 Qlib |
 | M22 | Qlib（若需要） | NOT_REQUIRED | 经审计：主工程 quant 能力满足（详见 docs/quant-audit.md） |
 | M23 | Research API / SSE | PLANNED | 稳定 Research API、SSE 事件流、source health API |
-| M24 | Workspace | DOING | Dashboard、Watchlist、Stock Workspace |
-| M25 | Research visual UI | PLANNED | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
+| M24 | Workspace | DONE | Dashboard、Watchlist、Stock Workspace |
+| M25 | Research visual UI | DOING | Timeline UI、Research Graph UI、Thesis Board、Evidence UI |
 | M26 | Interactive Report | PLANNED | TOC、Citation viewer、Explain/Audit/Refresh/Revalue/Revision Diff |
 | M27 | Tasks / Prediction UI | PLANNED | Tasks UI、Prediction Dashboard、完整双语主题回归 |
 | M28 | E2E / Performance / Cost | PLANNED | 多标的 E2E、性能、成本核算、安全审查 |
@@ -59,25 +59,40 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M24 — Workspace
+## 当前 DOING：M25 — Research visual UI
 
-### 范围（任务书 §55/§57/§58）
+### 范围（任务书 §60/§46/§47 UI）
 
-- Dashboard：研究总览（标的搜索 + 管线触发 + 事件流）
-- Watchlist UI：关注列表（真实 API 增删）
-- Stock Workspace 头部：name/code/market/industry + 最新研究入口
-- 全部双语 + 三态主题
+- Timeline UI：时间线视图（类型过滤、按时间排序）
+- Research Graph UI：溯源图可视化 + 节点点击 + 上下游追踪
+- 双语 + 主题适配沿用 tokens
 
-### M24 DoD
+### M25 DoD
 
 ```text
-[ ] Watchlist UI（真实 API）
-[ ] Workspace 骨架（Header + Tabs 占位待 M25 填充真实内容）
+[ ] Timeline UI（真实 API）
+[ ] Graph UI（真实 API + 上下游遍历交互）
 [ ] 测试 + 浏览器验证
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M24 — Workspace（DONE，2026-08-28）
+
+```text
+frontend/src/pages/WatchlistPage.tsx       关注列表（真实 API 增删 + 名称解析入列）
+frontend/src/pages/InstrumentWorkspacePage.tsx
+                                           标的 Workspace：Header（name/code/exchange/
+                                           board/industry）+ 最新行情 + 证据 + 预测
+frontend/src/pages/ReportsPage.tsx         报告列表 + 报告查看页（服务端已转义的 HTML）
+frontend/src/App.tsx                       BrowserRouter + 导航（§56 前三项；其余随
+                                           M25–M27 路由逐项点亮，不留死链）
+验证: frontend 8 tests + build PASS；浏览器实测：导航/关注列表增删/
+      名称解析（贵州茅台→SSE:600519）/Workspace 页数据全通
+```
 
 ## 已完成 Milestone
 
