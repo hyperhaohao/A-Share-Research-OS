@@ -29,15 +29,15 @@ Current Commit:
 
 ```text
 Phase 2 — Data / Evidence Foundation
-Milestone M18（Tasks / Scheduler）
+Milestone M19（Prediction / Validation）
 Status: DOING
 ```
 
-M0–M17（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
+M0–M18（均于 2026-08-28）已完成并通过各自 DoD（见 ROADMAP.md）。
 
 ---
 
-## 已完成（M0 – M17）
+## 已完成（M0 – M18）
 
 M0（2026-08-28）：
 

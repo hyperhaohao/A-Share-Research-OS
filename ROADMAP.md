@@ -44,8 +44,8 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 | M15 | Delta / Materiality | DONE | Monitor、Evidence delta、MaterialityJudge 三分支 |
 | M16 | Timeline | DONE | 统一事件时间线 |
 | M17 | Research Graph | DONE | 溯源图、upstream/downstream 遍历 |
-| M18 | Tasks / Scheduler | DOING | ResearchTask、scheduler、worker、retry、idempotency、recovery |
-| M19 | Prediction / Validation | PLANNED | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
+| M18 | Tasks / Scheduler | DONE | ResearchTask、scheduler、worker、retry、idempotency、recovery |
+| M19 | Prediction / Validation | DOING | 不可变 PredictionRecord、5D/20D/60D、ValidationRecord |
 | M20 | Regression / Experience | PLANNED | RegressionReview 归因、ResearchExperience 沉淀 |
 | M21 | Quant audit | PLANNED | 主工程 quant 能力客观审计，决定是否需要 Qlib |
 | M22 | Qlib（若需要） | PLANNED | 若需要：真实 A 股 Data→Factor→Model→Backtest→Metrics 闭环；否则 NOT_REQUIRED |
@@ -59,30 +59,46 @@ NOT_REQUIRED   经审计后证明不需要（仅 M22 允许）
 
 ---
 
-## 当前 DOING：M18 — Tasks / Scheduler
+## 当前 DOING：M19 — Prediction / Validation
 
-### 范围（任务书 §48/§49）
+### 范围（任务书 §50/§51）
 
-- ResearchTask（§48 字段全集）：task_id/instrument_id/task_type/schedule/
-  research_level/filters/enabled/last_run_at/next_run_at/status
-- task_type：monitor / periodic_full_research / event_trigger / prediction_validation
-- Scheduler 只负责「何时执行」；业务逻辑是可独立测试的函数（run_monitor/
-  run_full_research/validate_prediction）
-- retry / idempotency / restart recovery / concurrency control（§49）
-- SSE 进度推送预留（M23 正式 API）
+- PredictionRecord（§50 字段全集）：创建后不可修改（append-only）
+- horizon：5D/20D/60D（交易日）；benchmark（沪深300/中证500 或指定）
+- expected_direction/expected_return_range/expected_excess_return_range
+- ValidationRecord（§51）：instrument_return/benchmark_return/excess_return/
+  direction_correct/range_hit —— 由行情确定性计算（固定数值单测，§80）
+- 到期验证任务（task_type=prediction_validation 接入 M18 调度器）
+- API：POST /predictions + GET + POST /predictions/{id}/validate
 
-### M18 DoD
+### M19 DoD
 
 ```text
-[ ] ResearchTask 模型 + 持久化 + CRUD API
-[ ] Scheduler 循环（due → claim → run → retry/backoff）
-[ ] idempotency（同 task 同周期不重复执行）
-[ ] restart recovery（中断任务恢复）
-[ ] 并发控制（同 instrument 互斥）
+[ ] Prediction 不可变模型（禁改测试）
+[ ] Validation 数学（收益率/超额/方向/range hit 固定单测）
+[ ] 验证任务接入调度器
 [ ] Git checkpoint
 ```
 
 ---
+
+## 已完成 Milestone
+
+### M18 — Tasks / Scheduler（DONE，2026-08-28）
+
+```text
+backend/app/scheduler/tasks.py     ResearchTask（§48 字段全集）+ TaskRepository：
+                                   claim 原子认领（推进 next_run_at → 幂等）、
+                                   同 instrument 互斥（并发控制）、
+                                   retry 指数退避 + FAILED 终态、
+                                   recover_interrupted（租约超时重启恢复）
+backend/app/scheduler/scheduler.py tick 循环 + 业务函数注册表（scheduler 只管何时，
+                                   monitor/full_research 处理器独立可测）
+backend/app/api/tasks.py           POST/GET /tasks、PATCH enable、POST /scheduler/tick
+backend/alembic                    m18 迁移
+验证: backend pytest 205 passed
+      幂等（第二 tick 不重复）、失败退避、并发互斥、中断恢复、禁用停跑全测试
+```
 
 ## 已完成 Milestone
 
