@@ -11,6 +11,11 @@ docker compose up --build
 - backend:  http://localhost:8000（健康检查 `/api/v1/health`，容器 healthcheck）
 - 数据卷 `backend_data` 持久化 SQLite 文件；生产切 PostgreSQL 见下。
 
+> 注意（Windows）：Docker Desktop 的 WSL 引擎首次启动可能需要数分钟并伴随
+> 连接抖动 —— `docker --context desktop-linux version` 连续多次返回 ok 后再执行
+> `docker compose build`。镜像构建与全栈启动验证记录见 backup-restore.md 同级的
+> known-limitations.md 与 final-review.md。
+
 ## 后端配置（backend/app/config.py）
 
 | 变量 | 默认 | 说明 |
@@ -36,5 +41,5 @@ cd backend && ASRO_DATABASE_URL=... uv run alembic upgrade head
 
 ## PDF 导出说明
 
-Markdown 与 HTML 报告已可用；PDF 由 HTML 经无头 Chromium 打印生成（部署镜像
-需加 chromium 或接外部打印服务），默认浅色主题（任务书 §17）。
+Markdown 与 HTML 报告已可用（`GET /api/v1/reports/{id}/pdf`）；PDF 由 reportlab
+以内置 Adobe CJK 字体（STSong-Light）生成，浅色主题，内容与 HTML 一致。

@@ -190,8 +190,9 @@ ROADMAP.md / PLAN.md / STATUS.md
 
 ```text
 None（交付已完成）
-环境备注：Docker Desktop 守护进程本机启动缓慢，镜像级构建验证待其就绪
-（compose 配置已校验；属运行环境项，非代码缺陷）。
+环境备注：Docker Desktop 未运行（WSL docker-desktop 发行版 Stopped）——
+镜像级构建验证需用户启动 Docker Desktop GUI 后执行 docker compose build；
+compose 配置已校验；属运行环境项，非代码缺陷。
 ```
 
 ---
