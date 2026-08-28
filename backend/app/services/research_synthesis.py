@@ -184,8 +184,11 @@ class ValuationInputBuilder:
             by_type.get("financial_report") or [],
             key=lambda e: e.available_time, reverse=True,
         )
+        # only real quote records (price present) — kline bars are also
+        # market_quote-typed but carry no spot price
         quotes = sorted(
-            by_type.get("market_quote") or [],
+            [e for e in (by_type.get("market_quote") or [])
+             if (e.metadata or {}).get("price") is not None],
             key=lambda e: e.available_time, reverse=True,
         )
         if not financials or not quotes:

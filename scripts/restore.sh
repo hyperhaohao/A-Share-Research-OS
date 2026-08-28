@@ -13,6 +13,10 @@ if ! command -v sqlite3 >/dev/null 2>&1; then
   head -c 16 "$BACKUP" | grep -q "SQLite format 3" || { echo "not a SQLite file" >&2; exit 1; }
 fi
 
+# WAL mode: stale -wal/-shm files would replay the post-backup state over
+# the restored database (found during the R5.3 drill). Remove them after
+# copying; the backup was checkpointed so it is self-contained.
+rm -f "$DB-wal" "$DB-shm"
 cp "$BACKUP" "$DB"
 
 if command -v sqlite3 >/dev/null 2>&1; then

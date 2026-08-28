@@ -13,13 +13,13 @@ services:
 
   scheduler:
     build: ./backend
-    command: python -m scheduler_worker
+    command: uv run python -m scheduler_worker
     env_file: .env
     environment:
-      - ASRO_DATABASE_URL=sqlite:////data/asro.db
+      - ASRO_DATABASE_URL=sqlite:////app/data/asro.db
       - ASRO_SCHEDULER_INTERVAL=60
     volumes:
-      - backend_data:/data
+      - backend_data:/app/data
     depends_on:
       backend:
         condition: service_healthy

@@ -7,6 +7,7 @@ COPY pyproject.toml uv.lock ./
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app
+COPY scheduler_worker.py ./scheduler_worker.py
 
 RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev --no-install-project
 
