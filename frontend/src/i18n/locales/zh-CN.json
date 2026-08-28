@@ -73,7 +73,11 @@
       "timeline": "时间线",
       "graph": "研究图谱",
       "evidence": "证据",
-      "predictions": "预测"
+      "predictions": "预测",
+      "thesis": "论点",
+      "financials": "财务",
+      "valuation": "估值",
+      "reports": "报告"
     },
     "market": "最新行情",
     "evidence": "证据",
@@ -83,7 +87,31 @@
       "up": "看涨",
       "down": "看跌",
       "neutral": "中性"
-    }
+    },
+    "noData": "暂无数据",
+    "confidence": "置信度",
+    "supportingClaims": "支撑主张",
+    "opposingClaims": "对立主张",
+    "catalysts": "催化剂",
+    "risks": "风险",
+    "triggers": "触发条件",
+    "invalidate": "失效条件",
+    "latestPeriod": "最新报告期 {{period}}",
+    "revenue": "营业收入",
+    "netProfit": "归母净利润",
+    "grossMargin": "毛利率",
+    "revenueYoY": "营收同比",
+    "trend": "趋势",
+    "roeTrend": "ROE 趋势",
+    "revenueTrend": "营收趋势",
+    "impliedPrice": "隐含价格",
+    "upside": "空间",
+    "notComputable": "暂不可计算（输入缺失）",
+    "filter": "按类型过滤",
+    "filterAll": "全部类型",
+    "upstream": "向上追溯",
+    "downstream": "向下追溯",
+    "close": "关闭"
   },
   "report": {
     "title": "研究报告",
@@ -168,5 +196,14 @@
     "avgExcess": "平均超额收益",
     "rangeHit": "区间命中率",
     "pending": "待验证"
+  },
+  "copilot": {
+    "title": "研究 Copilot",
+    "noReport": "暂无报告 —— 先运行研究管线",
+    "placeholder": "问任何关于本研究的问题…",
+    "llmNarrative": "LLM 叙述（引用受上下文约束）",
+    "deterministic": "确定性回答（冻结态）",
+    "claims": "相关主张",
+    "citations": "引用数"
   }
 }

@@ -30,7 +30,7 @@ BLOCKED   真实外部阻塞
 | R1 | Real Research Data | DONE | 公告/财务/新闻/资金/行业/宏观 provider + 行情 fallback，3-5 只真实股票形成 Evidence |
 | R2 | Full Research Pipeline | DONE | Analyst 集 → ClaimCompiler → ThesisBuilder → Debate → Scenario → Valuation(证据输入) → Risk → Report 全链无手工补链 |
 | R3 | AI / Quant / Continuous | DONE | LLMProvider（OpenAI-compatible）接入主链 + Copilot + Quant 实接 + 后台 scheduler 服务 + Monitor/Delta/Full |
-| R4 | Research Workspace | TODO | Stock Workspace 九 Tab + Copilot + React Flow 图 + Interactive Report 补全（真实 API） |
+| R4 | Research Workspace | DONE | Stock Workspace 九 Tab + Copilot + React Flow 图 + Interactive Report 补全（真实 API） |
 | R5 | Production Research E2E | TODO | 4-6 只不同风格真实 A 股 Live Research E2E 全链 + 长时运行测试 + 生产复验 |
 
 ---
@@ -147,17 +147,17 @@ BLOCKED   真实外部阻塞
 
 ---
 
-## R4 — Research Workspace（TODO）
+## R4 — Research Workspace（DONE，2026-08-28）
 
 | # | 任务 | 状态 |
 |---|------|------|
-| R4.1 | Stock Workspace 九 Tab 补齐（Overview/Timeline/Graph/Thesis/Financials/Valuation/Evidence/Reports/Predictions） | TODO |
-| R4.2 | Research Copilot 侧栏 | TODO |
-| R4.3 | Thesis UI 全字段 | TODO |
-| R4.4 | Financial UI（报表+趋势图 ECharts） | TODO |
-| R4.5 | Valuation UI（方法/情景/假设/同业/分位/缺失） | TODO |
-| R4.6 | React Flow Research Graph（zoom/pan/filter/节点详情/主题/i18n） | TODO |
-| R4.7 | Interactive Report 补全（Counter Evidence/Revalue/Revision Diff/Accept/Reject/Version History） | TODO |
+| R4.1 | Stock Workspace 九 Tab 补齐（Overview/Timeline/Graph/Thesis/Financials/Valuation/Evidence/Reports/Predictions，双栏布局+Copilot 侧栏） | DONE |
+| R4.2 | Research Copilot 侧栏（最新报告 ask + copilot=true；LLM 未配置走确定性 baseline；引用/主张展示） | DONE |
+| R4.3 | Thesis UI 全字段（status/confidence/supporting+opposing/catalysts/risks/triggers/invalidate/时间） | DONE |
+| R4.4 | Financial UI（最近期指标卡 + 多期 ROE/营收 SVG 趋势图，真实财务证据数据） | DONE |
+| R4.5 | Valuation UI（方法/隐含价格/空间/输入缺失显式/场景绑定） | DONE |
+| R4.6 | React Flow Research Graph（@xyflow/react：zoom/pan/minimap/kind 过滤/节点详情/upstream+downstream 追溯/tokens 主题） | DONE |
+| R4.7 | Interactive Report 补全：RevisionPanel（版本历史/propose diff/accept/reject） | DONE |
 
 ---
 

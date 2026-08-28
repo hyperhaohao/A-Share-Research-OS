@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GraphTab, TimelineTab } from "../components/ResearchVisuals";
+import { TimelineTab } from "../components/ResearchVisuals";
+import { FinancialsTab, ThesisTab, ValuationTab, WorkspaceReportsTab } from "../components/WorkspaceTabs";
+import { CopilotSidebar } from "../components/CopilotSidebar";
+import { FlowGraphTab } from "../components/FlowGraph";
 
 interface InstrumentProfile {
   instrument_id: string;
@@ -54,7 +57,17 @@ async function fetchPredictions(id: string): Promise<PredictionItem[]> {
   return body.results;
 }
 
-const TABS = ["overview", "timeline", "graph", "evidence", "predictions"] as const;
+const TABS = [
+  "overview",
+  "timeline",
+  "graph",
+  "thesis",
+  "financials",
+  "valuation",
+  "evidence",
+  "reports",
+  "predictions",
+] as const;
 type WorkspaceTab = (typeof TABS)[number];
 
 /** Stock Workspace (任务书 §58): header + Overview/Timeline/Graph/Evidence/Predictions. */
@@ -101,6 +114,8 @@ export function InstrumentWorkspacePage() {
         <span className="secondary">{inst?.industry ?? t("label.missing")}</span>
       </header>
 
+      <div className="workspace-body">
+      <div className="workspace-main">
       <div className="workspace-tabs" role="tablist" aria-label={t("workspace.tabs")}>
         {TABS.map((key) => (
           <button
@@ -137,7 +152,11 @@ export function InstrumentWorkspacePage() {
       )}
 
       {tab === "timeline" && <TimelineTab instrumentId={instrumentId} />}
-      {tab === "graph" && <GraphTab instrumentId={instrumentId} />}
+      {tab === "graph" && <FlowGraphTab instrumentId={instrumentId} />}
+      {tab === "thesis" && <ThesisTab instrumentId={instrumentId} />}
+      {tab === "financials" && <FinancialsTab instrumentId={instrumentId} />}
+      {tab === "valuation" && <ValuationTab instrumentId={instrumentId} />}
+      {tab === "reports" && <WorkspaceReportsTab instrumentId={instrumentId} />}
 
       {tab === "evidence" && (
         <section className="card">
@@ -176,6 +195,10 @@ export function InstrumentWorkspacePage() {
           </ul>
         </section>
       )}
+      </div>{/* /workspace-main */}
+
+      <CopilotSidebar instrumentId={instrumentId} />
+      </div>{/* /workspace-body */}
 
       <p>
         <Link to="/" className="secondary">

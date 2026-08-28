@@ -73,7 +73,11 @@
       "timeline": "Timeline",
       "graph": "Research Graph",
       "evidence": "Evidence",
-      "predictions": "Predictions"
+      "predictions": "Predictions",
+      "thesis": "Thesis",
+      "financials": "Financials",
+      "valuation": "Valuation",
+      "reports": "Reports"
     },
     "market": "Latest quote",
     "evidence": "Evidence",
@@ -83,7 +87,31 @@
       "up": "Up",
       "down": "Down",
       "neutral": "Neutral"
-    }
+    },
+    "noData": "No data available",
+    "confidence": "Confidence",
+    "supportingClaims": "Supporting claims",
+    "opposingClaims": "Opposing claims",
+    "catalysts": "Catalysts",
+    "risks": "Risks",
+    "triggers": "Trigger conditions",
+    "invalidate": "Invalidate conditions",
+    "latestPeriod": "Latest period {{period}}",
+    "revenue": "Revenue",
+    "netProfit": "Net profit",
+    "grossMargin": "Gross margin",
+    "revenueYoY": "Revenue YoY",
+    "trend": "Trend",
+    "roeTrend": "ROE trend",
+    "revenueTrend": "Revenue trend",
+    "impliedPrice": "Implied price",
+    "upside": "Upside",
+    "notComputable": "Not computable (missing inputs)",
+    "filter": "Filter by kind",
+    "filterAll": "All kinds",
+    "upstream": "Upstream",
+    "downstream": "Downstream",
+    "close": "Close"
   },
   "report": {
     "title": "Research Report",
@@ -168,5 +196,14 @@
     "avgExcess": "Average excess return",
     "rangeHit": "Range hit rate",
     "pending": "Pending"
+  },
+  "copilot": {
+    "title": "Research Copilot",
+    "noReport": "No report yet — run the research pipeline first",
+    "placeholder": "Ask anything about this research…",
+    "llmNarrative": "LLM narrative (citations constrained to context)",
+    "deterministic": "Deterministic answer (frozen state)",
+    "claims": "Related claims",
+    "citations": "Citations"
   }
 }

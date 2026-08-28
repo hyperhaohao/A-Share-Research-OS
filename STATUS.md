@@ -10,14 +10,14 @@
 ## Current Phase
 
 ```text
-Remediation — R4 Research Workspace
+Remediation — R5 Production Research E2E
 ```
 
 ## Current Milestone
 
 ```text
-R4.1–R4.7：Stock Workspace 九 Tab 补齐 → Copilot 侧栏 → Thesis/Financial/
-Valuation UI → React Flow Graph → Interactive Report 补全
+R5.1–R5.4：多标的 Live Research E2E → 长时运行测试 → 生产复验 →
+Final Reviewer Pass
 ```
 
 ## Completed

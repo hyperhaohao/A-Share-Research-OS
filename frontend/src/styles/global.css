@@ -304,3 +304,43 @@
     padding: 16px;
   }
 }
+
+/* R4: two-column workspace (main + copilot) */
+.workspace-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.workspace-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.copilot {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 12px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1080px) {
+  .workspace-body {
+    flex-direction: column;
+  }
+  .copilot {
+    width: 100%;
+    position: static;
+  }
+}
+
+/* react-flow theme integration */
+.react-flow__node {
+  font-family: inherit;
+}
+
+.status-ok {
+  color: var(--color-info);
+}

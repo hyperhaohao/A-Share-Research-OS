@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { RevisionPanel } from "../components/RevisionPanel";
 
 interface ReportData {
   report_id: string;
@@ -258,6 +259,7 @@ export function InteractiveReportPage() {
       <p>
         <Link to="/reports" className="secondary">← {t("nav.reports")}</Link>
       </p>
-    </main>
+          <RevisionPanel reportId={reportId} />
+</main>
   );
 }
