@@ -10,7 +10,21 @@
 
 ---
 
-## 整改阶段（REMEDIATION，当前执行线）
+## 产品闭环二次整改（PW，当前执行线）
+
+> 依据 `docs/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md`。
+> 核心回归标的：000831 中国稀土（禁止为其写特殊业务逻辑）。
+
+| 阶段 | 内容 | 状态 |
+|------|------|------|
+| PW0 | Instrument Identity & Localization（持久化 Registry / 统一 Service / 本地化 / 单 Select） | DOING |
+| PW1 | Research Live Experience（SSE 实时 / 逐项进度 / 中文化 / CTA） | PLANNED |
+| PW2 | Watchlist / Task / Report / Prediction Closure | PLANNED |
+| PW3 | Command Center & Product E2E（Playwright / 000831 全链） | PLANNED |
+
+---
+
+## 整改阶段（REMEDIATION，历史执行线）
 
 > 整改依据 `A-Share-Research-OS-整改实施任务书.md`；状态详情见 `REMEDIATION.md`。
 > 整改 R0–R5 已全部完成。下方 M0–M29 为首轮交付历史记录。
