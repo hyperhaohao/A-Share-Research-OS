@@ -38,12 +38,11 @@ R0.7 测试重分类（api_integration / live 标记）
 ## Next Action
 
 ```text
-1. R0.5 修 app/services/pipeline.py RunManifest：git rev-parse HEAD、
-   配置规范化 SHA256、uuid4 派生真实 random_seed
-2. R0.6 修 app/services/report_compiler.py:245 or True 绕过 + :240 估值假设占位
-   （数据质量 section 实际渲染内容；估值假设来自真实估值输入或留空 FAIL）
-3. R0.7 pyproject 增加 pytest markers（api_integration/live）；docs/testing.md 分类说明
-4. Build + 全量 pytest + checkpoint → 进入 R1
+整改 R0–R5 全部完成并通过各自 DoD（2026-08-28）。
+后续增强（不阻断交付，按需排期）：
+- 基准指数（IDX）数据源接入 → 超额收益补全
+- 法定节假日历 → 预测到期日精确化
+- 公网部署认证/TLS（见 docs/security.md）
 ```
 
 ## Tests

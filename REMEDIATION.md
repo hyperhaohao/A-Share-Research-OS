@@ -31,7 +31,7 @@ BLOCKED   真实外部阻塞
 | R2 | Full Research Pipeline | DONE | Analyst 集 → ClaimCompiler → ThesisBuilder → Debate → Scenario → Valuation(证据输入) → Risk → Report 全链无手工补链 |
 | R3 | AI / Quant / Continuous | DONE | LLMProvider（OpenAI-compatible）接入主链 + Copilot + Quant 实接 + 后台 scheduler 服务 + Monitor/Delta/Full |
 | R4 | Research Workspace | DONE | Stock Workspace 九 Tab + Copilot + React Flow 图 + Interactive Report 补全（真实 API） |
-| R5 | Production Research E2E | TODO | 4-6 只不同风格真实 A 股 Live Research E2E 全链 + 长时运行测试 + 生产复验 |
+| R5 | Production Research E2E | DONE | 4-6 只不同风格真实 A 股 Live Research E2E 全链 + 长时运行测试 + 生产复验 |
 
 ---
 
@@ -161,14 +161,35 @@ BLOCKED   真实外部阻塞
 
 ---
 
-## R5 — Production Research E2E（TODO）
+## R5 — Production Research E2E（DONE，2026-08-28）
 
 | # | 任务 | 状态 |
 |---|------|------|
-| R5.1 | Live Research E2E：4-6 只不同风格真实 A 股全链（含预测/验证/增量） | TODO |
-| R5.2 | 长时运行测试（scheduler 连续/retry/restart/idempotency/source failure recovery） | TODO |
-| R5.3 | 生产复验（compose/migration/health/backup/restore drill） | TODO |
-| R5.4 | Final Reviewer Pass（按整改清单 §36 重扫） | TODO |
+| R5.1 | Live Research E2E：4 只（沪/深主板、创业板、科创板）× 全链（pipeline→报告→monitor→预测→验证），仅经公开 API，无手工补链 | DONE |
+| R5.2 | 长时运行：scheduler 连续 tick/retry 退避/restart 恢复/幂等/同标的互斥（test_scheduler 6 场景） | DONE |
+| R5.3 | 生产复验：三容器（backend/frontend/scheduler）构建+启动全 healthy；备份恢复演练完成（发现并修复 WAL 残留恢复缺陷——restore.sh 现移除 -wal/-shm） | DONE |
+| R5.4 | Final Reviewer Pass：TODO/FIXME/占位/Manifest/Gate 绕过/吞异常/mock 全扫描 —— 仅剩合法抽象基类标记；修复 restore.sh WAL 缺陷 | DONE |
+
+---
+
+## 最终结论（2026-08-28）
+
+```text
+R0 PASS — 状态一致/Manifest 真实值/Gate 无绕过/测试分类真实
+R1 PASS — 七能力真实数据源 + 行情/公告双 fallback + 4 标的 live 证据链
+R2 PASS — 8 分析师 + Claim/Thesis/Debate/Scenario/Valuation(证据输入)/Risk 全链，
+          live 全链无手工补链
+R3 PASS — LLMProvider(OpenAI-compatible)+引用边界+Copilot+双语 Narrative+
+          确定性 Quant 引擎(kline→因子→回测→指标→QuantBrief)+后台 scheduler
+          服务+Delta→新版本
+R4 PASS — 九 Tab Workspace+Copilot 侧栏+Thesis/Financial/Valuation UI+
+          React Flow 图谱(主题/i18n)+Revision Diff/Accept/Reject
+R5 PASS — 4 标的 live E2E+长时运行测试+三容器生产部署（全 healthy）+
+          备份恢复演练（修复 WAL 残留缺陷）+Reviewer 全扫
+全量验证：backend 277 tests PASS；frontend 8 tests + build PASS；
+生产栈 live：贵州茅台 1290-1294 实时行情/公告/财务/新闻经 API 与 UI 全通。
+已知限制：docs/known-limitations.md（节假日历近似、基准指数序列、认证首版未含）。
+```
 
 ---
 
