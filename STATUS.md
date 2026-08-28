@@ -9,8 +9,9 @@
 ## Current Phase
 
 ```text
-Product Workflow Rebuild — 二次整改 PW0（Instrument Identity & Localization）
+PW3（Command Center & Product E2E）收尾 → V2 总纲 Phase A（Artifact 地基）
 依据: docs/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md
+     + docs/A-Share-Research-OS-最终产品与架构修改方案.md（新总纲）
 ```
 
 ## Completed
@@ -20,59 +21,63 @@ Product Workflow Rebuild — 二次整改 PW0（Instrument Identity & Localizati
 首轮整改 R0–R5（历史，REMEDIATION.md）
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
-四轮产品整改（首页去 demo/动态标的解析/Pipeline 中英阶段名/CTA，git 13f7346）
+四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+五轮 PW0–PW2（DONE，本次）：
+  - 持久化 Instrument Registry + 统一 InstrumentService（远程解析/离线降级/重启持久）
+  - Presentation Layer（交易所/板块/能力/分析师/任务/门禁/预测 全量本地化）
+  - 外观/语言单 Select；研究管线 SSE 真实时（采集 8 能力/分析 8 分析师逐项）
+  - Watchlist/Task/Report/Prediction 业务卡片化 + 生成预测/删除任务/立即运行
+  - 修复 14 个测试文件的 as_of 定时炸弹（动态 PIT 时间戳）
 ```
 
 ## In Progress
 
 ```text
-PW0 — Instrument Identity & Localization
+PW3 — Playwright 产品 E2E（E2E-01…06，配置与用例已写，chromium 下载中）
 ```
 
 ## Next Action
 
 ```text
-PW0: 持久化 Instrument Registry（DB 表 + migration）+ 统一 InstrumentService，
-     所有入口（Search/Watchlist/Task/Pipeline/Workspace/Report/Prediction）走同一服务；
-     之后依次：本地化 Presentation Layer、外观/语言单 Select、
-     PW1 SSE 实时、PW2 四页闭环、PW3 Command Center + Playwright。
+1. chromium 就绪后跑 npx playwright test，修至全绿；
+2. 然后进入 V2 总纲 Phase A：先写 ARCHITECTURE-V2/DOMAIN-MAP/
+   ARTIFACT-PROTOCOL/HANDOFF-PROTOCOL 四份映射文档（§84），
+   再实现 ArtifactRecord/ProvenanceEdge/ResearchContext/HandoffEnvelope/
+   RunEvent 持久化（§85 第一批），并把 ReportVersion/Prediction/ResearchRun
+   注册为 Artifact 验证跨模块。
 ```
 
 ## Tests
 
 ```text
-backend: 285 passed（PW0 前基线）
-frontend: 8 passed + build PASS
+backend: 301 passed（含 PW0 registry/tasks/prediction-builder/reports 新测试）
+frontend: 7 passed + build PASS
+e2e: Playwright 用例就绪（product.spec.ts E2E-01…06），待 chromium 完成后执行
 ```
 
-## Live Verification
+## Live Verification（本轮实测）
 
 ```text
-R1: 4 只真实 A 股 × 4 能力 → Evidence + Manifest
-R2: 真实贵州茅台全链（无手工补链）
-R5: 4 标的 live E2E + 3 分支 continuous + scheduler
-13f7346: 搜索 000831 → 动态解析 中国稀土 → Workspace 打开
+000831 搜索 → 中国稀土 · 深交所 · 主板（无裸枚举）PASS
+中文名「中国稀土」远程解析 PASS
+Watchlist 000831 直接添加 → Workspace PASS
+docker restart 后 registry/watchlist 持久 PASS
+SSE 实时：数据采集 8/8 逐能力 + 分析 8/8 逐分析师 PASS
+报告库业务卡片 + 报告页生成预测（真实 000831 研究状态推导）PASS
+预测页业务卡片（无 SZSE、无 600519 hardcode）PASS
+研究总控台四区（最近研究/任务/预测/报告）PASS
 ```
 
 ## Open Issues
 
 ```text
-（产品闭环二審确认）
-1. Instrument Registry 仅进程内存 → 重启丢失动态标的（PW0 修）
-2. Pipeline SSE 未逐事件实时渲染 + 按事件名去重丢信息（PW1 修）
-3. Watchlist/Tasks/Reports/Predictions 仍为技术列表（PW2 修）
-4. Prediction 无生产入口 + SSE:600519 hardcode（PW2 修）
-5. 首页非研究总控台（PW3 修）
-6. 无浏览器级 E2E（PW3 修）
-（遗留）
-7. 基准指数（IDX）行情数据未接入 → 预测超额收益显式 null
-8. 法定节假日历未接入 → 预测到期日 ±1-3 天
-9. 公网部署需认证/TLS（当前单用户/内网定位）
-10. SQLite 仅适合当前单机规模；生产多用户需 PostgreSQL
-11. Macro 官方原始源（gov.cn 等）未接入；当前为媒体转载 + 机构标注
-12. Quant docs 描述为 upstream 审计能力，正式 runtime 为 baseline 引擎
-13. Cost accounting 当前为 hardcoded 统计，待 RunCostLedger 真实化
-14. Scheduler claim 为 check-then-update，PostgreSQL 前需原子化
+1. 资金流/历史行情对部分标的仍失败（源层真实失败，UI ⚠ 显形 —— 符合红线8）
+2. 预测区间由估值隐含价导出，000831 当前呈深度负区间（诚实推导，方向与区间
+   可能异号 —— 来自论点与估值口径差异，待 Phase C 经验卡/策略线处理）
+3. 基准指数（IDX）行情未接入 → 超额收益显式 null
+4. 法定节假日历未接入 → 预测到期日 ±1-3 天
+5. 公网部署需认证/TLS；SQLite 单机规模；生产多用户需 PostgreSQL
+6. Macro 官方原始源未接入；Cost Ledger 待真实化；scheduler claim 待原子化
 ```
 
 ## Branch / Commit

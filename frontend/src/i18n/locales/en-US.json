@@ -265,7 +265,8 @@
     "directionOk": "direction correct",
     "directionMiss": "direction missed",
     "emptyHint": "No predictions yet — create one from a report via \"Create prediction\".",
-    "viewBasis": "View research basis"
+    "viewBasis": "View research basis",
+    "dueBy": "due {{date}}"
   },
   "copilot": {
     "title": "Research Copilot",
@@ -275,5 +276,26 @@
     "deterministic": "Deterministic answer (frozen state)",
     "claims": "Related claims",
     "citations": "Citations"
+  },
+  "commandCenter": {
+    "title": "Research Command Center",
+    "recentResearch": "Recent research",
+    "noResearchYet": "No research yet — search an instrument and run it.",
+    "activeTasks": "Active tasks",
+    "noActiveTasks": "No tasks running right now ({{total}} tasks total).",
+    "goTasks": "Manage continuous research",
+    "pendingPredictions": "Pending predictions",
+    "noPredictions": "No pending predictions.",
+    "goPredictions": "View all predictions",
+    "recentReports": "Recent reports",
+    "noReports": "No reports yet.",
+    "goReports": "Open report library",
+    "viewTask": "View task",
+    "runStatus": {
+      "succeeded": "Completed",
+      "running": "Running",
+      "failed": "Failed",
+      "pending": "Queued"
+    }
   }
 }

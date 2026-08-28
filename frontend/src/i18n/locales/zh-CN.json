@@ -265,7 +265,8 @@
     "directionOk": "方向正确",
     "directionMiss": "方向错误",
     "emptyHint": "还没有预测 —— 在报告页点「生成预测」即可创建。",
-    "viewBasis": "查看研究依据"
+    "viewBasis": "查看研究依据",
+    "dueBy": "到期 {{date}}"
   },
   "copilot": {
     "title": "研究 Copilot",
@@ -275,5 +276,26 @@
     "deterministic": "确定性回答（冻结态）",
     "claims": "相关主张",
     "citations": "引用数"
+  },
+  "commandCenter": {
+    "title": "研究总控台",
+    "recentResearch": "最近研究",
+    "noResearchYet": "还没有研究 —— 搜索标的并立即研究。",
+    "activeTasks": "正在运行的任务",
+    "noActiveTasks": "当前没有运行中的任务（共 {{total}} 个任务）。",
+    "goTasks": "管理持续研究",
+    "pendingPredictions": "待验证预测",
+    "noPredictions": "暂无待验证预测。",
+    "goPredictions": "查看全部预测",
+    "recentReports": "最近报告",
+    "noReports": "还没有报告。",
+    "goReports": "打开报告库",
+    "viewTask": "查看任务",
+    "runStatus": {
+      "succeeded": "已完成",
+      "running": "运行中",
+      "failed": "失败",
+      "pending": "排队中"
+    }
   }
 }

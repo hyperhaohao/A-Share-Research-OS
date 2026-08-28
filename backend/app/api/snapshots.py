@@ -113,3 +113,47 @@ def create_research_run(
         },
         "snapshot": _snapshot_payload(snapshot),
     }
+
+
+@router.get("/research-runs")
+def list_research_runs(
+    limit: int = Query(default=10, ge=1, le=100),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Recent research runs, newest first (Command Center 最近研究)."""
+    from datetime import timezone
+
+    from sqlalchemy import select
+
+    from app.storage.orm import ResearchRunORM
+
+    def _iso_utc(value: datetime | None) -> str | None:
+        # SQLite returns naive UTC datetimes; tag them so clients render
+        # wall-clock correctly (missing-offset times read as local time).
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat()
+
+    rows = session.scalars(
+        select(ResearchRunORM)
+        .order_by(ResearchRunORM.started_at.desc())
+        .limit(limit)
+    ).all()
+    return {
+        "count": len(rows),
+        "results": [
+            {
+                "run_id": r.run_id,
+                "instrument_id": r.instrument_id,
+                "as_of": _iso_utc(r.as_of),
+                "run_type": r.run_type,
+                "status": r.status,
+                "snapshot_id": r.snapshot_id,
+                "started_at": _iso_utc(r.started_at),
+                "finished_at": _iso_utc(r.finished_at),
+            }
+            for r in rows
+        ],
+    }

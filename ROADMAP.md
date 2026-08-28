@@ -17,10 +17,31 @@
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| PW0 | Instrument Identity & Localization（持久化 Registry / 统一 Service / 本地化 / 单 Select） | DOING |
-| PW1 | Research Live Experience（SSE 实时 / 逐项进度 / 中文化 / CTA） | PLANNED |
-| PW2 | Watchlist / Task / Report / Prediction Closure | PLANNED |
-| PW3 | Command Center & Product E2E（Playwright / 000831 全链） | PLANNED |
+| PW0 | Instrument Identity & Localization（持久化 Registry / 统一 Service / 本地化 / 单 Select） | DONE |
+| PW1 | Research Live Experience（SSE 实时 / 逐项进度 / 中文化 / CTA） | DONE |
+| PW2 | Watchlist / Task / Report / Prediction Closure | DONE |
+| PW3 | Command Center & Product E2E（Playwright / 000831 全链） | DOING |
+
+---
+
+## V2 总纲执行线（Phase A–J，当前长期线）
+
+> 依据 `docs/A-Share-Research-OS-最终产品与架构修改方案.md`。
+> 以 Artifact/Provenance 为物料总线、AI 研究中枢为统一入口，
+> 按「研报→经验→验证→选股→策略→盯盘→决策→复盘→回灌」纵向闭环推进。
+
+| Phase | 内容 | 状态 |
+|-------|------|------|
+| A | 统一研究基础协议（Artifact/Provenance/Context/Handoff/RunEvent 持久化；Registry+本地化已由 PW0 计入） | PLANNED |
+| B | AI 研究中枢 + 报告 Handoff | PLANNED |
+| C | 研究经验卡（原炼验用） | PLANNED |
+| D | 研究验证工作流（强类型 DAG） | PLANNED |
+| E | 智能选股（Why Selected） | PLANNED |
+| F | 策略实验室 | PLANNED |
+| G | 策略盯盘（Observation/Signal/Decision 分离） | PLANNED |
+| H | 产业研究地图 + 全球宏观视图 | PLANNED |
+| I | 全库研究图谱 | PLANNED |
+| J | 完整复盘回灌 | PLANNED |
 
 ---
 

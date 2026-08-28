@@ -481,3 +481,16 @@
 .pct-down {
   color: var(--color-negative);
 }
+
+/* --- PW3: command center grid ------------------------------------------------ */
+
+.command-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.command-cell h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
