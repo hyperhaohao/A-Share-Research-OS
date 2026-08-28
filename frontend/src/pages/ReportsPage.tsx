@@ -1,13 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { PredictionCreateButton } from "../components/PredictionCreateButton";
+import { formatGate, uiLang } from "../presentation/enumLabels";
+import { formatWhen } from "../presentation/format";
 
 interface ReportSummary {
   report_id: string;
   instrument_id: string;
+  snapshot_id: string;
   language: string;
   gate_status: string;
-  created_at: string;
+  created_at: string | null;
+  latest_version_no: number;
+}
+
+interface ThesisSummary {
+  thesis_id: string;
+  supporting_claims: string[];
+  opposing_claims: string[];
 }
 
 async function fetchReports(): Promise<ReportSummary[]> {
@@ -17,10 +28,82 @@ async function fetchReports(): Promise<ReportSummary[]> {
   return body.results;
 }
 
-/** Reports list — real published/compiled reports from the backend. */
+/** 研究判断 derived from the snapshot's own thesis claim counts. */
+function useJudgment(instrumentId: string | null, snapshotId: string | null) {
+  const { data } = useQuery({
+    queryKey: ["judgment", instrumentId, snapshotId],
+    enabled: instrumentId != null && snapshotId != null,
+    staleTime: 60000,
+    queryFn: async (): Promise<ThesisSummary | null> => {
+      const params = new URLSearchParams({ instrument_id: instrumentId ?? "" });
+      if (snapshotId) params.set("snapshot_id", snapshotId);
+      const resp = await fetch(`/api/v1/theses?${params.toString()}`);
+      if (!resp.ok) return null;
+      const body = await resp.json();
+      return (body.results?.[0] as ThesisSummary) ?? null;
+    },
+  });
+  if (!data) return null;
+  const s = data.supporting_claims?.length ?? 0;
+  const o = data.opposing_claims?.length ?? 0;
+  if (s === 0 && o === 0) return null;
+  return s > o ? "up" : o > s ? "down" : "neutral";
+}
+
+function ReportCard({ report }: { report: ReportSummary }) {
+  const { t, i18n } = useTranslation();
+  const lang = uiLang(i18n.language);
+  const judgment = useJudgment(report.instrument_id, report.snapshot_id);
+
+  const profileQuery = useQuery({
+    queryKey: ["instrument", report.instrument_id],
+    queryFn: async () => {
+      const resp = await fetch(
+        `/api/v1/instruments/${encodeURIComponent(report.instrument_id)}`,
+      );
+      if (!resp.ok) return null;
+      const body = await resp.json();
+      return body.instrument as { code: string; name: string };
+    },
+    staleTime: 60000,
+  });
+  const profile = profileQuery.data;
+
+  return (
+    <li className="card watch-card" data-testid="report-card">
+      <div className="watch-card-head">
+        <Link to={`/reports/${report.report_id}`} className="watch-card-name">
+          {profile?.name ?? report.instrument_id}
+          {profile ? ` · ${profile.code}` : ""}
+        </Link>
+        <span className="secondary">{t("report.fullTitle")}</span>
+      </div>
+
+      <div className="task-grid">
+        <span>{t("report.dateLabel")}</span>
+        <span>{formatWhen(report.created_at, lang)}</span>
+        <span>{t("report.judgmentLabel")}</span>
+        <span>{judgment ? t(`workspace.direction.${judgment}`) : "—"}</span>
+        <span>{t("report.versionLabel")}</span>
+        <span className="mono">v{report.latest_version_no}</span>
+        <span>{t("report.qualityLabel")}</span>
+        <span>{formatGate(report.gate_status, lang)}</span>
+      </div>
+
+      <div className="header-controls">
+        <Link className="control-btn" to={`/reports/${report.report_id}`}>
+          {t("report.open")}
+        </Link>
+        <PredictionCreateButton reportId={report.report_id} />
+      </div>
+    </li>
+  );
+}
+
+/** Reports list — business cards over the real report library (PW2 §18). */
 export function ReportsPage() {
   const { t } = useTranslation();
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ["reports"],
     queryFn: fetchReports,
   });
@@ -29,66 +112,15 @@ export function ReportsPage() {
     <main className="page" data-testid="reports-page">
       <h1>{t("nav.reports")}</h1>
       {isPending && <p className="secondary">{t("common.loading")}</p>}
+      {isError && <p className="status-error">{t("common.error")}</p>}
       {data && data.length === 0 && <p className="secondary">{t("label.no_data")}</p>}
       {data && data.length > 0 && (
-        <ul className="watch-list">
+        <ul className="watch-list watch-cards">
           {data.map((r) => (
-            <li key={r.report_id} className="result-row">
-              <Link to={`/reports/${r.report_id}`} className="mono">
-                {r.report_id}
-              </Link>
-              <span>{r.instrument_id}</span>
-              <span className="mono secondary">{r.language}</span>
-              <span className="mono secondary">{r.gate_status}</span>
-            </li>
+            <ReportCard key={r.report_id} report={r} />
           ))}
         </ul>
       )}
-    </main>
-  );
-}
-
-export function ReportViewPage() {
-  const { reportId = "" } = useParams();
-  const { t } = useTranslation();
-  const { data, isPending, isError } = useQuery({
-    queryKey: ["report", reportId],
-    queryFn: async () => {
-      const resp = await fetch(`/api/v1/reports/${encodeURIComponent(reportId)}`);
-      if (!resp.ok) throw new Error("report.not_found");
-      const body = await resp.json();
-      return body.report as { html: string; instrument_id: string; language: string; gate_status: string };
-    },
-  });
-
-  if (isPending) {
-    return (
-      <main className="page">
-        <p className="secondary">{t("common.loading")}</p>
-      </main>
-    );
-  }
-  if (isError) {
-    return (
-      <main className="page">
-        <p className="status-error">{t("common.error")}</p>
-      </main>
-    );
-  }
-  return (
-    <main className="page" data-testid="report-view">
-      <h1>
-        {t("report.title")}: {data.instrument_id}
-      </h1>
-      <p className="mono secondary">
-        {data.language} · {t("report.gate")}: {data.gate_status}
-      </p>
-      <div className="card report-html" dangerouslySetInnerHTML={{ __html: data.html }} />
-      <p>
-        <Link to="/reports" className="secondary">
-          ← {t("nav.reports")}
-        </Link>
-      </p>
     </main>
   );
 }

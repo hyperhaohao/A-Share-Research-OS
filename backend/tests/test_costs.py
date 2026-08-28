@@ -11,6 +11,14 @@ from app.main import create_app
 from app.sources.runtime import reset_runtime
 from app.storage.orm import Base
 
+def _pit_as_of() -> str:
+    """Dynamic PIT timestamp: one hour in the future so freshly collected
+    evidence (available_time = now) is always visible (time-bomb fix)."""
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+
+
 
 def test_costs_shape_and_pipeline_accounting(client=None):
     engine = create_engine(
@@ -36,7 +44,7 @@ def test_costs_shape_and_pipeline_accounting(client=None):
     # a research run exists (created via the research-runs API)
     client.post(
         "/api/v1/research-runs",
-        params={"instrument": "600519", "as_of": "2026-08-28T15:00:00+00:00"},
+        params={"instrument": "600519", "as_of": _pit_as_of()},
     )
     client.post(
         "/api/v1/predictions",

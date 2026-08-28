@@ -10,6 +10,14 @@ from app.sources.runtime import reset_runtime
 from app.storage.agent_repo import AgentRepository, ResearchRequestStatus
 from app.storage.orm import Base
 
+def _pit_as_of() -> str:
+    """Dynamic PIT timestamp: one hour in the future so freshly collected
+    evidence (available_time = now) is always visible (time-bomb fix)."""
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+
+
 
 RAW_OK = (
     'v_sh600519="1~贵州茅台~600519~1648.00~1651.00~1655.00~32924~85755~24354~'
@@ -56,7 +64,7 @@ def _seed_snapshot(client, monkeypatch):
     client.post("/api/v1/evidence/collect", params={"instrument": "600519"})
     snapshot = client.post(
         "/api/v1/snapshots",
-        params={"instrument": "600519", "as_of": "2026-08-28T15:00:00+00:00"},
+        params={"instrument": "600519", "as_of": _pit_as_of()},
     ).json()["snapshot"]
     return snapshot
 
@@ -129,7 +137,7 @@ def test_missing_data_loop_closes_across_runs(client, monkeypatch):
     # evidence now exists in the database (PIT: available_time = now).
     later_snapshot = client.post(
         "/api/v1/snapshots",
-        params={"instrument": "600519", "as_of": "2026-08-28T15:00:00+00:00"},
+        params={"instrument": "600519", "as_of": _pit_as_of()},
     ).json()["snapshot"]
     assert later_snapshot["evidence_count"] >= 1
 

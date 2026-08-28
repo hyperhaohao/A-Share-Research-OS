@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { RevisionPanel } from "../components/RevisionPanel";
+import { PredictionCreateButton } from "../components/PredictionCreateButton";
 
 interface ReportData {
   report_id: string;
@@ -153,8 +154,9 @@ export function InteractiveReportPage() {
         </span>
       </header>
 
-      {/* Text actions (任务书 §61) */}
+      {/* Text actions (任务书 §61) + prediction handoff (PW2 §17) */}
       <div className="report-actions" role="group" aria-label={t("report.actions")}>
+        <PredictionCreateButton reportId={reportId} />
         <button type="button" className="control-btn" onClick={() => explainMutation.mutate()} disabled={explainMutation.isPending}>
           {t("report.explain")}
         </button>

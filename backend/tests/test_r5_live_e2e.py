@@ -20,6 +20,14 @@ from app.main import create_app
 from app.sources.runtime import reset_runtime
 from app.storage.orm import Base
 
+def _pit_as_of() -> str:
+    """Dynamic PIT timestamp: one hour in the future so freshly collected
+    evidence (available_time = now) is always visible (time-bomb fix)."""
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+
+
 INSTRUMENTS = [
     ("600519", "白酒/消费"),
     ("000001", "银行/金融"),
@@ -122,7 +130,7 @@ def test_r5_live_research_e2e_multi_instrument(e2e):
             "/api/v1/predictions",
             json={
                 "instrument": "600519",
-                "as_of": "2026-08-28T15:00:00+00:00",
+                "as_of": _pit_as_of(),
                 "horizon": "5D",
                 "expected_direction": "up",
                 "expected_return_min": -10.0,

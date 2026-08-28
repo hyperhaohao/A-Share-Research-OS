@@ -15,7 +15,7 @@
   },
   "home": {
     "title": "研究总览",
-    "description": "系统正在建设（M1 工程基线）。研究闭环：证据 → 主张 → 论点 → 估值 → 报告。",
+    "description": "输入标的，立即研究：实时看到数据采集、分析、论点与报告生成全过程。",
     "backendStatus": "后端状态",
     "backendUnreachable": "后端不可达",
     "checkAgain": "重试",
@@ -36,7 +36,7 @@
       "name": "按名称",
       "alias": "按别名"
     },
-    "searchPrompt": "搜索股票代码或名称，选择后可立即研究"
+    "searchPrompt": "搜索股票代码或名称（如 000831 / 中国稀土），选择后可立即研究"
   },
   "pipeline": {
     "title": "研究管线",
@@ -56,19 +56,32 @@
   "common": {
     "loading": "加载中…",
     "error": "出错了",
-    "retry": "重试"
+    "retry": "重试",
+    "cancel": "取消"
   },
   "errors": {
     "common.not_found": "资源不存在",
     "common.method_not_allowed": "请求方法不允许",
     "common.validation_error": "请求参数无效",
     "common.internal_error": "服务器内部错误",
-    "network.unreachable": "无法连接后端服务"
+    "network.unreachable": "无法连接后端服务",
+    "task.not_found": "任务不存在",
+    "task.running": "任务正在执行，暂时不能删除",
+    "task.disabled": "任务已暂停，请先启用再运行",
+    "task.busy": "该标的已有任务在运行",
+    "task.schedule_invalid": "计划格式无效",
+    "instrument.not_found": "未找到对应标的"
   },
   "watchlist": {
     "add": "添加关注",
     "remove": "移除关注",
-    "empty": "关注列表为空"
+    "empty": "关注列表为空",
+    "lastResearch": "最近研究",
+    "hasReport": "已有最新报告 v{{version}}",
+    "noResearch": "尚未进行研究",
+    "researchNow": "立即研究",
+    "viewReport": "查看报告",
+    "continuous": "持续跟踪"
   },
   "workspace": {
     "tabs": "工作区视图",
@@ -135,7 +148,13 @@
     "citSource": "来源",
     "citAuthority": "权威度",
     "citFactStatus": "事实状态",
-    "citAvailable": "可得时间"
+    "citAvailable": "可得时间",
+    "fullTitle": "完整研究报告",
+    "dateLabel": "研究时间",
+    "judgmentLabel": "研究判断",
+    "versionLabel": "版本",
+    "qualityLabel": "质量",
+    "open": "打开报告"
   },
   "label": {
     "no_data": "暂无数据",
@@ -192,7 +211,38 @@
     "tickRan": "已认领 {{claimed}} · 成功 {{ok}}",
     "list": "任务列表",
     "disable": "停用",
-    "enable": "启用"
+    "enable": "启用",
+    "typeLabel": "任务类型",
+    "scheduleLabel": "频率",
+    "statusLabel": "状态",
+    "lastRun": "上次执行",
+    "nextRun": "下次执行",
+    "runNow": "立即运行",
+    "delete": "删除",
+    "deleteConfirmText": "删除后不再自动执行，研究历史保留。",
+    "deleteConfirmYes": "确认删除",
+    "deleteConfirmNo": "取消",
+    "runningRefusal": "任务正在执行，暂时不能删除。",
+    "openLatestReport": "打开最新报告",
+    "frequency": "频率",
+    "freqDaily": "每天",
+    "freqWeekdays": "工作日",
+    "freqWeekly": "每周",
+    "weekday": "星期",
+    "time": "时间",
+    "typeFull": "定期完整研究",
+    "scheduleInvalid": "计划格式无效",
+    "empty": "还没有研究任务",
+    "diagnostics": "诊断",
+    "diagnosticsHint": "调度器诊断信息（普通使用无需关注）。",
+    "techDetails": "技术详情",
+    "day": {
+      "MON": "周一",
+      "TUE": "周二",
+      "WED": "周三",
+      "THU": "周四",
+      "FRI": "周五"
+    }
   },
   "predictions": {
     "performance": "预测表现统计",
@@ -200,7 +250,22 @@
     "directionAccuracy": "方向准确率",
     "avgExcess": "平均超额收益",
     "rangeHit": "区间命中率",
-    "pending": "待验证"
+    "pending": "待验证",
+    "create": "生成预测",
+    "horizon": "预测期限",
+    "h5D": "5个交易日",
+    "h20D": "20个交易日",
+    "h60D": "60个交易日",
+    "createConfirm": "确认生成",
+    "underivable": "研究状态缺少论点/估值/行情，无法诚实生成预测",
+    "directionLabel": "方向",
+    "rangeLabel": "预期区间",
+    "statusLabel": "状态",
+    "validated": "已验证",
+    "directionOk": "方向正确",
+    "directionMiss": "方向错误",
+    "emptyHint": "还没有预测 —— 在报告页点「生成预测」即可创建。",
+    "viewBasis": "查看研究依据"
   },
   "copilot": {
     "title": "研究 Copilot",

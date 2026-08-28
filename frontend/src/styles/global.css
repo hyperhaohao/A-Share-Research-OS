@@ -344,3 +344,140 @@
 .status-ok {
   color: var(--color-info);
 }
+
+/* --- PW0/PW1: presentation layer controls + pipeline stages ---------------- */
+
+.control-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card, transparent);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.pipeline-stages {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.pipeline-stage-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.pipeline-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.stage-icon {
+  width: 1.25em;
+  text-align: center;
+}
+
+.stage-done {
+  color: var(--color-info);
+}
+
+.stage-warn {
+  color: #b8860b;
+}
+
+.stage-missing {
+  color: var(--text-secondary, #888);
+}
+
+.stage-fail {
+  color: var(--color-danger);
+}
+
+.stage-wait {
+  color: var(--text-secondary, #888);
+}
+
+/* --- PW2: research cards ---------------------------------------------------- */
+
+.watch-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.watch-card {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.watch-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.watch-card-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.watch-card-name:hover {
+  text-decoration: underline;
+}
+
+.watch-card-quote {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 1.15rem;
+}
+
+.watch-card-state {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  font-size: 0.9rem;
+}
+
+.task-grid > span:nth-child(odd) {
+  color: var(--text-secondary, #888);
+}
+
+.prediction-create {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* price change semantics — always through the CN/intl token pair (任务书 §15) */
+.pct-up {
+  color: var(--color-positive);
+}
+
+.pct-down {
+  color: var(--color-negative);
+}

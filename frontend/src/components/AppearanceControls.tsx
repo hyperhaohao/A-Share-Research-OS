@@ -4,6 +4,11 @@ import { useTranslation } from "react-i18next";
 import type { ThemePreference } from "../theme/theme";
 import type { LanguagePreference } from "../i18n";
 
+/**
+ * PW0 (§8/§9): appearance + language are single-select controls — one
+ * <select> each, not three side-by-side buttons. ThemeProvider /
+ * LanguageProvider / localStorage / prefers-color-scheme logic is unchanged.
+ */
 export function AppearanceControls() {
   const { t } = useTranslation();
   const { preference, setPreference } = useTheme();
@@ -17,17 +22,18 @@ export function AppearanceControls() {
   return (
     <div role="group" aria-label={t("settings.appearance")}>
       <span className="control-label">{t("settings.appearance")}</span>
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          className={preference === opt.value ? "control-btn active" : "control-btn"}
-          aria-pressed={preference === opt.value}
-          onClick={() => setPreference(opt.value)}
-        >
-          {opt.label}
-        </button>
-      ))}
+      <select
+        className="control-select"
+        value={preference}
+        aria-label={t("settings.appearance")}
+        onChange={(e) => setPreference(e.target.value as ThemePreference)}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -45,17 +51,18 @@ export function LanguageControls() {
   return (
     <div role="group" aria-label={t("settings.language")}>
       <span className="control-label">{t("settings.language")}</span>
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          className={preference === opt.value ? "control-btn active" : "control-btn"}
-          aria-pressed={preference === opt.value}
-          onClick={() => setPreference(opt.value)}
-        >
-          {opt.label}
-        </button>
-      ))}
+      <select
+        className="control-select"
+        value={preference}
+        aria-label={t("settings.language")}
+        onChange={(e) => setPreference(e.target.value as LanguagePreference)}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

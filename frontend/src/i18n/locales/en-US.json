@@ -15,7 +15,7 @@
   },
   "home": {
     "title": "Dashboard",
-    "description": "Under construction (M1 foundation). Research loop: evidence → claims → theses → valuation → report.",
+    "description": "Pick an instrument and research it now: watch collection, analysis, thesis and reporting happen live.",
     "backendStatus": "Backend status",
     "backendUnreachable": "Backend unreachable",
     "checkAgain": "Retry",
@@ -36,7 +36,7 @@
       "name": "by name",
       "alias": "by alias"
     },
-    "searchPrompt": "Search a stock code or name, then run research"
+    "searchPrompt": "Search by code or name (e.g. 000831), select it, then run research"
   },
   "pipeline": {
     "title": "Research pipeline",
@@ -56,19 +56,32 @@
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
-    "retry": "Retry"
+    "retry": "Retry",
+    "cancel": "Cancel"
   },
   "errors": {
     "common.not_found": "Resource not found",
     "common.method_not_allowed": "Method not allowed",
     "common.validation_error": "Invalid request parameters",
     "common.internal_error": "Internal server error",
-    "network.unreachable": "Cannot reach the backend service"
+    "network.unreachable": "Cannot reach the backend service",
+    "task.not_found": "Task not found",
+    "task.running": "Task is running and cannot be deleted right now",
+    "task.disabled": "Task is paused; enable it before running",
+    "task.busy": "Another task for this instrument is running",
+    "task.schedule_invalid": "Invalid schedule format",
+    "instrument.not_found": "Instrument not found"
   },
   "watchlist": {
     "add": "Add to watchlist",
     "remove": "Remove",
-    "empty": "Watchlist is empty"
+    "empty": "Watchlist is empty",
+    "lastResearch": "Last research",
+    "hasReport": "Latest report v{{version}} available",
+    "noResearch": "Not researched yet",
+    "researchNow": "Research now",
+    "viewReport": "View report",
+    "continuous": "Track continuously"
   },
   "workspace": {
     "tabs": "Workspace views",
@@ -135,7 +148,13 @@
     "citSource": "Source",
     "citAuthority": "Authority",
     "citFactStatus": "Fact status",
-    "citAvailable": "Available at"
+    "citAvailable": "Available at",
+    "fullTitle": "Full research report",
+    "dateLabel": "Researched",
+    "judgmentLabel": "Judgment",
+    "versionLabel": "Version",
+    "qualityLabel": "Quality",
+    "open": "Open report"
   },
   "label": {
     "no_data": "No data available",
@@ -192,7 +211,38 @@
     "tickRan": "Claimed {{claimed}} · Succeeded {{ok}}",
     "list": "Task list",
     "disable": "Disable",
-    "enable": "Enable"
+    "enable": "Enable",
+    "typeLabel": "Type",
+    "scheduleLabel": "Schedule",
+    "statusLabel": "Status",
+    "lastRun": "Last run",
+    "nextRun": "Next run",
+    "runNow": "Run now",
+    "delete": "Delete",
+    "deleteConfirmText": "No future runs after deletion; research history is kept.",
+    "deleteConfirmYes": "Confirm delete",
+    "deleteConfirmNo": "Cancel",
+    "runningRefusal": "Task is executing and cannot be deleted right now.",
+    "openLatestReport": "Open latest report",
+    "frequency": "Frequency",
+    "freqDaily": "Daily",
+    "freqWeekdays": "Weekdays",
+    "freqWeekly": "Weekly",
+    "weekday": "Weekday",
+    "time": "Time",
+    "typeFull": "Periodic full research",
+    "scheduleInvalid": "Invalid schedule format",
+    "empty": "No research tasks yet",
+    "diagnostics": "Diagnostics",
+    "diagnosticsHint": "Scheduler diagnostics (not needed for normal use).",
+    "techDetails": "Technical details",
+    "day": {
+      "MON": "Monday",
+      "TUE": "Tuesday",
+      "WED": "Wednesday",
+      "THU": "Thursday",
+      "FRI": "Friday"
+    }
   },
   "predictions": {
     "performance": "Prediction performance",
@@ -200,7 +250,22 @@
     "directionAccuracy": "Direction accuracy",
     "avgExcess": "Average excess return",
     "rangeHit": "Range hit rate",
-    "pending": "Pending"
+    "pending": "Pending",
+    "create": "Create prediction",
+    "horizon": "Horizon",
+    "h5D": "5 trading days",
+    "h20D": "20 trading days",
+    "h60D": "60 trading days",
+    "createConfirm": "Create",
+    "underivable": "Research state lacks thesis/valuation/quote — refusing to invent a prediction",
+    "directionLabel": "Direction",
+    "rangeLabel": "Expected range",
+    "statusLabel": "Status",
+    "validated": "Validated",
+    "directionOk": "direction correct",
+    "directionMiss": "direction missed",
+    "emptyHint": "No predictions yet — create one from a report via \"Create prediction\".",
+    "viewBasis": "View research basis"
   },
   "copilot": {
     "title": "Research Copilot",

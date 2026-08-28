@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { formatBoard, formatExchange, uiLang } from "../presentation/enumLabels";
 
 interface InstrumentResult {
   matched_by: "code" | "name" | "alias";
@@ -25,10 +26,11 @@ async function searchInstruments(query: string): Promise<{ count: number; result
   return resp.json();
 }
 
-/** Real API-driven instrument search. Results are clickable → workspace. */
+/** Real API-driven instrument search; results show business identity (PW0). */
 export function InstrumentSearch({ onSelect }: { onSelect?: (instrumentId: string) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const lang = uiLang(i18n.language);
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
 
@@ -73,10 +75,12 @@ export function InstrumentSearch({ onSelect }: { onSelect?: (instrumentId: strin
             data.results.map((r) => (
               <div key={r.instrument.instrument_id} className="result-row" style={{ cursor: "pointer" }}
                    onClick={() => open(r.instrument.instrument_id)}>
-                <span className="mono result-code">{r.instrument.code}</span>
                 <span className="result-name">{r.instrument.name}</span>
-                <span className="mono secondary">{r.instrument.exchange}</span>
-                <span className="secondary">{t(`home.matchedBy.${r.matched_by}`)}</span>
+                <span className="mono result-code">{r.instrument.code}</span>
+                <span className="secondary">
+                  {formatExchange(r.instrument.exchange, lang)}
+                  {r.instrument.board ? ` · ${formatBoard(r.instrument.board, lang)}` : ""}
+                </span>
                 <button type="button" className="control-btn"
                         onClick={(e) => { e.stopPropagation(); open(r.instrument.instrument_id); }}>
                   {t("workspace.open")}

@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { formatDirection, formatHorizon, uiLang } from "../presentation/enumLabels";
+import { formatPct, formatWhen } from "../presentation/format";
 
 interface Performance {
   total_validations: number;
@@ -15,6 +18,7 @@ interface PredictionItem {
   expected_direction: string;
   expected_return_range: [number, number];
   due_at: string;
+  supporting_thesis_id: string | null;
   validation?: {
     instrument_return_pct: number;
     direction_correct: boolean | null;
@@ -28,19 +32,71 @@ async function fetchPerformance(): Promise<Performance> {
   return resp.json();
 }
 
+/** List-all predictions (PW2 §16: no seed hardcode, no N+1 per instrument). */
 async function fetchAllPredictions(): Promise<PredictionItem[]> {
-  // aggregate across instruments currently in the watchlist + SSE:600519 seed
-  const watch = await fetch("/api/v1/watchlist").then((r) => r.json());
-  const ids: string[] = (watch.results ?? []).map((w: { instrument_id: string }) => w.instrument_id);
-  if (!ids.includes("SSE:600519")) ids.push("SSE:600519");
-  const results: PredictionItem[] = [];
-  for (const id of ids) {
-    const resp = await fetch(`/api/v1/predictions?instrument_id=${encodeURIComponent(id)}`);
-    if (!resp.ok) continue;
-    const body = await resp.json();
-    results.push(...body.results);
-  }
-  return results;
+  const resp = await fetch("/api/v1/predictions");
+  if (!resp.ok) throw new Error("network.unreachable");
+  const body = await resp.json();
+  return body.results;
+}
+
+function useInstrumentName(instrumentId: string) {
+  const { data } = useQuery({
+    queryKey: ["instrument", instrumentId],
+    staleTime: 60000,
+    queryFn: async (): Promise<{ name: string; code: string } | null> => {
+      const resp = await fetch(`/api/v1/instruments/${encodeURIComponent(instrumentId)}`);
+      if (!resp.ok) return null;
+      const body = await resp.json();
+      return body.instrument;
+    },
+  });
+  return data;
+}
+
+function PredictionCard({ prediction: p }: { prediction: PredictionItem }) {
+  const { t, i18n } = useTranslation();
+  const lang = uiLang(i18n.language);
+  const name = useInstrumentName(p.instrument_id);
+  const [lo, hi] = p.expected_return_range;
+
+  return (
+    <li className="card watch-card" data-testid="prediction-card">
+      <div className="watch-card-head">
+        <Link to={`/instrument/${p.instrument_id}`} className="watch-card-name">
+          {name?.name ?? p.instrument_id}
+          {name ? ` · ${name.code}` : ""}
+        </Link>
+        <span className="secondary">{formatHorizon(p.horizon, lang)}</span>
+      </div>
+      <div className="task-grid">
+        <span>{t("predictions.directionLabel")}</span>
+        <span>{formatDirection(p.expected_direction, lang)}</span>
+        <span>{t("predictions.rangeLabel")}</span>
+        <span className="mono">
+          {formatPct(lo)} ~ {formatPct(hi)}
+        </span>
+        <span>{t("predictions.statusLabel")}</span>
+        {p.validation ? (
+          <span className={p.validation.direction_correct ? "status-ok" : "status-error"}>
+            {t("predictions.validated")}: {formatPct(p.validation.instrument_return_pct)}
+            {p.validation.direction_correct != null
+              ? ` · ${p.validation.direction_correct ? t("predictions.directionOk") : t("predictions.directionMiss")}`
+              : ""}
+          </span>
+        ) : (
+          <span className="secondary">
+            {t("predictions.pending")} · {formatWhen(p.due_at, lang)}
+          </span>
+        )}
+      </div>
+      <div className="header-controls">
+        <Link className="control-btn" to={`/instrument/${p.instrument_id}`}>
+          {t("predictions.viewBasis")}
+        </Link>
+      </div>
+    </li>
+  );
 }
 
 export function PredictionsPage() {
@@ -86,21 +142,12 @@ export function PredictionsPage() {
 
       <section className="card">
         <h2>{t("workspace.predictions")}</h2>
-        {predsQuery.data?.length === 0 && <p className="secondary">{t("label.no_data")}</p>}
-        <ul className="watch-list">
+        {predsQuery.data?.length === 0 && (
+          <p className="secondary">{t("predictions.emptyHint")}</p>
+        )}
+        <ul className="watch-list watch-cards">
           {(predsQuery.data ?? []).map((p) => (
-            <li key={p.prediction_id} className="result-row">
-              <span className="mono">{p.instrument_id}</span>
-              <span className="mono">{p.horizon}</span>
-              <span>{t(`workspace.direction.${p.expected_direction}`)}</span>
-              {p.validation ? (
-                <span className={p.validation.direction_correct ? "status-ok mono" : "status-error mono"}>
-                  {p.validation.instrument_return_pct}%
-                </span>
-              ) : (
-                <span className="secondary">{t("predictions.pending")}</span>
-              )}
-            </li>
+            <PredictionCard key={p.prediction_id} prediction={p} />
           ))}
         </ul>
       </section>

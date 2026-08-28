@@ -213,16 +213,23 @@ class ResearchPipeline:
             # ---- 4) analyst orchestration ----------------------------------
             claim_ids: list[str] = []
             brief_risks: list[str] = []
+            # business keys drive the per-analyst live UI (整改方案 §5):
+            # the enum values collide (financial/industry → fundamental,
+            # event/news/macro → news), so emit a distinct key per analyst
             analysts = [
-                IndustryAnalyst(), FinancialAnalyst(), EventAnalyst(),
-                NewsAnalyst(), CapitalFlowAnalyst(), MacroPolicyAnalyst(),
-                MarketAnalyst(),
+                ("industry", IndustryAnalyst()),
+                ("financial", FinancialAnalyst()),
+                ("event", EventAnalyst()),
+                ("news", NewsAnalyst()),
+                ("capital_flow", CapitalFlowAnalyst()),
+                ("macro_policy", MacroPolicyAnalyst()),
+                ("market", MarketAnalyst()),
             ]
             thesis_id: str | None = None
-            for analyst in analysts:
+            for analyst_key, analyst in analysts:
                 self._emit(
                     run_id, "analyst_progress",
-                    {"analyst": analyst.analyst_type.value}, events,
+                    {"analyst": analyst_key, "status": "running"}, events,
                 )
                 try:
                     outcome = analyst.analyze(
@@ -231,11 +238,15 @@ class ResearchPipeline:
                     )
                     claim_ids.extend(outcome.created_claim_ids)
                     brief_risks.extend(outcome.brief.risks)
+                    self._emit(
+                        run_id, "analyst_progress",
+                        {"analyst": analyst_key, "status": "ok"}, events,
+                    )
                 except Exception as exc:  # noqa: BLE001 — one analyst must not
                     # kill the run; its missing-data stays disclosed via briefs
                     self._emit(
                         run_id, "analyst_progress",
-                        {"analyst": analyst.analyst_type.value,
+                        {"analyst": analyst_key,
                          "status": "failed", "error": str(exc)[:200]},
                         events,
                     )

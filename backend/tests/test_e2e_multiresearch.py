@@ -18,6 +18,14 @@ from app.main import create_app
 from app.sources.runtime import reset_runtime
 from app.storage.orm import Base
 
+def _pit_as_of() -> str:
+    """Dynamic PIT timestamp: one hour in the future so freshly collected
+    evidence (available_time = now) is always visible (time-bomb fix)."""
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+
+
 # Remediation R0.7 classification: this file exercises full API flows against a
 # TestClient with monkeypatched source transport — it is an API Integration E2E,
 # NOT a Live Research E2E (live runs in R5).
@@ -87,7 +95,7 @@ def test_full_research_pipeline_per_board(client, monkeypatch, code, name, prefi
     # 3) PIT snapshot
     snapshot = client.post(
         "/api/v1/snapshots",
-        params={"instrument": code, "as_of": "2026-08-28T15:00:00+00:00"},
+        params={"instrument": code, "as_of": _pit_as_of()},
     ).json()["snapshot"]
     assert snapshot["evidence_count"] == 1
 
@@ -177,7 +185,7 @@ def test_multi_instrument_reports_are_isolated(client, monkeypatch):
         client.post("/api/v1/evidence/collect", params={"instrument": code})
         snapshot = client.post(
             "/api/v1/snapshots",
-            params={"instrument": code, "as_of": "2026-08-28T15:00:00+00:00"},
+            params={"instrument": code, "as_of": _pit_as_of()},
         ).json()["snapshot"]
         report = client.post(
             "/api/v1/reports/compile",

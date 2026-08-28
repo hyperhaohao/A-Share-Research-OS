@@ -9,6 +9,14 @@ from app.main import create_app
 from app.sources.runtime import reset_runtime
 from app.storage.orm import Base
 
+def _pit_as_of() -> str:
+    """Dynamic PIT timestamp: one hour in the future so freshly collected
+    evidence (available_time = now) is always visible (time-bomb fix)."""
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+
+
 
 RAW_OK = (
     'v_sh600519="1~贵州茅台~600519~1648.00~1651.00~1655.00~32924~85755~24354~'
@@ -58,7 +66,7 @@ def test_collect_then_snapshot_then_run(client, monkeypatch):
     assert collected["created"] >= 1
 
     # build a snapshot pinned to an explicit as_of (default = per-request now)
-    as_of = "2026-08-28T15:00:00+00:00"
+    as_of = _pit_as_of()
     snap = client.post(
         "/api/v1/snapshots",
         params={"instrument": "600519", "as_of": as_of},
