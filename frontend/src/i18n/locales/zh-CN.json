@@ -35,11 +35,15 @@
       "code": "按代码",
       "name": "按名称",
       "alias": "按别名"
-    }
+    },
+    "searchPrompt": "搜索股票代码或名称，选择后可立即研究"
   },
   "pipeline": {
     "title": "研究管线",
-    "run": "运行一次研究"
+    "run": "运行一次研究",
+    "claimsCount": "主张数：{{count}}",
+    "openReport": "查看报告",
+    "openWorkspace": "打开工作台"
   },
   "settings": {
     "language": "界面语言",
@@ -111,7 +115,8 @@
     "filterAll": "全部类型",
     "upstream": "向上追溯",
     "downstream": "向下追溯",
-    "close": "关闭"
+    "close": "关闭",
+    "open": "打开"
   },
   "report": {
     "title": "研究报告",

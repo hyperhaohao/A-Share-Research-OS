@@ -14,6 +14,7 @@ Missing data stays ``None`` / absent — displayed as missing, never guessed.
 from __future__ import annotations
 
 from app.domain.code_norm import InvalidInstrumentCode, normalize_code
+from app.domain.instrument import instrument_id_for
 from app.domain.instrument import (
     Board,
     Exchange,
@@ -109,6 +110,40 @@ class InstrumentCatalog:
 
     def get(self, instrument_id: str) -> InstrumentProfile | None:
         return self._by_id.get(instrument_id)
+
+    def upsert(self, profile: InstrumentProfile) -> None:
+        self._put(profile)
+
+    def resolve_or_create(self, raw: str, *, name: str | None = None) -> InstrumentProfile | None:
+        """Resolve a raw query to an instrument. If not in catalog but the
+        code is a valid A-share code, create a new profile from the code
+        structure (exchange/board) and the provided or fetched name."""
+        query = (raw or "").strip()
+        if not query:
+            return None
+        # try catalog first
+        results = self.resolve(query, limit=1)
+        if results:
+            return results[0].instrument
+        # try to create from code structure
+        try:
+            code, exchange, board = normalize_code(query)
+        except InvalidInstrumentCode:
+            return None
+        instrument_id = instrument_id_for(exchange, code)
+        if instrument_id in self._by_id:
+            return self._by_id[instrument_id]
+        profile = _build_profile(
+            code=code,
+            name=name or code,  # will be enriched by source when available
+            exchange=exchange,
+            board=board,
+            aliases=(),
+            sector=None,
+            industry=None,
+        )
+        self._put(profile)
+        return profile
 
     def all(self) -> list[InstrumentProfile]:
         return list(self._by_id.values())

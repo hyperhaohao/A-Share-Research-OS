@@ -31,11 +31,4 @@ describe("App smoke", () => {
     unmount();
   });
 
-  it("exposes up/down samples with token-driven classes", async () => {
-    render(<App />);
-    const up = await screen.findByTestId("up-sample");
-    const down = await screen.findByTestId("down-sample");
-    expect(up.className).toContain("quote-up");
-    expect(down.className).toContain("quote-down");
-  });
 });

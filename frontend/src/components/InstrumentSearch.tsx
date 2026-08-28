@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 interface InstrumentResult {
   matched_by: "code" | "name" | "alias";
@@ -12,8 +13,6 @@ interface InstrumentResult {
     board: string;
     market: string;
     industry: string | null;
-    sector: string | null;
-    market_cap: number | null;
   };
 }
 
@@ -26,9 +25,10 @@ async function searchInstruments(query: string): Promise<{ count: number; result
   return resp.json();
 }
 
-/** Real API-driven instrument search (code or name resolution). */
-export function InstrumentSearch() {
+/** Real API-driven instrument search. Results are clickable → workspace. */
+export function InstrumentSearch({ onSelect }: { onSelect?: (instrumentId: string) => void }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
 
@@ -41,6 +41,11 @@ export function InstrumentSearch() {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(query.trim());
+  };
+
+  const open = (iid: string) => navigate(`/instrument/${encodeURIComponent(iid)}`);
+  const runResearch = (iid: string) => {
+    if (onSelect) onSelect(iid);
   };
 
   return (
@@ -66,11 +71,22 @@ export function InstrumentSearch() {
           {data && data.count === 0 && <p className="secondary">{t("home.searchEmpty")}</p>}
           {data &&
             data.results.map((r) => (
-              <div key={r.instrument.instrument_id} className="result-row">
+              <div key={r.instrument.instrument_id} className="result-row" style={{ cursor: "pointer" }}
+                   onClick={() => open(r.instrument.instrument_id)}>
                 <span className="mono result-code">{r.instrument.code}</span>
                 <span className="result-name">{r.instrument.name}</span>
                 <span className="mono secondary">{r.instrument.exchange}</span>
                 <span className="secondary">{t(`home.matchedBy.${r.matched_by}`)}</span>
+                <button type="button" className="control-btn"
+                        onClick={(e) => { e.stopPropagation(); open(r.instrument.instrument_id); }}>
+                  {t("workspace.open")}
+                </button>
+                {onSelect && (
+                  <button type="button" className="control-btn"
+                          onClick={(e) => { e.stopPropagation(); runResearch(r.instrument.instrument_id); }}>
+                    {t("pipeline.run")}
+                  </button>
+                )}
               </div>
             ))}
         </div>

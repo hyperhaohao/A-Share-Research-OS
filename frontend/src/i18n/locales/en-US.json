@@ -35,11 +35,15 @@
       "code": "by code",
       "name": "by name",
       "alias": "by alias"
-    }
+    },
+    "searchPrompt": "Search a stock code or name, then run research"
   },
   "pipeline": {
     "title": "Research pipeline",
-    "run": "Run research"
+    "run": "Run research",
+    "claimsCount": "Claims: {{count}}",
+    "openReport": "Open Report",
+    "openWorkspace": "Open Workspace"
   },
   "settings": {
     "language": "Language",
@@ -111,7 +115,8 @@
     "filterAll": "All kinds",
     "upstream": "Upstream",
     "downstream": "Downstream",
-    "close": "Close"
+    "close": "Close",
+    "open": "Open"
   },
   "report": {
     "title": "Research Report",
