@@ -9,9 +9,8 @@
 ## Current Phase
 
 ```text
-PW0–PW3 全部 DONE（git 6e4c285…e90002e，E2E 6/6 绿）
-当前执行线：V2 总纲 Phase A —— 先产出 §84 四份映射文档（docs/v2/），
-再实现 Artifact/Provenance/Context/Handoff/RunEvent 地基
+PW0–PW3 DONE（E2E 6/6 绿）+ V2 Phase A 批次1 DONE（§85 第一批代码全落地）
+当前执行线：V2 Phase A 收尾项 → Phase B（AI 研究中枢）
 ```
 
 ## Completed
@@ -33,39 +32,37 @@ PW0–PW3 全部 DONE（git 6e4c285…e90002e，E2E 6/6 绿）
 ## In Progress
 
 ```text
-V2 Phase A —— ARCHITECTURE-V2 / DOMAIN-MAP / ARTIFACT-PROTOCOL / HANDOFF-PROTOCOL
+None（Phase A 批次1 完成并真机验证；下一单元为 Phase B）
 ```
 
 ## Next Action
 
 ```text
-Phase A 批次 1（§85 第一批代码）：
-ArtifactRecord + ProvenanceEdge 表与仓储、ArtifactService、ResearchContext、
-HandoffEnvelope、RunEvent 持久化（SSE 事件落库可回放），
-并把 ReportVersion/Prediction/ResearchRun 注册为 Artifact 验证跨模块；
-四份映射文档见 docs/v2/（ARCHITECTURE-V2/DOMAIN-MAP/ARTIFACT-PROTOCOL/
-HANDOFF-PROTOCOL）。
+Phase A 收尾（小项）：
+1. 前端 shared/handoff.ts + context.ts（URL 编解码统一，报告→预测 CTA 改走信封）；
+2. Playwright 扩 E2E-07（lineage 回溯）；
+然后进入 Phase B：ResearchCommandCenter 三栏 + ResearchPlan + ConversationSession
+（只控制 Search/Pipeline/Report/Continuous Research/Prediction，总纲 §87）。
 ```
 
 ## Tests
 
 ```text
-backend: 301 passed（含 PW0 registry/tasks/prediction-builder/reports 新测试）
+backend: 305 passed（+ Phase A artifacts/handoff/replay 4 测试）
 frontend: 7 passed + build PASS
-e2e: Playwright 用例就绪（product.spec.ts E2E-01…06），待 chromium 完成后执行
+e2e: Playwright 产品 E2E 6/6 passed（E2E-01…06，vite+compose 真实栈）
 ```
 
 ## Live Verification（本轮实测）
 
 ```text
-000831 搜索 → 中国稀土 · 深交所 · 主板（无裸枚举）PASS
-中文名「中国稀土」远程解析 PASS
-Watchlist 000831 直接添加 → Workspace PASS
-docker restart 后 registry/watchlist 持久 PASS
-SSE 实时：数据采集 8/8 逐能力 + 分析 8/8 逐分析师 PASS
-报告库业务卡片 + 报告页生成预测（真实 000831 研究状态推导）PASS
-预测页业务卡片（无 SZSE、无 600519 hardcode）PASS
-研究总控台四区（最近研究/任务/预测/报告）PASS
+产品流（PW）：000831 搜索/名称解析/Watchlist 直加/重启持久/SSE 实时阶段/
+报告卡片/生成预测/预测卡片/总控台 —— 全 PASS（另 Playwright 6/6 回归）
+Phase A（真机 000831 全新 run，43 事件）：
+  artifacts 注册 research_run/report/report_version（业务标题）PASS
+  事件落库回放 43/43 PASS（GET /research-runs/{id}/events）
+  lineage：version ← produced ← run；version --derived_from--> report PASS
+  按 instrument 检索 artifacts（SZSE:000831）PASS
 ```
 
 ## Open Issues

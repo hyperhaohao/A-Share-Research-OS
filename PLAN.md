@@ -63,16 +63,18 @@
 ## Phase A — 统一研究基础协议（DOING，PW 完成后立即开始）
 - [x] ARCHITECTURE-V2.md / DOMAIN-MAP.md / ARTIFACT-PROTOCOL.md / HANDOFF-PROTOCOL.md
       （§84：基于当前代码做映射与接口细化，不改顶层方向）→ docs/v2/
-- [ ] ArtifactRecord + ArtifactRegistry（跨领域索引/导航/溯源/搜索/Handoff）
-- [ ] ProvenanceEdge（derived_from/supported_by/… 全关系表）
-- [ ] ResearchContext（instrument/as_of/snapshot/run/version/…）
-- [ ] HandoffEnvelope（跨模块动作信封）
-- [ ] RunEvent 持久化（SSE 事件同时落库，可回放/任务历史/失败分析，§37）
+- [x] ArtifactRecord + ArtifactRegistry（跨领域索引/导航/溯源/搜索/Handoff）
+- [x] ProvenanceEdge（8 关系 + 每关系上游方向表 + BFS lineage）
+- [x] ResearchContext（模型 + Handoff 信封内嵌；独立持久化按需 Phase B）
+- [x] HandoffEnvelope（注册动作表 + 422 显式拒绝 + POST/GET /handoffs）
+- [x] RunEvent 持久化（SSE 事件同时落库，回放/任务历史/失败分析，§37）
 - [x] Instrument Registry 持久化（PW0 已完成，计入 Phase A）
 - [x] Presentation Localization（PW0 已完成，计入 Phase A）
-- [ ] 现有 ReportVersion / Prediction / ResearchRun 注册为 Artifact 并验证跨模块
+- [x] ReportVersion / Prediction / ResearchRun(+Validation) 注册为 Artifact，
+      lineage/replay 真机验证（000831 全新 run 43 事件 43/43 回放）
+- [ ] 前端 shared/handoff.ts + context.ts；Playwright E2E-07 lineage
 
-## Phase B — AI 研究中枢 + 报告 Handoff（TODO）
+## Phase B — AI 研究中枢 + 报告 Handoff（DOING next）
 - [ ] ResearchCommandCenter（计划/运行中/产物三栏，§38）
 - [ ] ResearchPlan + ConversationSession（先只控制 Search/Pipeline/Report/
       Continuous Research/Prediction，§87）
