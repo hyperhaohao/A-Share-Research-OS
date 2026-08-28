@@ -40,6 +40,9 @@ def run_pipeline(
         "snapshot_id": outcome.snapshot_id,
         "report_id": outcome.report_id,
         "gate_status": outcome.gate_status,
+        "thesis_id": outcome.thesis_id,
+        "claim_count": outcome.claim_count,
+        "valuation_count": outcome.valuation_count,
         "events": outcome.events,
     }
 

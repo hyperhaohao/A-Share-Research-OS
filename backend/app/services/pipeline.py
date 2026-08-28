@@ -1,15 +1,26 @@
 """Research pipeline: orchestrates one research run end-to-end with SSE.
 
-Pipeline stages (任务书 §67 event names):
-    run_started → source_progress → evidence_ready → snapshot_built →
-    quality_gate → analyst_progress → valuation_ready → report_ready →
-    run_completed | run_failed
+Remediation R2 full chain (整改 §7):
+
+    InstrumentResolver (caller) → EvidenceCollector → EvidenceSnapshot →
+    EvidenceQualityGate → Analyst Orchestrator (industry → financial →
+    event → news → capital_flow → market) → AnalystBrief[] →
+    ClaimCompiler (claims created by analysts, aggregated here) →
+    AnalysisQualityGate → ThesisBuilder → Bull/Bear (debate) →
+    ScenarioEngine → ValuationEngine (inputs from evidence) →
+    RiskManager → ResearchManager (this orchestration) → ReportCompiler →
+    FinalReportQualityGate → ReportVersion
+
+SSE stages (任务书 §67): run_started → source_progress → evidence_ready →
+snapshot_built → quality_gate → analyst_progress → claims_compiled →
+thesis_ready → debate_ready → valuation_ready → scenario_ready →
+risk_ready → report_ready → run_completed | run_failed
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import update as _update
@@ -17,22 +28,48 @@ from sqlalchemy.orm import Session
 
 from app.core.events import get_event_bus
 from app.domain.evidence import utc_now
+from app.domain.manifest import ReportVersion
+from app.domain.manifest import ArtifactDigest, RunManifest, VersionRef
+from app.services.analysts import (
+    CapitalFlowAnalyst,
+    EventAnalyst,
+    FinancialAnalyst,
+    IndustryAnalyst,
+    NewsAnalyst,
+)
 from app.services.evidence_collector import collect_capability_evidence
 from app.services.market_analyst import MarketAnalyst
 from app.services.report_compiler import ReportCompiler
-from app.storage.manifest_repo import (
-    ArtifactDigest,
-    ManifestRepository,
-    RunManifest,
-    ReportVersionRepository,
-    VersionRef,
+from app.services.research_synthesis import (
+    RiskManager,
+    ScenarioEngine,
+    ThesisBuilder,
+    ValuationInputBuilder,
 )
-from app.domain.manifest import ReportVersion
+from app.storage.manifest_repo import (
+    ManifestRepository,
+    ReportVersionRepository,
+    RunManifest,
+)
 from app.storage.orm import ResearchRunORM
 from app.storage.report_repo import ReportRepository
 from app.storage.research_repo import ResearchRepository
 from app.storage.repository import EvidenceRepository
-from app.storage.snapshot_repo import ResearchRunRepository, SnapshotRepository, ResearchRunStatus, ResearchRunType
+from app.storage.snapshot_repo import (
+    ResearchRunRepository,
+    ResearchRunStatus,
+    ResearchRunType,
+    SnapshotRepository,
+)
+
+_COLLECT_CAPABILITIES = [
+    "market_data",
+    "announcements",
+    "financials",
+    "news",
+    "capital_flow",
+    "industry",
+]
 
 
 @dataclass
@@ -41,6 +78,9 @@ class PipelineOutcome:
     snapshot_id: str
     report_id: str
     gate_status: str
+    thesis_id: str | None = None
+    claim_count: int = 0
+    valuation_count: int = 0
     events: list[dict] = field(default_factory=list)
 
 
@@ -60,6 +100,41 @@ class ResearchPipeline:
         self._bus.publish(run_id, event, payload)
         recorded.append({"event": event, **payload})
 
+    def _code_commit(self) -> str:
+        import os
+        import subprocess
+
+        env = os.environ.get("ASRO_CODE_COMMIT")
+        if env:
+            return env[:64]
+        try:
+            return (
+                subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=".", timeout=5)
+                .decode()
+                .strip()[:64]
+            )
+        except Exception:  # noqa: BLE001 — no git metadata available
+            return "unversioned"
+
+    def _config_digest(self) -> str:
+        import hashlib
+        import json
+        import os
+
+        from app.config import get_settings
+
+        settings = get_settings()
+        payload = {
+            "app_name": settings.app_name,
+            "debug": settings.debug,
+            "cors_origins": sorted(settings.cors_origins),
+            "database_url_kind": settings.database_url.split(":", 1)[0],
+        }
+        env_overrides = {k: v for k, v in os.environ.items() if k.startswith("ASRO_")}
+        payload["env"] = dict(sorted(env_overrides.items()))
+        canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
     def run(self, instrument_id: str, *, language: str = "zh-CN", run_id: str | None = None) -> PipelineOutcome:
         run_id = run_id or f"run_{uuid4().hex[:12]}"
         events: list[dict] = []
@@ -71,41 +146,189 @@ class ResearchPipeline:
         self._emit(run_id, "run_started", {"instrument_id": instrument_id}, events)
 
         try:
-            # 1) source collection
-            self._emit(
-                run_id, "source_progress",
-                {"capability": "market_data", "status": "fetching"}, events,
+            # ---- 1) collect every capability ------------------------------
+            for capability in _COLLECT_CAPABILITIES:
+                self._emit(
+                    run_id, "source_progress",
+                    {"capability": capability, "status": "fetching"}, events,
+                )
+                outcome = collect_capability_evidence(
+                    instrument_id, capability, repo=self._evidence
+                )
+                self._emit(
+                    run_id, "evidence_ready",
+                    {
+                        "capability": capability,
+                        "status": outcome.manifest.final_status,
+                        "created": len(outcome.created_ids),
+                    },
+                    events,
+                )
+
+            # macro/policy needs a topic: derive it from the industry chain
+            industry_label = self._industry_label(instrument_id)
+            if industry_label:
+                macro_outcome = collect_capability_evidence(
+                    instrument_id, "macro_policy",
+                    repo=self._evidence,
+                    params={"keyword": industry_label, "subject": instrument_id},
+                )
+                self._emit(
+                    run_id, "evidence_ready",
+                    {"capability": "macro_policy",
+                     "status": macro_outcome.manifest.final_status,
+                     "created": len(macro_outcome.created_ids)},
+                    events,
+                )
+
+            # ---- 2) snapshot (PIT gate) -----------------------------------
+            # as_of is captured AFTER collection completes: the snapshot pins
+            # exactly the evidence this run collected (all of it was
+            # available by now), and nothing that arrives later.
+            snapshot_as_of = utc_now()
+            snapshot = self._snapshots.build(
+                instrument_id, snapshot_as_of, evidence_repo=self._evidence
             )
-            outcome = collect_capability_evidence(
-                instrument_id, "market_data", repo=self._evidence
-            )
             self._emit(
-                run_id, "evidence_ready",
-                {"created": len(outcome.created_ids), "capability": "market_data"},
+                run_id, "snapshot_built",
+                {"snapshot_id": snapshot.snapshot_id, "evidence_count": len(snapshot.items)},
                 events,
             )
 
-            # 2) snapshot (PIT gate)
-            snapshot = self._snapshots.build(
-                instrument_id, now, evidence_repo=self._evidence
+            # ---- 3) evidence quality gate ----------------------------------
+            from app.services.quality_service import QualityService
+
+            quality_service = QualityService(self._session)
+            gate_results = quality_service.run_evidence_and_analysis_gates(
+                snapshot.snapshot_id
+            )
+            evidence_gate = gate_results[0]
+            self._emit(
+                run_id, "quality_gate",
+                {"gate": "evidence", "status": evidence_gate.status.value,
+                 "blocked": evidence_gate.blocked},
+                events,
             )
 
-            # 3) analyst
-            self._emit(run_id, "analyst_progress", {"analyst": "market"}, events)
-            analyst = MarketAnalyst().analyze(
-                snapshot.snapshot_id, session=self._session, run_id=run_id,
-                collect_missing=False,
-            )
-            _ = analyst
+            # ---- 4) analyst orchestration ----------------------------------
+            claim_ids: list[str] = []
+            brief_risks: list[str] = []
+            analysts = [
+                IndustryAnalyst(), FinancialAnalyst(), EventAnalyst(),
+                NewsAnalyst(), CapitalFlowAnalyst(), MarketAnalyst(),
+            ]
+            thesis_id: str | None = None
+            for analyst in analysts:
+                self._emit(
+                    run_id, "analyst_progress",
+                    {"analyst": analyst.analyst_type.value}, events,
+                )
+                try:
+                    outcome = analyst.analyze(
+                        snapshot.snapshot_id, session=self._session,
+                        run_id=run_id, collect_missing=False,
+                    )
+                    claim_ids.extend(outcome.created_claim_ids)
+                    brief_risks.extend(outcome.brief.risks)
+                except Exception as exc:  # noqa: BLE001 — one analyst must not
+                    # kill the run; its missing-data stays disclosed via briefs
+                    self._emit(
+                        run_id, "analyst_progress",
+                        {"analyst": analyst.analyst_type.value,
+                         "status": "failed", "error": str(exc)[:200]},
+                        events,
+                    )
 
-            # 4) report + valuation readiness
-            self._emit(run_id, "valuation_ready", {}, events)
+            claim_ids = list(dict.fromkeys(claim_ids))
+            self._emit(
+                run_id, "claims_compiled", {"count": len(claim_ids)}, events
+            )
+
+            # ---- 5) analysis quality gate ----------------------------------
+            analysis_gate = gate_results[1]
+            self._emit(
+                run_id, "quality_gate",
+                {"gate": "analysis", "status": analysis_gate.status.value,
+                 "blocked": analysis_gate.blocked},
+                events,
+            )
+
+            # ---- 6) thesis --------------------------------------------------
+            if claim_ids:
+                builder = ThesisBuilder(self._session)
+                thesis_outcome = builder.build(
+                    instrument_id, snapshot.snapshot_id, claim_ids,
+                    industry_label=industry_label,
+                    brief_risks=brief_risks,
+                )
+                thesis_id = thesis_outcome.thesis_id
+                self._emit(
+                    run_id, "thesis_ready",
+                    {"thesis_id": thesis_id,
+                     "supporting": len(thesis_outcome.supporting_claim_ids),
+                     "opposing": len(thesis_outcome.opposing_claim_ids)},
+                    events,
+                )
+
+                # ---- 7) debate (deterministic baseline, cited) --------------
+                from app.services.debate_engine import DebateEngine
+                from app.storage.research_repo import ReferenceNotFoundError
+
+                try:
+                    debate = DebateEngine(self._session).run_round(thesis_id)
+                    self._emit(
+                        run_id, "debate_ready",
+                        {"debate_id": debate.debate_id, "round": debate.round_no},
+                        events,
+                    )
+                except (ReferenceNotFoundError, ValueError):
+                    self._emit(
+                        run_id, "debate_ready", {"status": "skipped"}, events,
+                    )
+
+                # ---- 8) valuation from evidence -----------------------------
+                input_builder = ValuationInputBuilder(self._session)
+                built = input_builder.build(instrument_id, snapshot)
+                assumptions = built.pop("__assumptions__", [])
+                methods = built.pop("__methods__", [])
+                valuation_results = input_builder.compute_from_evidence(
+                    instrument_id, snapshot
+                )
+                self._emit(
+                    run_id, "valuation_ready",
+                    {"methods": methods, "computable": sum(
+                        1 for r in valuation_results if r.computable)},
+                    events,
+                )
+
+                # ---- 9) scenarios -------------------------------------------
+                base_value = self._median_implied_price(valuation_results)
+                scenario_engine = ScenarioEngine(self._session)
+                scenario_ids = scenario_engine.build_for(
+                    thesis_id, snapshot.snapshot_id, instrument_id,
+                    base_value=base_value, assumptions=assumptions,
+                )
+                self._emit(
+                    run_id, "scenario_ready", {"scenarios": len(scenario_ids)}, events,
+                )
+
+                # ---- 10) risks ----------------------------------------------
+                risk_manager = RiskManager(self._session)
+                risks = risk_manager.build(
+                    instrument_id, snapshot, [thesis_id]
+                )
+                self._emit(
+                    run_id, "risk_ready", {"risks": len(risks)}, events,
+                )
+
+            # ---- 11) report + gate + version --------------------------------
             compiler = ReportCompiler(self._session)
             structured = compiler.compile(snapshot.snapshot_id)
             rendered = compiler.render_and_gate(structured, language=language)
             self._emit(
                 run_id, "quality_gate",
-                {"status": rendered["gate"]["status"], "blocked": rendered["gate"]["blocked"]},
+                {"gate": "final_report", "status": rendered["gate"]["status"],
+                 "blocked": rendered["gate"]["blocked"]},
                 events,
             )
 
@@ -119,7 +342,6 @@ class ResearchPipeline:
                 html=rendered["html"],
                 content={"citations": sorted(set(structured.citations))},
             )
-            # seed the immutable version chain (V1)
             self._versions.save(
                 ReportVersion(
                     report_id=report_id,
@@ -132,7 +354,7 @@ class ResearchPipeline:
             )
             self._emit(run_id, "report_ready", {"report_id": report_id}, events)
 
-            # 5) bind the run to the snapshot + record its manifest
+            # ---- 12) bind run + real manifest --------------------------------
             self._session.execute(
                 _update(ResearchRunORM)
                 .where(ResearchRunORM.run_id == run_id)
@@ -145,28 +367,32 @@ class ResearchPipeline:
                 run_id=run_id,
                 mode="live",
                 as_of=now,
-                code_commit=_code_commit(),
-                config_digest=_config_digest(),
+                code_commit=self._code_commit(),
+                config_digest=self._config_digest(),
                 random_seed=_run_random_seed(run_id),
                 snapshot_id=snapshot.snapshot_id,
                 started_at=now,
                 finished_at=utc_now(),
                 status="succeeded",
                 provider_payload_digests=(
-                    ArtifactDigest(
-                        name="market_data", sha256=snapshot.content_hash
-                    ),
+                    ArtifactDigest(name="snapshot", sha256=snapshot.content_hash),
                 ),
                 environment=(
-                    VersionRef(component="pipeline", version="1"),
+                    VersionRef(component="pipeline", version="2"),
                     VersionRef(component="provider:tencent_quote", version="1"),
+                    VersionRef(component="provider:eastmoney_suite", version="1"),
                 ),
             )
             self._manifests.save(manifest)
 
             self._emit(
                 run_id, "run_completed",
-                {"report_id": report_id, "snapshot_id": snapshot.snapshot_id},
+                {
+                    "report_id": report_id,
+                    "snapshot_id": snapshot.snapshot_id,
+                    "thesis_id": thesis_id,
+                    "claims": len(claim_ids),
+                },
                 events,
             )
             return PipelineOutcome(
@@ -174,6 +400,10 @@ class ResearchPipeline:
                 snapshot_id=snapshot.snapshot_id,
                 report_id=report_id,
                 gate_status=rendered["gate"]["status"],
+                thesis_id=thesis_id,
+                claim_count=len(claim_ids),
+                valuation_count=sum(1 for r in valuation_results if r.computable)
+                if claim_ids else 0,
                 events=events,
             )
         except Exception as exc:  # noqa: BLE001 — pipeline failures emit run_failed
@@ -187,55 +417,27 @@ class ResearchPipeline:
             self._session.flush()
             raise
 
+    def _industry_label(self, instrument_id: str) -> str | None:
+        evidence = self._evidence.list_for_instrument(instrument_id)
+        for e in reversed(evidence):  # newest first
+            if e.evidence_type.value == "industry_data":
+                chain = (e.metadata or {}).get("industry_chain") or []
+                if chain:
+                    return chain[0]
+        return None
 
-def _code_commit() -> str:
-    """Real code commit: env override → git rev-parse → explicit unknown.
-
-    Docker images carry no .git; builds pass ASRO_CODE_COMMIT as a build arg
-    (see Dockerfile), so a real hash is always available in deployments.
-    """
-    import os
-    import subprocess
-
-    env = os.environ.get("ASRO_CODE_COMMIT")
-    if env:
-        return env[:64]
-    try:
-        return (
-            subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=".", timeout=5)
-            .decode()
-            .strip()[:64]
-        )
-    except Exception:  # noqa: BLE001 — no git metadata available
-        return "unversioned"
-
-
-def _config_digest() -> str:
-    """SHA256 over the canonical runtime configuration (real config digest)."""
-    import hashlib
-    import json
-
-    import os
-
-    from app.config import get_settings
-
-    settings = get_settings()
-    payload = {
-        "app_name": settings.app_name,
-        "debug": settings.debug,
-        "cors_origins": sorted(settings.cors_origins),
-        "database_url_kind": settings.database_url.split(":", 1)[0],
-    }
-    env_overrides = {
-        k: v for k, v in os.environ.items() if k.startswith("ASRO_")
-    }
-    payload["env"] = dict(sorted(env_overrides.items()))
-    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    def _median_implied_price(self, valuation_results) -> float | None:
+        values = sorted(r.value for r in valuation_results if r.computable)
+        if not values:
+            return None
+        n = len(values)
+        mid = n // 2
+        if n % 2:
+            return values[mid]
+        return round((values[mid - 1] + values[mid]) / 2, 4)
 
 
 def _run_random_seed(run_id: str) -> int:
-    """Deterministic-per-run seed derived from the unique run id (not a constant)."""
     import hashlib
 
     return int.from_bytes(hashlib.sha256(run_id.encode()).digest()[:4], "big")

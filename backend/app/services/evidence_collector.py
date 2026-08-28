@@ -94,6 +94,7 @@ def collect_capability_evidence(
     runtime: SourceRuntime | None = None,
     repo: EvidenceRepository,
     fresh: bool = False,
+    params: dict | None = None,
 ) -> CollectionOutcome:
     """Resolve a capability through the source layer and store evidence.
 
@@ -105,7 +106,12 @@ def collect_capability_evidence(
     whose entire purpose is to re-check against new source data.
     """
     rt = runtime or get_runtime()
-    request = SourceRequest(capability=capability, instrument_id=instrument_id, as_of=utc_now())
+    request = SourceRequest(
+        capability=capability,
+        instrument_id=instrument_id,
+        as_of=utc_now(),
+        params=params or {},
+    )
     if fresh:
         result = rt.registry.resolve(request)
     else:

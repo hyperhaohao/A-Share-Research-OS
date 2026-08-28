@@ -10,14 +10,14 @@
 ## Current Phase
 
 ```text
-Remediation — R2 Full Research Pipeline
+Remediation — R3 AI / Quant / Continuous
 ```
 
 ## Current Milestone
 
 ```text
-R2.1–R2.9：Analyst 集 → ClaimCompiler → ThesisBuilder → Debate/Scenario/
-ValuationInputBuilder → RiskManager → Pipeline 全链（无手工补链）
+R3.1–R3.7：LLMProvider → 边界落地 → Copilot 接入 → 双语 Narrative →
+TideQuantAdapter → 后台 scheduler 服务 → Delta 接主链
 ```
 
 ## Completed

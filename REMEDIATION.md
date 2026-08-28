@@ -28,7 +28,7 @@ BLOCKED   真实外部阻塞
 |------|------|------|----------|
 | R0 | State & Integrity Repair | DONE | 状态一致 / Manifest 无占位 / Gate 无绕过 / 测试分类真实 |
 | R1 | Real Research Data | DONE | 公告/财务/新闻/资金/行业/宏观 provider + 行情 fallback，3-5 只真实股票形成 Evidence |
-| R2 | Full Research Pipeline | TODO | Analyst 集 → ClaimCompiler → ThesisBuilder → Debate → Scenario → Valuation(证据输入) → Risk → Report 全链无手工补链 |
+| R2 | Full Research Pipeline | DONE | Analyst 集 → ClaimCompiler → ThesisBuilder → Debate → Scenario → Valuation(证据输入) → Risk → Report 全链无手工补链 |
 | R3 | AI / Quant / Continuous | TODO | LLMProvider（OpenAI-compatible）接入主链 + Copilot + Quant 实接 + 后台 scheduler 服务 + Monitor/Delta/Full |
 | R4 | Research Workspace | TODO | Stock Workspace 九 Tab + Copilot + React Flow 图 + Interactive Report 补全（真实 API） |
 | R5 | Production Research E2E | TODO | 4-6 只不同风格真实 A 股 Live Research E2E 全链 + 长时运行测试 + 生产复验 |
@@ -115,21 +115,21 @@ BLOCKED   真实外部阻塞
 
 ---
 
-## R2 — Full Research Pipeline（TODO）
+## R2 — Full Research Pipeline（DONE，2026-08-28）
 
 ### 任务清单
 
 | # | 任务 | 状态 |
 |---|------|------|
-| R2.1 | AnalystOrchestrator + Financial/Event/News/Industry/Macro/CapitalFlow/Risk Analyst（按数据能力逐个闭环） | TODO |
-| R2.2 | ClaimCompiler（Brief[] → Claim[]，强制引用） | TODO |
-| R2.3 | ThesisBuilder（Claim[] → Thesis[]，强制引用） | TODO |
-| R2.4 | Debate 接入主链（保留确定性 fallback；输出引用现有 Claim/Evidence） | TODO |
-| R2.5 | ScenarioEngine（Bear/Base/Bull + valuation_result） | TODO |
-| R2.6 | ValuationInputBuilder（Financial Evidence → 规范化指标 → 引擎输入，可追溯） | TODO |
-| R2.7 | RiskManager（结构化 risk 对象，非模板） | TODO |
-| R2.8 | ResearchManager 汇编 + Pipeline 全链改造 | TODO |
-| R2.9 | Live 验证：至少一只真实股票全链执行（无手工 POST 补链） | TODO |
+| R2.1 | Analyst 集：Industry/Financial/Event/News/CapitalFlow（BaseSnapshotAnalyst 模板方法，快照钉住证据） | DONE |
+| R2.2 | ClaimCompiler：claims 由分析师创建（引用强制），pipeline 聚合去重 | DONE |
+| R2.3 | ThesisBuilder：官方披露/确认事实→supporting，媒体→context；confidence=均值 | DONE |
+| R2.4 | Debate 入主链（确定性 baseline 一轮，引用现有 Claim/Evidence） | DONE |
+| R2.5 | ScenarioEngine：Bear 30/Base 45/Bull 25（和=100），假设+触发条件 | DONE |
+| R2.6 | ValuationInputBuilder：PE/PB/PS 输入全部来自证据（价格/市值/EPS/BVPS/营收），目标倍数为显式记录假设；DCF/DDM/分位显式 not-computable | DONE |
+| R2.7 | RiskManager：thesis_risk/invalidation/data_availability 三类，携带 supporting claims/evidence | DONE |
+| R2.8 | Pipeline 全链改造 + SSE 新阶段（snapshot_built/claims_compiled/thesis_ready/debate_ready/scenario_ready/risk_ready） | DONE |
+| R2.9 | Live 验证：真实贵州茅台全链（无手工补链）PASS；claim→报告正文可验证 | DONE |
 
 ---
 
