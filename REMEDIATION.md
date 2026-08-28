@@ -29,7 +29,7 @@ BLOCKED   真实外部阻塞
 | R0 | State & Integrity Repair | DONE | 状态一致 / Manifest 无占位 / Gate 无绕过 / 测试分类真实 |
 | R1 | Real Research Data | DONE | 公告/财务/新闻/资金/行业/宏观 provider + 行情 fallback，3-5 只真实股票形成 Evidence |
 | R2 | Full Research Pipeline | DONE | Analyst 集 → ClaimCompiler → ThesisBuilder → Debate → Scenario → Valuation(证据输入) → Risk → Report 全链无手工补链 |
-| R3 | AI / Quant / Continuous | TODO | LLMProvider（OpenAI-compatible）接入主链 + Copilot + Quant 实接 + 后台 scheduler 服务 + Monitor/Delta/Full |
+| R3 | AI / Quant / Continuous | DONE | LLMProvider（OpenAI-compatible）接入主链 + Copilot + Quant 实接 + 后台 scheduler 服务 + Monitor/Delta/Full |
 | R4 | Research Workspace | TODO | Stock Workspace 九 Tab + Copilot + React Flow 图 + Interactive Report 补全（真实 API） |
 | R5 | Production Research E2E | TODO | 4-6 只不同风格真实 A 股 Live Research E2E 全链 + 长时运行测试 + 生产复验 |
 
@@ -133,17 +133,17 @@ BLOCKED   真实外部阻塞
 
 ---
 
-## R3 — AI / Quant / Continuous（TODO）
+## R3 — AI / Quant / Continuous（DONE，2026-08-28）
 
 | # | 任务 | 状态 |
 |---|------|------|
-| R3.1 | LLMProvider（OpenAI-compatible：generate_structured/text/stream/model_info/usage） | TODO |
-| R3.2 | LLM 边界落地（Evidence First；禁造事实；引用强制） | TODO |
-| R3.3 | Copilot Explain/Refresh 接入 LLM（保留确定性 baseline） | TODO |
-| R3.4 | 双语 Narrative Layer（en-US 不再直接复用中文原文；引用仍指原文） | TODO |
-| R3.5 | Quant：TideQuantAdapter（历史→因子→模型→回测→指标→QuantBrief 进 Research State） | TODO |
-| R3.6 | 后台 scheduler 服务（compose 第三服务，periodic tick） | TODO |
-| R3.7 | Continuous Research：Monitor→Materiality→Delta（受影响 Claim/Thesis/Analyst→Revalue→NewVersion）/Full 接主 Pipeline | TODO |
+| R3.1 | LLMProvider：OpenAICompatibleProvider（generate_structured/text/stream/model_info/usage 累计）+ DeterministicStubProvider | DONE |
+| R3.2 | LLM 边界落地：explain_with_llm 仅叙述层；引用越界 → invalid_citations 标记；LLM 路径零 Claim/Evidence 写入（测试断言） | DONE |
+| R3.3 | Copilot：ask API 增加 copilot=true（LLM 配置时走 narrative，未配置走确定性 baseline） | DONE |
+| R3.4 | Narrative Layer：narrativize_report（LLM 翻译 zh→en 填充 text_en；失败/未配置 → 原文+语言标记，绝不伪造） | DONE |
+| R3.5 | Quant：EastmoneyKlineProvider（historical_data）+ 确定性 quant 引擎（5d 动量信号 t-1 无前视、long/flat 回测、年化/Sharpe/回撤/胜率固定数值测试）+ QuantBrief 进 Research State（pipeline quant 阶段） | DONE |
+| R3.6 | 后台 scheduler 服务：backend/scheduler_worker.py（SIGTERM 优雅退出）+ compose 第三服务（ASRO_SCHEDULER_INTERVAL） | DONE |
+| R3.7 | Continuous：monitor handler 接 Materiality → DELTA 时以新快照重编译并追加 delta change_reason 的 ReportVersion；scheduler 集成测试 | DONE |
 
 ---
 

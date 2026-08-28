@@ -16,6 +16,7 @@ from app.sources.providers.capital_industry import (
     EastmoneyIndustryProvider,
 )
 from app.sources.providers.eastmoney_financials import EastmoneyFinancialsProvider
+from app.sources.providers.eastmoney_kline import EastmoneyKlineProvider
 from app.sources.providers.eastmoney_quote import EastmoneyQuoteProvider
 from app.sources.providers.news import (
     EastmoneyMacroPolicyProvider,
@@ -50,6 +51,8 @@ class SourceRuntime:
             self.registry.register(EastmoneyIndustryProvider())
         if not self.registry.providers_for("macro_policy"):
             self.registry.register(EastmoneyMacroPolicyProvider())
+        if not self.registry.providers_for("historical_data"):
+            self.registry.register(EastmoneyKlineProvider())
 
     def resolve_cached(self, request: SourceRequest) -> SourceResult:
         """Resolve with a per-capability TTL cache in front of the registry."""

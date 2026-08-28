@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.domain.evidence import utc_now
 from app.scheduler.tasks import TaskRepository, TaskType
 from app.services.monitor import MonitorService
+from app.services.pipeline import ResearchPipeline
 
 
 @dataclass
@@ -27,8 +28,50 @@ class TickResult:
 
 
 def run_monitor_task(session: Session, task) -> None:
-    """Business function: monitor one instrument (independently runnable)."""
-    MonitorService(session).run_monitor(task.instrument_id)
+    """Business function: monitor one instrument, then act on materiality
+    (整改 R3.7): DELTA → recompile the report on the new snapshot as a new
+    ReportVersion; FULL → run the complete research pipeline."""
+    decision = MonitorService(session).run_monitor(task.instrument_id)
+
+    if decision.decision.value == "no_material_change":
+        return
+
+    from app.services.report_compiler import ReportCompiler
+    from app.storage.manifest_repo import ReportVersionRepository
+    from app.storage.report_repo import ReportRepository
+
+    if decision.decision.value == "delta_research":
+        compiler = ReportCompiler(session)
+        structured = compiler.compile(decision.new_snapshot_id)
+        rendered = compiler.render_and_gate(structured, language="zh-CN")
+        # find the latest report for this instrument to extend its chain
+        reports = ReportRepository(session).list_for(task.instrument_id)
+        if reports:
+            latest = reports[0]
+            chain = ReportVersionRepository(session).list_chain(latest["report_id"])
+            previous = chain[-1] if chain else None
+            ReportVersionRepository(session).save(
+                __import__("app.domain.manifest", fromlist=["ReportVersion"]).ReportVersion(
+                    report_id=latest["report_id"],
+                    version_no=(previous.version_no + 1) if previous else 1,
+                    parent_version_id=previous.version_id if previous else None,
+                    change_reason=(
+                        f"delta research: {decision.decision.value} "
+                        f"({len(decision.added_evidence_ids)} new evidence, "
+                        f"price {decision.price_change_pct}%)"
+                    ),
+                    changed_sections=("market_and_capital",),
+                    language="zh-CN",
+                    markdown=rendered["markdown"],
+                    html=rendered["html"],
+                    content_json={"citations": sorted(set(structured.citations))},
+                )
+            )
+
+
+def run_full_research_task(session: Session, task) -> None:
+    """Business function: full research pipeline for one instrument."""
+    ResearchPipeline(session).run(task.instrument_id)
 
 
 def run_periodic_full_research(session: Session, task) -> None:

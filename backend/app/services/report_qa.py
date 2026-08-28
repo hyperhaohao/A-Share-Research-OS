@@ -17,6 +17,7 @@ from uuid import uuid4
 from sqlalchemy import JSON, DateTime, String, select
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.ai.llm_provider import get_llm_provider as _get_provider
 from app.domain.evidence import utc_now
 from app.services.evidence_collector import collect_capability_evidence
 from app.storage.orm import Base
@@ -151,6 +152,47 @@ class ReportQAService:
             "removed_evidence_ids": removed,
             "affected_claim_ids": affected,
             "manifest_ids": manifest_ids,
+        }
+
+    # -- Copilot (R3.3): LLM narrative over the frozen context ------------------
+    def explain_with_llm(self, report_row: dict, question: str) -> dict:
+        """LLM-composed answer over the deterministic context. The answer's
+        citations are validated against the context (boundary rule, 整改 §16):
+        the LLM cannot cite evidence it was not given, and no evidence or
+        claims are created by this path."""
+        base = self.explain(report_row, question)
+        provider = _get_provider()
+        if provider is None:
+            return {**base, "narrative_kind": "deterministic"}
+
+        context_claims = [
+            {"claim_id": c["claim_id"], "statement": c["statement"]}
+            for c in base["claims"]
+        ]
+        prompt = (
+            "Question: " + question + "\n\n"
+            "You are answering strictly from the context below. "
+            "Cite claim ids as [claim:<id>]. Do not invent facts or numbers.\n"
+            "Claims: " + repr(context_claims) + "\n"
+            "Theses: " + repr(base["theses"]) + "\n"
+            "Evidence ids: " + repr(base["citations"]) + "\n"
+        )
+        answer = provider.generate_text(
+            prompt,
+            system="Evidence-first research copilot. Use only the provided context.",
+        )
+        # boundary validation: citations mentioned must exist in context
+        import re as _re
+
+        cited = set(_re.findall(r"\[claim:(clm_[0-9a-f]+)\]", answer))
+        known = {c["claim_id"] for c in base["claims"]}
+        invalid = sorted(cited - known)
+        return {
+            **base,
+            "narrative_kind": "llm",
+            "narrative": answer,
+            "narrative_provider": provider.model_info()["model"],
+            "invalid_citations": invalid,
         }
 
     # -- audit log ---------------------------------------------------------------

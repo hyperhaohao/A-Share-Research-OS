@@ -39,6 +39,7 @@ from app.services.analysts import (
 )
 from app.services.evidence_collector import collect_capability_evidence
 from app.services.market_analyst import MarketAnalyst
+from app.services.quant_brief import QuantBriefService
 from app.services.report_compiler import ReportCompiler
 from app.services.research_synthesis import (
     RiskManager,
@@ -69,6 +70,7 @@ _COLLECT_CAPABILITIES = [
     "news",
     "capital_flow",
     "industry",
+    "historical_data",
 ]
 
 
@@ -238,6 +240,24 @@ class ResearchPipeline:
                          "status": "failed", "error": str(exc)[:200]},
                         events,
                     )
+
+            # quant loop over historical bars
+            try:
+                quant_brief, quant_result = QuantBriefService().analyze(
+                    snapshot.snapshot_id, session=self._session, run_id=run_id
+                )
+                claim_ids.extend(quant_brief.claim_refs)
+                self._emit(
+                    run_id, "analyst_progress",
+                    {"analyst": "quant", "status": "ok",
+                     "metrics": quant_result.get("metrics")}, events,
+                )
+            except Exception as exc:  # noqa: BLE001 — quant must not kill the run
+                self._emit(
+                    run_id, "analyst_progress",
+                    {"analyst": "quant", "status": "failed", "error": str(exc)[:200]},
+                    events,
+                )
 
             claim_ids = list(dict.fromkeys(claim_ids))
             self._emit(

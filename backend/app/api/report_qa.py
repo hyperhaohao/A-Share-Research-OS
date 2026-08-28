@@ -17,6 +17,7 @@ router = APIRouter(prefix="/reports", tags=["reports-qa"])
 class AskIn(BaseModel):
     question: str = Field(default="", max_length=2000)
     mode: str = Field(pattern="^(explain|refresh)$")
+    copilot: bool = Field(default=False, description="compose the answer with the LLM when configured")
 
 
 @router.post("/{report_id}/ask")
@@ -33,7 +34,10 @@ def ask_report(
     service = ReportQAService(session)
     try:
         if payload.mode == "explain":
-            answer = service.explain(report_row, payload.question)
+            if payload.copilot:
+                answer = service.explain_with_llm(report_row, payload.question)
+            else:
+                answer = service.explain(report_row, payload.question)
         else:
             answer = service.refresh(report_row)
     except KeyError:

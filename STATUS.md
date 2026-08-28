@@ -10,14 +10,14 @@
 ## Current Phase
 
 ```text
-Remediation — R3 AI / Quant / Continuous
+Remediation — R4 Research Workspace
 ```
 
 ## Current Milestone
 
 ```text
-R3.1–R3.7：LLMProvider → 边界落地 → Copilot 接入 → 双语 Narrative →
-TideQuantAdapter → 后台 scheduler 服务 → Delta 接主链
+R4.1–R4.7：Stock Workspace 九 Tab 补齐 → Copilot 侧栏 → Thesis/Financial/
+Valuation UI → React Flow Graph → Interactive Report 补全
 ```
 
 ## Completed

@@ -27,6 +27,7 @@ class AnalystType(str, Enum):
     VALUATION = "valuation"
     NEWS = "news"
     CAPITAL_FLOW = "capital_flow"
+    QUANT = "quant"
 
 
 class ResearchRequestStatus(str, Enum):

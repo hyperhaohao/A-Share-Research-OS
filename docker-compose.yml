@@ -11,6 +11,20 @@ services:
       - "8000:8000"
     restart: unless-stopped
 
+  scheduler:
+    build: ./backend
+    command: python -m scheduler_worker
+    env_file: .env
+    environment:
+      - ASRO_DATABASE_URL=sqlite:////data/asro.db
+      - ASRO_SCHEDULER_INTERVAL=60
+    volumes:
+      - backend_data:/data
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
     depends_on:
