@@ -46,11 +46,11 @@
       POST /predictions/from-report（诚实推导：论点方向 + 估值域 + 快照价；
       缺输入 → 422 prediction.underivable）、lifecycle 卡片
 
-## PW3 — Command Center & Product E2E（DOING）
+## PW3 — Command Center & Product E2E（DONE）
 - [x] Research Command Center（最近研究/运行中任务/待验证预测/最近报告；
       GET /research-runs 新端点 + UTC 时区标注）
-- [ ] Playwright 产品 E2E（E2E-01…06 全绿）
-- [ ] E2E 纳入常用验证循环
+- [x] Playwright 产品 E2E（E2E-01…06 全绿，6/6 passed）
+- [x] E2E 纳入常用验证循环（npx playwright test，vite 复用 + compose 后端）
 
 ---
 
@@ -60,9 +60,9 @@
 > 业务物料不进 localStorage；跨模块走 Artifact+Context+Handoff；LLM 不创造事实；
 > 失败/降级显形；每个"完成"必须有产品级 E2E。
 
-## Phase A — 统一研究基础协议（TODO，PW 完成后立即开始）
-- [ ] ARCHITECTURE-V2.md / DOMAIN-MAP.md / ARTIFACT-PROTOCOL.md / HANDOFF-PROTOCOL.md
-      （§84：基于当前代码做映射与接口细化，不改顶层方向）
+## Phase A — 统一研究基础协议（DOING，PW 完成后立即开始）
+- [x] ARCHITECTURE-V2.md / DOMAIN-MAP.md / ARTIFACT-PROTOCOL.md / HANDOFF-PROTOCOL.md
+      （§84：基于当前代码做映射与接口细化，不改顶层方向）→ docs/v2/
 - [ ] ArtifactRecord + ArtifactRegistry（跨领域索引/导航/溯源/搜索/Handoff）
 - [ ] ProvenanceEdge（derived_from/supported_by/… 全关系表）
 - [ ] ResearchContext（instrument/as_of/snapshot/run/version/…）

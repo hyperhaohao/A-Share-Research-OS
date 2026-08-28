@@ -9,9 +9,9 @@
 ## Current Phase
 
 ```text
-PW3（Command Center & Product E2E）收尾 → V2 总纲 Phase A（Artifact 地基）
-依据: docs/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md
-     + docs/A-Share-Research-OS-最终产品与架构修改方案.md（新总纲）
+PW0–PW3 全部 DONE（git 6e4c285…e90002e，E2E 6/6 绿）
+当前执行线：V2 总纲 Phase A —— 先产出 §84 四份映射文档（docs/v2/），
+再实现 Artifact/Provenance/Context/Handoff/RunEvent 地基
 ```
 
 ## Completed
@@ -33,18 +33,18 @@ PW3（Command Center & Product E2E）收尾 → V2 总纲 Phase A（Artifact 地
 ## In Progress
 
 ```text
-PW3 — Playwright 产品 E2E（E2E-01…06，配置与用例已写，chromium 下载中）
+V2 Phase A —— ARCHITECTURE-V2 / DOMAIN-MAP / ARTIFACT-PROTOCOL / HANDOFF-PROTOCOL
 ```
 
 ## Next Action
 
 ```text
-1. chromium 就绪后跑 npx playwright test，修至全绿；
-2. 然后进入 V2 总纲 Phase A：先写 ARCHITECTURE-V2/DOMAIN-MAP/
-   ARTIFACT-PROTOCOL/HANDOFF-PROTOCOL 四份映射文档（§84），
-   再实现 ArtifactRecord/ProvenanceEdge/ResearchContext/HandoffEnvelope/
-   RunEvent 持久化（§85 第一批），并把 ReportVersion/Prediction/ResearchRun
-   注册为 Artifact 验证跨模块。
+Phase A 批次 1（§85 第一批代码）：
+ArtifactRecord + ProvenanceEdge 表与仓储、ArtifactService、ResearchContext、
+HandoffEnvelope、RunEvent 持久化（SSE 事件落库可回放），
+并把 ReportVersion/Prediction/ResearchRun 注册为 Artifact 验证跨模块；
+四份映射文档见 docs/v2/（ARCHITECTURE-V2/DOMAIN-MAP/ARTIFACT-PROTOCOL/
+HANDOFF-PROTOCOL）。
 ```
 
 ## Tests
