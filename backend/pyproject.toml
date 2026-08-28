@@ -22,3 +22,13 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    # Remediation R0.7 — honest test classification (整改任务书 §5.2.D / §31):
+    #   api_integration: FastAPI TestClient flows with monkeypatched sources —
+    #                    these are API Integration E2E, NOT Live Research E2E
+    #   live:            real network / real sources; may be skipped offline
+    #   unit:            pure logic, no network, no DB
+    "api_integration: API integration flow (mocked source transport)",
+    "live: real-network source verification (skip when offline)",
+    "unit: pure logic test",
+]

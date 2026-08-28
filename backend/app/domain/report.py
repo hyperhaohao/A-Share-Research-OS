@@ -38,6 +38,10 @@ class StructuredReport:
     sections: dict[str, ReportSection] = field(default_factory=dict)
     citations: list[str] = field(default_factory=list)
     data_quality_notes: list[str] = field(default_factory=list)
+    # real valuation provenance for the publication gate (remediation R0.6)
+    valuation_summaries: list[dict] = field(default_factory=list)
+    # capabilities detected missing — must all be disclosed (remediation R0.6)
+    missing_capabilities: list[str] = field(default_factory=list)
     gate_status: str = "not_run"
 
     def section(self, key: str) -> ReportSection:

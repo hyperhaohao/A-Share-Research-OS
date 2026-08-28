@@ -18,6 +18,11 @@ from app.main import create_app
 from app.sources.runtime import reset_runtime
 from app.storage.orm import Base
 
+# Remediation R0.7 classification: this file exercises full API flows against a
+# TestClient with monkeypatched source transport — it is an API Integration E2E,
+# NOT a Live Research E2E (live runs in R5).
+pytestmark = pytest.mark.api_integration
+
 # (code, name, exchange_prefix, price)
 INSTRUMENTS = [
     ("600519", "贵州茅台", "sh", "1648.00"),   # 沪市主板 · 消费

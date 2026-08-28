@@ -249,6 +249,10 @@ class ReportGateInput(BaseModel):
     risk_section: bool = False
     data_quality_section: bool = False
     disclaimer: bool = False
+    # Real disclosure audit (added in remediation R0.6): every capability
+    # detected missing must appear in the report's data-quality disclosure.
+    missing_capabilities: tuple[str, ...] = ()
+    disclosed_missing: tuple[str, ...] = ()
 
 
 class FinalReportQualityGate:
@@ -281,6 +285,18 @@ class FinalReportQualityGate:
                         severity=GateSeverity.FAIL,
                     )
                 )
+
+        # 2b) missing-data disclosure must be complete (remediation R0.6 —
+        # the previous `or True` bypass is replaced by a real business rule)
+        undisclosed = sorted(set(report.missing_capabilities) - set(report.disclosed_missing))
+        if undisclosed:
+            findings.append(
+                GateFinding(
+                    code="report.missing_data_undisclosed",
+                    message=f"missing capabilities not disclosed: {undisclosed}",
+                    severity=GateSeverity.FAIL,
+                )
+            )
 
         # 3) valuation section must carry assumptions
         if report.has_valuation and not report.valuation_assumptions:

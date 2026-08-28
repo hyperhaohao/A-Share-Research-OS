@@ -145,19 +145,22 @@ class ResearchPipeline:
                 run_id=run_id,
                 mode="live",
                 as_of=now,
-                code_commit="0000000",
-                config_digest="0" * 64,
-                random_seed=0,
+                code_commit=_code_commit(),
+                config_digest=_config_digest(),
+                random_seed=_run_random_seed(run_id),
                 snapshot_id=snapshot.snapshot_id,
                 started_at=now,
                 finished_at=utc_now(),
                 status="succeeded",
                 provider_payload_digests=(
                     ArtifactDigest(
-                        name="market_data", sha256=_sha16(snapshot.content_hash).ljust(64, "0")
+                        name="market_data", sha256=snapshot.content_hash
                     ),
                 ),
-                environment=(VersionRef(component="pipeline", version="1"),),
+                environment=(
+                    VersionRef(component="pipeline", version="1"),
+                    VersionRef(component="provider:tencent_quote", version="1"),
+                ),
             )
             self._manifests.save(manifest)
 
@@ -185,7 +188,54 @@ class ResearchPipeline:
             raise
 
 
-def _sha16(text: str) -> str:
+def _code_commit() -> str:
+    """Real code commit: env override → git rev-parse → explicit unknown.
+
+    Docker images carry no .git; builds pass ASRO_CODE_COMMIT as a build arg
+    (see Dockerfile), so a real hash is always available in deployments.
+    """
+    import os
+    import subprocess
+
+    env = os.environ.get("ASRO_CODE_COMMIT")
+    if env:
+        return env[:64]
+    try:
+        return (
+            subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=".", timeout=5)
+            .decode()
+            .strip()[:64]
+        )
+    except Exception:  # noqa: BLE001 — no git metadata available
+        return "unversioned"
+
+
+def _config_digest() -> str:
+    """SHA256 over the canonical runtime configuration (real config digest)."""
+    import hashlib
+    import json
+
+    import os
+
+    from app.config import get_settings
+
+    settings = get_settings()
+    payload = {
+        "app_name": settings.app_name,
+        "debug": settings.debug,
+        "cors_origins": sorted(settings.cors_origins),
+        "database_url_kind": settings.database_url.split(":", 1)[0],
+    }
+    env_overrides = {
+        k: v for k, v in os.environ.items() if k.startswith("ASRO_")
+    }
+    payload["env"] = dict(sorted(env_overrides.items()))
+    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _run_random_seed(run_id: str) -> int:
+    """Deterministic-per-run seed derived from the unique run id (not a constant)."""
     import hashlib
 
-    return hashlib.sha256(text.encode()).hexdigest()[:16]
+    return int.from_bytes(hashlib.sha256(run_id.encode()).digest()[:4], "big")

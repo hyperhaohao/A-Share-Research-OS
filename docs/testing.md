@@ -52,3 +52,15 @@ M23 pipeline live 事件序列 PASS
 - 节假日交易日历未接入（预测 due 用周末近似）；
 - UI E2E（Playwright）在 M29 部署验证时补；
 - PDF 导出在 M29 交付（Markdown/HTML 已可用）。
+
+
+## 测试分类（整改 R0.7）
+
+| 标记 | 含义 | 示例 |
+|------|------|------|
+| `api_integration` | TestClient 全流程 + monkeypatch 传输层 —— **是 API Integration E2E，不是 Live Research E2E** | test_e2e_multiresearch.py（pytestmark） |
+| `live` | 真实网络/真实数据源验证（离线自动 skip） | test_tencent_quote.py::test_live_quote_real_network |
+| `unit` | 纯逻辑 | 估值数学/材质域校验 |
+
+> Live Research E2E（多标的真实全链，无 monkeypatch、无手工补链）在整改 R5 交付；
+> 在此之前，任何「E2E」表述均指 API Integration E2E。

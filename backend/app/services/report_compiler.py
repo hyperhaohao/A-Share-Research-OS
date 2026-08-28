@@ -146,6 +146,14 @@ class ReportCompiler:
                     "numbers": {"value": v["value"], "upside_pct": upside},
                 }
             )
+            # real assumption provenance: the actual inputs used by the engine
+            report.valuation_summaries.append(
+                {
+                    "method": v["method"],
+                    "inputs": sorted((v.get("inputs") or {}).keys()),
+                    "value": v["value"],
+                }
+            )
 
         # -- scenarios / debates ---------------------------------------------
         for thesis in theses:
@@ -188,7 +196,9 @@ class ReportCompiler:
 
         # -- data quality --------------------------------------------------------
         quality = report.section("data_quality")
-        for gap in self._missing_capabilities(evidence, pinned):
+        missing_capabilities = self._missing_capabilities(evidence, pinned)
+        report.missing_capabilities = list(missing_capabilities)
+        for gap in missing_capabilities:
             report.data_quality_notes.append(gap)
             quality.items.append(
                 {
@@ -232,18 +242,26 @@ class ReportCompiler:
         markdown = renderer.render_markdown(report)
         html = renderer.render_html(report)
 
+        computable_valuations = [
+            v for v in report.valuation_summaries if v.get("value") is not None
+        ]
         gate_input = ReportGateInput(
             known_evidence_ids=tuple(set(report.citations)),
             citations=tuple(set(report.citations)),
             claim_support=self._claim_support(report),
-            has_valuation=bool(report.sections.get("valuation", None) and report.sections["valuation"].items),
-            valuation_assumptions=("deterministic engine inputs recorded",),
+            has_valuation=bool(computable_valuations),
+            # real assumptions = the actual engine input names per computable method
+            valuation_assumptions=tuple(
+                f"{v['method']}: inputs={','.join(v['inputs'])}"
+                for v in computable_valuations
+            ),
             risk_section=bool(report.sections.get("risks") and report.sections["risks"].items),
             data_quality_section=bool(
                 report.sections.get("data_quality") and report.sections["data_quality"].items
-            )
-            or True,  # missing-data disclosure always rendered (even as empty)
+            ),
             disclaimer=True,
+            missing_capabilities=tuple(report.missing_capabilities),
+            disclosed_missing=tuple(report.data_quality_notes),
         )
         gate = FinalReportQualityGate().evaluate(gate_input)
         report.gate_status = gate.status.value

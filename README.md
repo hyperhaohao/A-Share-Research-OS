@@ -6,7 +6,14 @@ Prediction → Validation），而非一次性生成的互不关联的报告。
 
 ## 当前状态
 
-**M0–M28 已交付并通过各自 DoD；M29（生产交付）进行中。**
+**整改进行中（R0–R5）**：首轮交付建立了完整的 Research OS Kernel（研究域模型/
+证据链/PIT/质量门/调度器/双语三态 UI），但按整改任务书核实，以下能力尚属未完成：
+真实多源数据链（公告/财务/新闻/资金/行业/宏观）、完整研究主链（Analyst 集→
+Claim→Thesis→Debate→Scenario→Valuation→Risk 全自动）、LLM 接入、Quant 实接、
+后台调度服务与 Live Research E2E。
+
+- 整改状态源：[REMEDIATION.md](REMEDIATION.md)（当前阶段：R0）
+- 历史 M0–M29 交付记录：`docs/milestones/`（保留，不代表当前完成结论）
 详见 [ROADMAP.md](ROADMAP.md) 与 [STATUS.md](STATUS.md)。
 
 ## 快速开始

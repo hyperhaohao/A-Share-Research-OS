@@ -10,6 +10,32 @@
 
 ---
 
+## 整改阶段（REMEDIATION，当前执行线）
+
+> 整改依据 `A-Share-Research-OS-整改实施任务书.md`；状态详情见 `REMEDIATION.md`。
+> 下方 M0–M29 为首轮交付历史记录（保留，不代表当前完成结论）。
+
+| 阶段 | 内容 | 状态 |
+|------|------|------|
+| R0 | State & Integrity Repair（状态/Manifest/Gate/测试分类） | DOING |
+| R1 | Real Research Data（公告/财务/新闻/资金/行业/宏观 + 行情 fallback） | TODO |
+| R2 | Full Research Pipeline（Analyst 集→Claim→Thesis→Debate→Scenario→Valuation→Risk→Report） | TODO |
+| R3 | AI / Quant / Continuous（LLMProvider/Copilot/QuantAdapter/后台调度/Delta） | TODO |
+| R4 | Research Workspace Completion（九 Tab/Copilot/React Flow/Interactive Report） | TODO |
+| R5 | Production Research E2E（多标的 Live E2E/长时运行/生产复验） | TODO |
+
+---
+
+## 首轮交付历史（M0–M29）
+
+> 本文件是长期 Milestone 状态的唯一状态源。
+>
+> 每完成一个 Milestone（通过其 DoD）更新状态。
+> 同一时间只允许一个 `DOING`。
+> Milestone 细节以 `docs/A-Share-Research-OS-最终实施任务书.md` 为准。
+
+---
+
 ## 状态图例
 
 ```text
