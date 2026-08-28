@@ -29,6 +29,7 @@ from app.api.stream import router as stream_router, watchlist_router
 from app.api.regression import router as regression_router
 from app.api.costs import router as costs_router
 from app.api.monitor import router as monitor_router
+from app.api.artifacts import router as artifacts_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -77,6 +78,7 @@ def create_app() -> FastAPI:
     app.include_router(regression_router, prefix="/api/v1")
     app.include_router(costs_router, prefix="/api/v1")
     app.include_router(monitor_router, prefix="/api/v1")
+    app.include_router(artifacts_router, prefix="/api/v1")
     return app
 
 

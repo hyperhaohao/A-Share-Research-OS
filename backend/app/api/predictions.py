@@ -40,6 +40,35 @@ class PredictionIn(BaseModel):
     invalidate_conditions: list[str] = Field(default_factory=list)
 
 
+def _register_prediction(session: Session, prediction: PredictionRecord) -> str:
+    """Artifact registration (V2 §85): one prediction = one artifact."""
+    from app.application.artifacts import ArtifactService
+
+    name = prediction.instrument_id
+    try:
+        from app.services.instrument_service import InstrumentService
+
+        profile = InstrumentService(session).get_profile(
+            prediction.instrument_id, allow_remote=False
+        )
+        if profile:
+            name = f"{profile.name} · {profile.code}"
+    except Exception:  # noqa: BLE001 — identity must not block registration
+        pass
+    return ArtifactService(session).register(
+        artifact_type="prediction",
+        domain_type="PredictionRecord",
+        domain_id=prediction.prediction_id,
+        title=f"{name} · {prediction.horizon.value} 预测",
+        summary=f"{prediction.expected_direction.value} "
+                f"[{prediction.expected_return_range[0]}, {prediction.expected_return_range[1]}]%",
+        instrument_ids=(prediction.instrument_id,),
+        as_of_time=prediction.as_of,
+        created_by="api",
+        route="/predictions",
+    )
+
+
 def _payload(p: PredictionRecord, validation: ValidationRecord | None = None) -> dict:
     data = {
         "prediction_id": p.prediction_id,
@@ -98,6 +127,7 @@ def create_prediction(payload: PredictionIn, session: Session = Depends(get_sess
     prediction_id = PredictionRepository(session).save(prediction)
     saved = PredictionRepository(session).get(prediction_id)
     assert saved is not None
+    _register_prediction(session, saved)
     return {"prediction": _payload(saved)}
 
 
@@ -127,6 +157,25 @@ def create_prediction_from_report(
         raise AppError(
             "prediction.underivable", status_code=422, detail=str(exc)
         ) from None
+
+    from app.application.artifacts import ArtifactService, RelationType
+
+    service = ArtifactService(session)
+    prediction_artifact = _register_prediction(session, prediction)
+    report_artifact = service.register(
+        artifact_type="report",
+        domain_type="Report",
+        domain_id=payload.report_id,
+        title=f"完整研究报告 {payload.report_id[:16]}",
+        instrument_ids=(prediction.instrument_id,),
+        created_by="api",
+        route=f"/reports/{payload.report_id}",
+    )
+    service.link(
+        from_artifact_id=prediction_artifact,
+        to_artifact_id=report_artifact,
+        relation=RelationType.GENERATED_FROM,
+    )
     return {"prediction": _payload(prediction)}
 
 
@@ -169,6 +218,26 @@ def validate_prediction(
         ) from None
     prediction = PredictionRepository(session).get(prediction_id)
     assert prediction is not None
+    from app.application.artifacts import ArtifactService, RelationType
+
+    service = ArtifactService(session)
+    prediction_artifact = service.by_domain("PredictionRecord", prediction_id)
+    if prediction_artifact is not None:
+        validation_artifact = service.register(
+            artifact_type="validation",
+            domain_type="ValidationRecord",
+            domain_id=record.validation_id,
+            title=f"验证结果 {record.instrument_return_pct:+.2f}%",
+            instrument_ids=(prediction.instrument_id,),
+            as_of_time=record.validated_at,
+            created_by="api",
+            route="/predictions",
+        )
+        service.link(
+            from_artifact_id=prediction_artifact["artifact_id"],
+            to_artifact_id=validation_artifact,
+            relation=RelationType.VALIDATED_BY,
+        )
     return {"prediction": _payload(prediction, record)}
 
 

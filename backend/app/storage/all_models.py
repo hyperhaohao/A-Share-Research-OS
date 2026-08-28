@@ -15,6 +15,9 @@ from app.storage.prediction_repo import PredictionORM, ValidationORM  # noqa: F4
 from app.api.regression import RegressionReviewORM, ResearchExperienceORM  # noqa: F401
 from app.scheduler.tasks import ResearchTaskORM  # noqa: F401
 from app.services.monitor import MaterialityDecisionORM  # noqa: F401
+from app.application.artifacts import ArtifactORM, ProvenanceEdgeORM  # noqa: F401
+from app.application.run_events import RunEventORM  # noqa: F401
+from app.application.handoff import HandoffORM  # noqa: F401
 from app.services.report_qa import ReportAskORM  # noqa: F401
 
 _ = Base

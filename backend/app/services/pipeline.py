@@ -101,7 +101,77 @@ class ResearchPipeline:
 
     def _emit(self, run_id: str, event: str, payload: dict, recorded: list) -> None:
         self._bus.publish(run_id, event, payload)
+        # V2 Phase A: every live event is also persisted (回放/任务历史/失败分析)
+        from app.application.run_events import record_run_event
+
+        record_run_event(self._session, run_id, event, payload)
         recorded.append({"event": event, **payload})
+
+    def _instrument_name(self, instrument_id: str) -> str:
+        from app.services.instrument_service import InstrumentService
+
+        profile = InstrumentService(self._session).get_profile(
+            instrument_id, allow_remote=False
+        )
+        return profile.name if profile else instrument_id
+
+    def _register_artifacts(
+        self,
+        *,
+        run_id: str,
+        instrument_id: str,
+        snapshot_as_of,
+        report_id: str,
+        version_id: str,
+        version_no: int,
+    ) -> None:
+        """Register this run's outputs on the Artifact Registry (V2 §85)."""
+        from app.application.artifacts import ArtifactService, RelationType
+
+        name = self._instrument_name(instrument_id)
+        service = ArtifactService(self._session)
+        run_artifact = service.register(
+            artifact_type="research_run",
+            domain_type="ResearchRun",
+            domain_id=run_id,
+            title=f"{name} · 完整研究 {run_id[:16]}",
+            instrument_ids=(instrument_id,),
+            as_of_time=snapshot_as_of,
+            created_by="pipeline",
+            route=f"/instrument/{instrument_id}",
+        )
+        report_artifact = service.register(
+            artifact_type="report",
+            domain_type="Report",
+            domain_id=report_id,
+            title=f"{name} · 完整研究报告",
+            instrument_ids=(instrument_id,),
+            as_of_time=snapshot_as_of,
+            created_by="pipeline",
+            route=f"/reports/{report_id}",
+        )
+        version_artifact = service.register(
+            artifact_type="report_version",
+            domain_type="ReportVersion",
+            domain_id=version_id,
+            title=f"{name} · 完整研究报告 v{version_no}",
+            instrument_ids=(instrument_id,),
+            as_of_time=snapshot_as_of,
+            version=version_no,
+            created_by="pipeline",
+            route=f"/reports/{report_id}",
+        )
+        service.link(
+            from_artifact_id=run_artifact,
+            to_artifact_id=version_artifact,
+            relation=RelationType.PRODUCED,
+        )
+        # the stable report handle derives its content from the version
+        service.link(
+            from_artifact_id=report_artifact,
+            to_artifact_id=version_artifact,
+            relation=RelationType.DERIVED_FROM,
+        )
 
     def _code_commit(self) -> str:
         import os
@@ -381,7 +451,7 @@ class ResearchPipeline:
                 html=rendered["html"],
                 content={"citations": sorted(set(structured.citations))},
             )
-            self._versions.save(
+            version_id = self._versions.save(
                 ReportVersion(
                     report_id=report_id,
                     version_no=1,
@@ -390,6 +460,14 @@ class ResearchPipeline:
                     html=rendered["html"],
                     content_json={"citations": sorted(set(structured.citations))},
                 )
+            )
+            self._register_artifacts(
+                run_id=run_id,
+                instrument_id=instrument_id,
+                snapshot_as_of=snapshot.as_of,
+                report_id=report_id,
+                version_id=version_id,
+                version_no=1,
             )
             self._emit(run_id, "report_ready", {"report_id": report_id}, events)
 
