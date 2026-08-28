@@ -31,14 +31,15 @@ def _parse_as_of(raw: str | None) -> datetime:
     return parsed
 
 
-def _resolve_or_404(raw: str) -> str:
-    """Accept instrument_id directly or any resolvable form."""
+def _resolve_or_404(raw: str, session) -> str:
+    """Accept instrument_id directly or any resolvable form (registry-only:
+    snapshot creation must not stall on remote identity resolution)."""
     if ":" in raw:
         return raw.upper()
     try:
         code, exchange, _board = normalize_code(raw)
     except InvalidInstrumentCode:
-        instrument_id = resolve_instrument_id(raw)
+        instrument_id = resolve_instrument_id(raw, session, allow_remote=False)
         if instrument_id is None:
             raise AppError("instrument.not_found", status_code=404) from None
         return instrument_id
@@ -63,7 +64,7 @@ def build_snapshot(
     as_of: str | None = Query(default=None, description="ISO datetime with offset"),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = _resolve_or_404(instrument)
+    instrument_id = _resolve_or_404(instrument, session)
     snapshot = SnapshotRepository(session).build(
         instrument_id, _parse_as_of(as_of), evidence_repo=EvidenceRepository(session)
     )
@@ -85,7 +86,7 @@ def create_research_run(
     run_type: ResearchRunType = Query(default=ResearchRunType.FULL),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = _resolve_or_404(instrument)
+    instrument_id = _resolve_or_404(instrument, session)
     as_of_dt = _parse_as_of(as_of)
 
     snapshot_repo = SnapshotRepository(session)

@@ -2,6 +2,7 @@
 into ``Base.metadata`` for Alembic autogenerate."""
 
 from app.storage.orm import Base, WatchlistORM  # noqa: F401
+from app.storage.instrument_repo import InstrumentRegistryORM  # noqa: F401
 from app.storage.research_orm import ClaimORM, CorporateEventORM, ThesisORM  # noqa: F401
 from app.storage.quality_orm import QualityGateResultORM  # noqa: F401
 from app.storage.agent_repo import AnalystBriefORM, ResearchRequestORM  # noqa: F401

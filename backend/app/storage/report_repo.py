@@ -76,6 +76,13 @@ class ReportRepository:
         rows = self._session.scalars(stmt.order_by(ReportORM.created_at.desc())).all()
         return [self._row_to_dict(r) for r in rows]
 
+    def list_recent(self, *, limit: int = 50) -> list[dict]:
+        """All reports, newest first (报告库 product list)."""
+        rows = self._session.scalars(
+            select(ReportORM).order_by(ReportORM.created_at.desc()).limit(limit)
+        ).all()
+        return [self._row_to_dict(r) for r in rows]
+
     @staticmethod
     def _row_to_dict(r: ReportORM) -> dict:
         return {

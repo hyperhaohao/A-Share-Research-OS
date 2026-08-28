@@ -47,7 +47,7 @@ def collect_evidence(
     """Run a real collection pass: source layer → evidence atoms + manifest."""
     from app.api.market_data import resolve_instrument_id
 
-    instrument_id = resolve_instrument_id(instrument)
+    instrument_id = resolve_instrument_id(instrument, session, allow_remote=False)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
 

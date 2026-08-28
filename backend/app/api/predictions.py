@@ -75,7 +75,7 @@ def _payload(p: PredictionRecord, validation: ValidationRecord | None = None) ->
 
 @router.post("", status_code=201)
 def create_prediction(payload: PredictionIn, session: Session = Depends(get_session)) -> dict:
-    instrument_id = resolve_instrument_id(payload.instrument)
+    instrument_id = resolve_instrument_id(payload.instrument, session)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
     excess = None
@@ -101,14 +101,45 @@ def create_prediction(payload: PredictionIn, session: Session = Depends(get_sess
     return {"prediction": _payload(saved)}
 
 
+class PredictionFromReportIn(BaseModel):
+    report_id: str = Field(min_length=6, max_length=32)
+    horizon: Horizon
+
+
+@router.post("/from-report", status_code=201)
+def create_prediction_from_report(
+    payload: PredictionFromReportIn, session: Session = Depends(get_session)
+) -> dict:
+    """PredictionBuilder: derive a prediction from one report's research state.
+
+    Refuses explicitly (422 prediction.underivable) when the research state
+    lacks a thesis, a visible quote, or a computable valuation — ranges are
+    never invented."""
+    from app.services.prediction_builder import PredictionBuilder, PredictionNotDerivable
+
+    try:
+        prediction = PredictionBuilder(session).build_and_save(
+            payload.report_id, payload.horizon
+        )
+    except KeyError:
+        raise AppError("report.not_found", status_code=404) from None
+    except PredictionNotDerivable as exc:
+        raise AppError(
+            "prediction.underivable", status_code=422, detail=str(exc)
+        ) from None
+    return {"prediction": _payload(prediction)}
+
+
 @router.get("")
 def list_predictions(
-    instrument_id: str = Query(min_length=3, max_length=32),
+    instrument_id: str | None = Query(default=None, min_length=3, max_length=32),
+    limit: int = Query(default=200, ge=1, le=500),
     session: Session = Depends(get_session),
 ) -> dict:
-    orm_rows = session.scalars(
-        select(PredictionORM).where(PredictionORM.instrument_id == instrument_id)
-    ).all()
+    stmt = select(PredictionORM).order_by(PredictionORM.created_at.desc()).limit(limit)
+    if instrument_id is not None:
+        stmt = stmt.where(PredictionORM.instrument_id == instrument_id)
+    orm_rows = session.scalars(stmt).all()
     results = []
     for row in orm_rows:
         prediction = PredictionRepository(session).get(row.prediction_id)

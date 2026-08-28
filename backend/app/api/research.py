@@ -19,7 +19,6 @@ from app.domain.research import (
     InvestmentThesis,
     ThesisStatus,
 )
-from app.api.market_data import resolve_instrument_id
 from app.storage.research_repo import ReferenceNotFoundError, ResearchRepository
 
 router = APIRouter(tags=["research"])

@@ -18,7 +18,7 @@ def run_monitor(
     instrument: str = Query(min_length=4, max_length=64),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = resolve_instrument_id(instrument)
+    instrument_id = resolve_instrument_id(instrument, session)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
     decision = MonitorService(session).run_monitor(instrument_id)

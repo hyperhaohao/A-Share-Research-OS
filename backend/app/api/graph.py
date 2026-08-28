@@ -18,7 +18,7 @@ def get_graph(
     instrument: str = Query(min_length=4, max_length=64),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = resolve_instrument_id(instrument)
+    instrument_id = resolve_instrument_id(instrument, session, allow_remote=False)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
     graph = ResearchGraph(session).build_for_instrument(instrument_id)
@@ -33,7 +33,7 @@ def trace_node(
     max_depth: int = Query(default=10, ge=1, le=50),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = resolve_instrument_id(instrument)
+    instrument_id = resolve_instrument_id(instrument, session, allow_remote=False)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
 

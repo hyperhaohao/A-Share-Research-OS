@@ -21,7 +21,7 @@ def get_timeline(
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = resolve_instrument_id(instrument)
+    instrument_id = resolve_instrument_id(instrument, session, allow_remote=False)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
     kind_list = [k.strip() for k in kinds.split(",") if k.strip()] if kinds else None

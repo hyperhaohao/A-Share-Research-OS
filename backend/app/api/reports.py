@@ -11,6 +11,7 @@ from app.core.errors import AppError
 from app.db import get_session
 from app.services.pdf_export import markdown_to_pdf
 from app.services.report_compiler import ReportCompiler
+from app.storage.manifest_repo import ReportVersionRepository
 from app.storage.report_repo import ReportRepository
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -73,12 +74,30 @@ def compile_report(
 
 @router.get("")
 def list_reports(
-    instrument_id: str = Query(min_length=3, max_length=32),
+    instrument_id: str | None = Query(default=None, min_length=3, max_length=32),
     language: str | None = Query(default=None, pattern="^(zh-CN|en-US)$"),
+    limit: int = Query(default=50, ge=1, le=200),
     session: Session = Depends(get_session),
 ) -> dict:
-    reports = ReportRepository(session).list_for(instrument_id, language=language)
-    return {"count": len(reports), "results": reports}
+    """Report library list (PW2): all reports newest-first, with the latest
+    version number attached; per-instrument listing stays available."""
+    repo = ReportRepository(session)
+    if instrument_id is not None:
+        reports = repo.list_for(instrument_id, language=language)
+    else:
+        reports = [r for r in repo.list_recent(limit=limit)
+                   if language is None or r["language"] == language]
+    report_ids = [r["report_id"] for r in reports]
+    versions = ReportVersionRepository(session).latest_version_nos(report_ids)
+    results = []
+    for r in reports:
+        payload = {k: r[k] for k in (
+            "report_id", "instrument_id", "snapshot_id", "language",
+            "gate_status", "published", "created_at",
+        )}
+        payload["latest_version_no"] = versions.get(r["report_id"], 1)
+        results.append(payload)
+    return {"count": len(results), "results": results}
 
 
 @router.get("/{report_id}")

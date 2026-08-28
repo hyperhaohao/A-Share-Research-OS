@@ -48,6 +48,82 @@ DEFAULT_INTERVALS = {"monitor": 300, "periodic_full_research": 86400, "event_tri
 MAX_ATTEMPTS = 5
 LEASE_SECONDS = 900  # a running task older than this is considered interrupted
 
+_DOW = {"MON": 0, "TUE": 1, "WED": 2, "THU": 3, "FRI": 4, "SAT": 5, "SUN": 6}
+_WEEKDAY_SET = (0, 1, 2, 3, 4)
+
+
+class ScheduleSpec:
+    """Parsed schedule: ``interval:N`` | ``daily:HH:MM`` | ``weekdays:HH:MM``
+    | ``weekly:DDD:HH:MM`` (DDD ∈ MON..SUN).
+
+    Wall-clock times are interpreted in the server's local timezone (the
+    deployment is CN-local; the scheduler container runs with TZ=Asia/Shanghai)
+    and stored as UTC timestamps.
+    """
+
+    __slots__ = ("kind", "interval_seconds", "hour", "minute", "weekdays")
+
+    def __init__(self, schedule: str) -> None:
+        text = (schedule or "").strip().lower()
+        parts = text.split(":")
+        if parts[0] == "interval" and len(parts) == 2:
+            try:
+                seconds = int(parts[1])
+            except ValueError:
+                raise ValueError(f"bad interval: {schedule!r}") from None
+            if seconds < 0:
+                raise ValueError(f"interval must be >= 0: {schedule!r}")
+            self.kind = "interval"
+            self.interval_seconds = seconds
+            self.hour = self.minute = 0
+            self.weekdays: tuple[int, ...] | None = None
+            return
+        if parts[0] in ("daily", "weekdays", "weekly"):
+            if parts[0] == "weekly":
+                if len(parts) != 4 or parts[1].upper() not in _DOW:
+                    raise ValueError(f"weekly needs DDD (MON..SUN): {schedule!r}")
+                self.weekdays = (_DOW[parts[1].upper()],)
+                time_parts = (parts[2], parts[3])
+            else:
+                if len(parts) != 3:
+                    raise ValueError(f"{parts[0]} needs HH:MM: {schedule!r}")
+                self.weekdays = _WEEKDAY_SET if parts[0] == "weekdays" else None
+                time_parts = (parts[1], parts[2])
+            try:
+                hour, minute = int(time_parts[0]), int(time_parts[1])
+            except ValueError:
+                raise ValueError(f"bad wall-clock time: {schedule!r}") from None
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError(f"wall-clock time out of range: {schedule!r}")
+            self.kind = parts[0]
+            self.interval_seconds = 0
+            self.hour, self.minute = hour, minute
+            return
+        raise ValueError(f"unsupported schedule: {schedule!r}")
+
+
+def validate_schedule(schedule: str) -> ScheduleSpec:
+    """Parse + validate; raises ValueError on malformed specs."""
+    return ScheduleSpec(schedule)
+
+
+def compute_next_run(schedule: str, after: datetime) -> datetime:
+    """Next run time for a schedule, strictly after ``after`` (UTC in, UTC out).
+
+    Wall-clock schedules advance day by day (bounded 8-day search) in the
+    server's local timezone; interval schedules add the interval directly.
+    """
+    spec = ScheduleSpec(schedule)
+    if spec.kind == "interval":
+        return after + timedelta(seconds=spec.interval_seconds)
+    local = after.astimezone()
+    candidate = local.replace(hour=spec.hour, minute=spec.minute, second=0, microsecond=0)
+    for _ in range(8):  # bounded: every wall-clock schedule fires within a week
+        if candidate > local and (spec.weekdays is None or candidate.weekday() in spec.weekdays):
+            return candidate.astimezone(timezone.utc)
+        candidate += timedelta(days=1)
+    raise ValueError(f"no next occurrence within a week: {schedule!r}")
+
 
 class ResearchTask(BaseModel):
     model_config = ConfigDict(extra="forbid", validate_assignment=True)
@@ -104,16 +180,21 @@ class TaskRepository:
         research_level: str = "standard",
         filters: dict | None = None,
     ) -> ResearchTask:
-        interval = schedule or f"interval:{DEFAULT_INTERVALS[task_type.value]}"
+        schedule = schedule or f"interval:{DEFAULT_INTERVALS[task_type.value]}"
+        spec = ScheduleSpec(schedule)  # raises ValueError on malformed input
         now = utc_now()
-        seconds = int(interval.split(":", 1)[1])
+        if spec.kind == "interval":
+            next_run = now  # first run happens on the next scheduler tick
+        else:
+            # wall-clock schedules fire at their scheduled time, not instantly
+            next_run = compute_next_run(schedule, now)
         task = ResearchTask(
             instrument_id=instrument_id,
             task_type=task_type,
-            schedule=interval,
+            schedule=schedule,
             research_level=research_level,
             filters=filters or {},
-            next_run_at=now,  # first run happens on the next scheduler tick
+            next_run_at=next_run,
             created_at=now,
         )
         self._session.add(self._to_orm(task))
@@ -175,7 +256,6 @@ class TaskRepository:
         task = self.get(task_id)
         if task is None or not task.enabled or task.status is TaskStatus.RUNNING:
             return None
-        interval = int(task.schedule.split(":", 1)[1])
         # concurrency control: one running task per instrument
         if self.running_for_instrument(task.instrument_id):
             # reschedule shortly; another task for this instrument is running
@@ -190,7 +270,7 @@ class TaskRepository:
             running_since=now,
             last_run_at=now,
             attempts=task.attempts + 1,
-            next_run_at=now + timedelta(seconds=interval),
+            next_run_at=compute_next_run(task.schedule, now),
         )
         return self.get(task_id)
 
@@ -202,24 +282,36 @@ class TaskRepository:
             self._update_raw(task_id, status=TaskStatus.IDLE.value, running_since=None, attempts=0)
             return
         attempts = task.attempts
+        # failure backoff is independent of the schedule kind: retries come
+        # after an exponential pause, then resume the normal cadence
+        backoff = min(2 ** attempts * 30, 3600)
         if attempts >= MAX_ATTEMPTS:
-            interval = int(task.schedule.split(":", 1)[1])
             self._update_raw(
                 task_id,
                 status=TaskStatus.FAILED.value,
                 running_since=None,
-                next_run_at=now + timedelta(seconds=interval),
+                next_run_at=now + timedelta(seconds=backoff),
             )
         else:
-            # exponential backoff, capped at one hour, independent of the
-            # schedule interval so interval:0 tasks still back off
-            backoff = min(2 ** attempts * 30, 3600)
             self._update_raw(
                 task_id,
                 status=TaskStatus.IDLE.value,
                 running_since=None,
                 next_run_at=now + timedelta(seconds=backoff),
             )
+
+    def delete(self, task_id: str) -> bool:
+        """Remove the scheduling config row. Research history (runs, reports,
+        predictions — all keyed by instrument) is never touched."""
+        task = self.get(task_id)
+        if task is None:
+            return False
+        row = self._session.scalars(
+            select(ResearchTaskORM).where(ResearchTaskORM.task_id == task_id)
+        ).first()
+        self._session.delete(row)
+        self._session.flush()
+        return True
 
     def recover_interrupted(self, now: datetime, *, lease_seconds: int = LEASE_SECONDS) -> list[str]:
         """Restart recovery: reschedule tasks stuck running past the lease."""
@@ -233,8 +325,7 @@ class TaskRepository:
         ).all()
         recovered: list[str] = []
         for row in rows:
-            interval = int(row.schedule.split(":", 1)[1])
-            backoff = min(2 ** row.attempts * 30, interval)
+            backoff = min(2 ** row.attempts * 30, 3600)
             row.status = TaskStatus.IDLE.value
             row.next_run_at = now + timedelta(seconds=backoff)
             row.running_since = None

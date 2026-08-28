@@ -28,7 +28,7 @@ def run_pipeline(
                                description="client-generated id to subscribe before running"),
     session: Session = Depends(get_session),
 ) -> dict:
-    instrument_id = resolve_instrument_id(instrument)
+    instrument_id = resolve_instrument_id(instrument, session)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
     try:
@@ -90,7 +90,7 @@ watchlist_router = APIRouter(prefix="/watchlist", tags=["watchlist"])
 
 @watchlist_router.post("", status_code=201)
 def add_to_watchlist(payload: WatchlistIn, session: Session = Depends(get_session)) -> dict:
-    instrument_id = resolve_instrument_id(payload.instrument)
+    instrument_id = resolve_instrument_id(payload.instrument, session)
     if instrument_id is None:
         raise AppError("instrument.not_found", status_code=404)
     existing = session.query(WatchlistORM).filter_by(instrument_id=instrument_id).first()

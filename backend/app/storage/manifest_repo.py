@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, DateTime, Integer, String, select, UniqueConstraint
+from sqlalchemy import JSON, DateTime, Integer, String, func, select, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.manifest import (
@@ -181,6 +181,17 @@ class ReportVersionRepository:
             select(ReportVersionORM).where(ReportVersionORM.version_id == version_id)
         ).first()
         return None if row is None else self._row_to_domain(row)
+
+    def latest_version_nos(self, report_ids: list[str]) -> dict[str, int]:
+        """Max version_no per report (报告库 card display)."""
+        if not report_ids:
+            return {}
+        rows = self._session.execute(
+            select(ReportVersionORM.report_id, func.max(ReportVersionORM.version_no))
+            .where(ReportVersionORM.report_id.in_(report_ids))
+            .group_by(ReportVersionORM.report_id)
+        ).all()
+        return {report_id: max_no for report_id, max_no in rows}
 
     @staticmethod
     def _row_to_domain(r: ReportVersionORM) -> ReportVersion:
