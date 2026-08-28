@@ -14,6 +14,8 @@ services:
   scheduler:
     build: ./backend
     command: uv run python -m scheduler_worker
+    healthcheck:
+      disable: true  # worker loop, not an HTTP service
     env_file: .env
     environment:
       - ASRO_DATABASE_URL=sqlite:////app/data/asro.db
