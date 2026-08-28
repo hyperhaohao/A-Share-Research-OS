@@ -47,7 +47,7 @@ class ResearchRepository:
         self, event: CorporateEvent, *, validate_evidence: bool = True
     ) -> str:
         if validate_evidence:
-            self._require_evidence(event.evidence_refs)
+            self._require_instrument_evidence(event.instrument_id, event.evidence_refs)
         row = CorporateEventORM(
             event_id=event.event_id,
             instrument_id=event.instrument_id,
@@ -261,6 +261,19 @@ class ResearchRepository:
         missing = [i for i in ids if i not in existing]
         if missing:
             raise ReferenceNotFoundError(f"claims not found: {missing}")
+
+    def _require_instrument_evidence(self, instrument_id: str, evidence_ids) -> None:
+        """Evidence must belong to the same instrument (P0-03)."""
+        self._require_evidence(evidence_ids)
+        ids = list(dict.fromkeys(evidence_ids))
+        for eid in ids:
+            ev = self._session.scalars(
+                select(EvidenceORM).where(EvidenceORM.evidence_id == eid)
+            ).first()
+            if ev is not None and ev.instrument_id != instrument_id:
+                raise CrossInstrumentError(
+                    f"evidence {eid} belongs to {ev.instrument_id}, not {instrument_id}"
+                )
 
     def _require_snapshot_evidence(
         self, instrument_id: str, snapshot_id: str, evidence_ids

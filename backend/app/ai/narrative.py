@@ -67,8 +67,8 @@ def narrativize_report(
     if provider is None:
         for key, idx, _zh in targets:
             item = report.sections[key].items[idx]
-            item["text_en"] = item["text_zh"]
-            item["text_language"] = "zh-CN"  # marker: original preserved
+            item["text_en"] = item["text_zh"]  # fallback: original Chinese
+            item["text_language"] = "zh-CN"  # marker: not a real translation
         return {"translated": 0, "fallback": len(targets), "kind": "deterministic"}
 
     # chunk to keep prompts bounded

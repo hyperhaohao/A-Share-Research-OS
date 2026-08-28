@@ -100,11 +100,38 @@ class RevisionRepository:
             raise ReferenceNotFoundError(
                 f"report {proposal.report_id} has no version chain to extend"
             )
-        previous = chain[-1]
 
+        # stale base_version check
+        previous = chain[-1]
+        if previous.version_id != proposal.base_version_id:
+            raise ValueError(
+                f"stale base_version: expected {previous.version_id}, "
+                f"got {proposal.base_version_id}"
+            )
+
+        # original_text must exist exactly once
+        count = previous.markdown.count(proposal.original_text)
+        if count == 0:
+            raise ValueError("original_text not found in current version")
+        if count > 1:
+            raise ValueError(
+                f"original_text appears {count} times — ambiguous revision"
+            )
+
+        # targeted replacement (only 1 occurrence, verified above)
         revised_markdown = previous.markdown.replace(
-            proposal.original_text, proposal.proposed_text
+            proposal.original_text, proposal.proposed_text, 1
         )
+
+        # re-render HTML from revised markdown (consistency fix P0-01)
+        from app.domain.report import ReportRenderer
+        from datetime import datetime as _dt, timezone as _tz
+
+        renderer = ReportRenderer(previous.language)
+        revised_html = renderer.render_html(
+            _markdown_to_structured(revised_markdown)
+        )
+
         version = ReportVersion(
             report_id=proposal.report_id,
             version_no=previous.version_no + 1,
@@ -113,7 +140,7 @@ class RevisionRepository:
             changed_sections=(proposal.target_section,),
             language=previous.language,
             markdown=revised_markdown,
-            html=previous.html,
+            html=revised_html,
             content_json={
                 **previous.content_json,
                 "revision_proposal_id": proposal.proposal_id,
@@ -166,3 +193,26 @@ class RevisionRepository:
             created_at=_ensure_utc(r.created_at),
             resolved_at=_ensure_utc(r.resolved_at),
         )
+
+def _markdown_to_structured(markdown: str):
+    """Minimal markdown→structured adapter for re-rendering HTML after a
+    targeted revision. The full compiler remains the production path."""
+    from app.domain.report import StructuredReport, ReportSection
+    from datetime import datetime, timezone as _tz
+
+    report = StructuredReport(
+        instrument_id="", snapshot_id="",
+        as_of=datetime.now(_tz.utc),
+        generated_at=datetime.now(_tz.utc),
+    )
+    current_section = None
+    for line in markdown.splitlines():
+        if line.startswith("## "):
+            key = line[3:].strip().lower().replace(" ", "_")
+            current_section = ReportSection(key=key)
+            report.sections[key] = current_section
+        elif line.startswith("- ") and current_section is not None:
+            current_section.items.append(
+                {"text_zh": line[2:], "text_en": line[2:], "text_language": "zh-CN"}
+            )
+    return report

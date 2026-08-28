@@ -97,8 +97,8 @@ class ReportCompiler:
             theses_section.items.append(
                 {
                     "text_zh": f"{thesis.title}：{thesis.description}",
-                    "text_en": f"{thesis.title}：{thesis.description}",
-                    "text_language": "zh-CN",  # stored original; never translated away
+                    "text_en": None,  # en filled by narrative layer (or fallback marker)
+                    "text_language": "zh-CN",
                     "evidence_ids": list(dict.fromkeys(thesis_evidence)),
                     "claim_ids": list(thesis.supporting_claims),
                 }
@@ -110,7 +110,7 @@ class ReportCompiler:
             claims_section_items.append(
                 {
                     "text_zh": claim.statement,
-                    "text_en": claim.statement,
+                    "text_en": None,
                     "text_language": "zh-CN",
                     "evidence_ids": list(claim.supporting_evidence_refs),
                 }
@@ -172,12 +172,12 @@ class ReportCompiler:
                     bear = self._research.get_claim(d.bear_claim_id)
                     if bull is not None:
                         bull_bear.items.append(
-                            {"text_zh": bull.statement, "text_en": bull.statement,
+                            {"text_zh": bull.statement, "text_en": None,
                              "text_language": "zh-CN", "evidence_ids": list(bull.supporting_evidence_refs)}
                         )
                     if bear is not None:
                         bull_bear.items.append(
-                            {"text_zh": bear.statement, "text_en": bear.statement,
+                            {"text_zh": bear.statement, "text_en": None,
                              "text_language": "zh-CN", "evidence_ids": list(bear.supporting_evidence_refs)}
                         )
 
@@ -186,7 +186,7 @@ class ReportCompiler:
         for thesis in theses:
             for risk in thesis.risks:
                 risks_section.items.append(
-                    {"text_zh": risk, "text_en": risk, "text_language": "zh-CN", "evidence_ids": []}
+                    {"text_zh": risk, "text_en": None, "text_language": "zh-CN", "evidence_ids": []}
                 )
             for invalidate in thesis.invalidate_conditions:
                 risks_section.items.append(
