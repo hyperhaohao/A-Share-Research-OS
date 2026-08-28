@@ -80,8 +80,6 @@ def _seed_report_with_claim(client, monkeypatch):
         f"/api/v1/reports/{report['report_id']}/versions",
         json={"language": "zh-CN", "markdown": report["markdown"]},
     )
-    print(f'DEBUG seed: content_json keys={list(report["content_json"].keys())}')
-    print(f'DEBUG seed: has_section_items={"section_items" in report["content_json"]}')
     return report, claim, thesis, evidence_id
 
 

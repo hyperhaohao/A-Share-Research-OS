@@ -80,3 +80,34 @@ tests/factors/  alpha101/academic 样本回归
 
 M22 不需要 Qlib Adapter 实现。若未来触发重评，按 §4.4/§54 经 Adapter 接入并完成
 真实 A 股 `Data → Factor → Model → Prediction → Backtest → Metrics` 闭环后再评估。
+
+---
+
+## BaselineQuantEngine vs Upstream Capabilities
+
+> 整改三轮 P1-01：明确区分正式运行时能力与上游审计能力。
+
+### 正式运行时已接入（BaselineQuantEngine）
+
+```text
+Eastmoney kline 日线数据获取
+5D 动量因子
+20D 动量因子
+20D 波动率因子
+5D 动量信号 Long/Flat 回测（t-1 无前视）
+年化收益 / Sharpe / 最大回撤 / 胜率
+QuantBrief → Research State（引用 kline Evidence）
+```
+
+### TideTrading 上游已审计但未接入正式运行时
+
+```text
+Alpha101 / GTJA191 / Qlib158 因子库
+450+ 因子库
+ChinaAEngine（T+1 / 佣金 / 印花税 / 涨跌停）
+Optimizer
+完整真实性测试
+```
+
+以上 upstream 能力在 M0 审计中记录，但**不属于正式运行时已验证能力**。
+如果需要高级量化，需真实接入 TideQuantAdapter 并通过集成测试。
