@@ -54,6 +54,13 @@ def compile_report(
             "citations": sorted(set(report.citations)),
             "data_quality_notes": report.data_quality_notes,
             "sections": sorted(report.sections.keys()),
+            "section_items": {
+                key: [
+                    {k: v for k, v in item.items() if k != "is_disclaimer"}
+                    for item in section.items
+                ]
+                for key, section in report.sections.items()
+            },
         },
     )
     saved = repo.get(report_id)

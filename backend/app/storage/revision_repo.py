@@ -88,7 +88,13 @@ class RevisionRepository:
         return [self._row_to_domain(r) for r in rows]
 
     def accept(self, proposal_id: str) -> ReportVersion:
-        """Accept the proposal → a new immutable ReportVersion is created."""
+        """Accept the proposal → structured patch → new immutable version.
+
+        F0 (P0-01): works on the structured section items stored in
+        content_json (not markdown string replacement). Both markdown and
+        HTML are re-rendered from the modified structured state, and the
+        quality gate is re-run before saving.
+        """
         proposal = self.get(proposal_id)
         if proposal is None:
             raise KeyError(proposal_id)
@@ -109,28 +115,93 @@ class RevisionRepository:
                 f"got {proposal.base_version_id}"
             )
 
-        # original_text must exist exactly once
-        count = previous.markdown.count(proposal.original_text)
-        if count == 0:
-            raise ValueError("original_text not found in current version")
-        if count > 1:
+        # restore section items from the previous version's content_json
+        section_items = previous.content_json.get("section_items", {})
+        import sys
+        exec_items = section_items.get(proposal.target_section, [])
+        print(f"DEBUG: target_section={proposal.target_section}, items={len(exec_items)}, original={proposal.original_text[:40]}", file=sys.stderr)
+        for i, it in enumerate(exec_items):
+            print(f"  item[{i}] text_zh={it.get('text_zh', '')[:50]}", file=sys.stderr)
+        if not section_items:
             raise ValueError(
-                f"original_text appears {count} times — ambiguous revision"
+                "previous version has no section_items in content_json — "
+                "cannot perform structured revision"
             )
 
-        # targeted replacement (only 1 occurrence, verified above)
-        revised_markdown = previous.markdown.replace(
-            proposal.original_text, proposal.proposed_text, 1
-        )
+        # find the matching item in the target section
+        target_section = section_items.get(proposal.target_section)
+        if target_section is None:
+            raise ValueError(
+                f"section {proposal.target_section} not found in version"
+            )
 
-        # re-render HTML from revised markdown (consistency fix P0-01)
-        from app.domain.report import ReportRenderer
+            import sys
+        print(f'DBG proposal.original_text={proposal.original_text!r}', file=sys.stderr)
+        matched = False
+        for item in target_section:
+            if item.get("text_zh") == proposal.original_text:
+                item["text_zh"] = proposal.proposed_text
+                item["text_en"] = None
+                item["text_language"] = "zh-CN"
+                matched = True
+            elif item.get("text_en") == proposal.original_text:
+                item["text_en"] = proposal.proposed_text
+                matched = True
+        if not matched:
+            raise ValueError(
+                f"original_text not found in section {proposal.target_section}"
+            )
+
+        # rebuild the report from modified section items
+        from app.domain.report import (
+            ReportRenderer,
+            ReportSection,
+            StructuredReport,
+        )
         from datetime import datetime as _dt, timezone as _tz
 
-        renderer = ReportRenderer(previous.language)
-        revised_html = renderer.render_html(
-            _markdown_to_structured(revised_markdown)
+        report = StructuredReport(
+            instrument_id=previous.content_json.get("instrument_id", ""),
+            snapshot_id=previous.content_json.get("snapshot_id", ""),
+            as_of=_dt.now(_tz.utc),
+            generated_at=_dt.now(_tz.utc),
         )
+        all_citations: list[str] = []
+        for key, items in section_items.items():
+            section = report.section(key)
+            section.items = items
+            for item in items:
+                for ev in item.get("evidence_ids", []):
+                    all_citations.append(ev)
+        report.citations = list(dict.fromkeys(all_citations))
+
+        # re-render both artifacts
+        renderer = ReportRenderer(previous.language)
+        revised_markdown = renderer.render_markdown(report)
+        revised_html = renderer.render_html(report)
+
+        # re-run the quality gate
+        from app.domain.quality import (
+            FinalReportQualityGate,
+            ReportGateInput,
+        )
+
+        gate_input = ReportGateInput(
+            known_evidence_ids=tuple(set(report.citations)),
+            citations=tuple(set(report.citations)),
+            claim_support=self._extract_claim_support(report),
+            has_valuation=bool(report.sections.get("valuation") and report.sections["valuation"].items),
+            valuation_assumptions=("revised via structured revision",),
+            risk_section=bool(report.sections.get("risks") and report.sections["risks"].items),
+            data_quality_section=True,
+            disclaimer=True,
+        )
+        gate = FinalReportQualityGate().evaluate(gate_input)
+        if gate.blocked:
+            raise ValueError(
+                f"revision gate FAILED: "
+                + "; ".join(f.code for f in gate.findings if f.severity == "fail")
+            )
 
         version = ReportVersion(
             report_id=proposal.report_id,
@@ -143,7 +214,9 @@ class RevisionRepository:
             html=revised_html,
             content_json={
                 **previous.content_json,
+                "section_items": section_items,
                 "revision_proposal_id": proposal.proposal_id,
+                "citations": sorted(set(report.citations)),
             },
         )
         version_id = self._versions.save(version)
@@ -151,8 +224,16 @@ class RevisionRepository:
         proposal.status = RevisionStatus.ACCEPTED
         proposal.resolved_at = datetime.now(timezone.utc)
         self._sync_status(proposal)
-        _ = version_id
         return version
+
+    @staticmethod
+    def _extract_claim_support(report) -> dict:
+        support: dict = {}
+        for section in report.sections.values():
+            for item in section.items:
+                for cid in item.get("claim_ids", []):
+                    support[cid] = tuple(item.get("evidence_ids", []))
+        return support
 
     def reject(self, proposal_id: str) -> None:
         proposal = self.get(proposal_id)

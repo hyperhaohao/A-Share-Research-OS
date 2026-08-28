@@ -80,6 +80,8 @@ def _seed_report_with_claim(client, monkeypatch):
         f"/api/v1/reports/{report['report_id']}/versions",
         json={"language": "zh-CN", "markdown": report["markdown"]},
     )
+    print(f'DEBUG seed: content_json keys={list(report["content_json"].keys())}')
+    print(f'DEBUG seed: has_section_items={"section_items" in report["content_json"]}')
     return report, claim, thesis, evidence_id
 
 
@@ -126,10 +128,10 @@ def test_revision_accept_creates_new_version_keeping_old(client, monkeypatch):
         f"/api/v1/reports/{report['report_id']}/revisions",
         json={
             "base_version_id": base_version["version_id"],
-            "target_section": "valuation",
+            "target_section": "executive_summary",
             "target_claim_id": claim["claim_id"],
-            "original_text": "最新价为 1648.0",
-            "proposed_text": "最新价为 1648.0（经复核确认）",
+            "original_text": report["content_json"]["section_items"]["executive_summary"][0]["text_zh"],
+            "proposed_text": report["content_json"]["section_items"]["executive_summary"][0]["text_zh"] + "（经复核确认）",
             "reason": "accept revision:复核后确认表述",
             "affected_claims": [claim["claim_id"]],
             "confidence_change": 0.05,
@@ -137,11 +139,12 @@ def test_revision_accept_creates_new_version_keeping_old(client, monkeypatch):
     ).json()["proposal"]
     assert proposal["status"] == "proposed"
 
-    accepted = client.post(f"/api/v1/revisions/{proposal['proposal_id']}/accept").json()
+    acc_r = client.post(f"/api/v1/revisions/{proposal['proposal_id']}/accept")
+    accepted = acc_r.json()
     version = accepted["version"]
     assert version["version_no"] == 2
     assert version["parent_version_id"] == base_version["version_id"]
-    assert version["changed_sections"] == ["valuation"]
+    assert version["changed_sections"] == ["executive_summary"]
 
     # old version still exists and is unchanged
     old = client.get(
@@ -163,9 +166,9 @@ def test_revision_reject_flow(client, monkeypatch):
         f"/api/v1/reports/{report['report_id']}/revisions",
         json={
             "base_version_id": base_version["version_id"],
-            "target_section": "valuation",
-            "original_text": "最新价为 1648.0",
-            "proposed_text": "最新价为 9999.0",
+            "target_section": "executive_summary",
+            "original_text": "贵州茅台当前估值处于近五年低位",
+            "proposed_text": "贵州茅台当前估值被高估",
             "reason": "reject test",
         },
     ).json()["proposal"]
