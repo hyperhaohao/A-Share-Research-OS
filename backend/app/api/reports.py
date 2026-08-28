@@ -30,6 +30,13 @@ def compile_report(
     except KeyError:
         raise AppError("snapshot.not_found", status_code=404) from None
 
+    # P0-07: narrative layer — en-US reports get LLM-translated prose
+    if language == "en-US":
+        from app.ai.llm_provider import get_llm_provider
+        from app.ai.narrative import narrativize_report
+
+        narrativize_report(report, provider=get_llm_provider(), target_language="en-US")
+
     rendered = compiler.render_and_gate(report, language=language)
     blocked = rendered["gate"]["blocked"]
     published = publish and not blocked

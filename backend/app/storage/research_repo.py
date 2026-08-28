@@ -25,6 +25,13 @@ class ReferenceNotFoundError(ValueError):
     """A cited object does not exist — refuse to create the citing object."""
 
 
+class CrossInstrumentError(ReferenceNotFoundError):
+    """A cited evidence belongs to a different instrument."""
+
+
+class CrossSnapshotError(ReferenceNotFoundError):
+    """A cited evidence is not pinned by the specified snapshot."""
+
 def _ensure_utc(value: datetime | None) -> datetime | None:
     if value is None or value.tzinfo is not None:
         return value
@@ -80,8 +87,9 @@ class ResearchRepository:
     # -- claims --------------------------------------------------------------
     def save_claim(self, claim: Claim, *, validate_refs: bool = True) -> str:
         if validate_refs:
-            self._require_evidence(
-                claim.supporting_evidence_refs + claim.opposing_evidence_refs
+            self._require_snapshot_evidence(
+                claim.instrument_id, claim.snapshot_id,
+                claim.supporting_evidence_refs + claim.opposing_evidence_refs,
             )
         row = ClaimORM(
             claim_id=claim.claim_id,
@@ -176,7 +184,10 @@ class ResearchRepository:
     # -- theses --------------------------------------------------------------
     def save_thesis(self, thesis: InvestmentThesis, *, validate_refs: bool = True) -> str:
         if validate_refs:
-            self._require_claims(thesis.supporting_claims + thesis.opposing_claims)
+            self._require_snapshot_claims(
+                thesis.instrument_id, thesis.snapshot_id,
+                thesis.supporting_claims + thesis.opposing_claims,
+            )
         row = ThesisORM(
             thesis_id=thesis.thesis_id,
             instrument_id=thesis.instrument_id,
@@ -250,3 +261,43 @@ class ResearchRepository:
         missing = [i for i in ids if i not in existing]
         if missing:
             raise ReferenceNotFoundError(f"claims not found: {missing}")
+
+    def _require_snapshot_evidence(
+        self, instrument_id: str, snapshot_id: str, evidence_ids
+    ) -> None:
+        """PIT integrity (P0-06): evidence must belong to the same instrument
+        AND be pinned by the specified snapshot."""
+        self._require_evidence(evidence_ids)
+        from app.storage.snapshot_repo import SnapshotRepository as _SR
+
+        snap = _SR(self._session).get(snapshot_id)
+        if snap is None:
+            raise CrossSnapshotError(f"snapshot {snapshot_id} not found")
+        if snap.instrument_id != instrument_id:
+            raise CrossInstrumentError(
+                f"snapshot belongs to {snap.instrument_id}, not {instrument_id}"
+            )
+        pinned = set(snap.evidence_ids)
+        for eid in evidence_ids:
+            if eid not in pinned:
+                raise CrossSnapshotError(
+                    f"evidence {eid} not pinned by snapshot {snapshot_id}"
+                )
+
+    def _require_snapshot_claims(
+        self, instrument_id: str, snapshot_id: str, claim_ids
+    ) -> None:
+        """Claims must belong to the same instrument and snapshot (P0-06)."""
+        self._require_claims(claim_ids)
+        for cid in claim_ids:
+            c = self.get_claim(cid)
+            if c is None:
+                continue
+            if c.instrument_id != instrument_id:
+                raise CrossInstrumentError(
+                    f"claim {cid} belongs to {c.instrument_id}, not {instrument_id}"
+                )
+            if c.snapshot_id != snapshot_id:
+                raise CrossSnapshotError(
+                    f"claim {cid} belongs to snapshot {c.snapshot_id}, not {snapshot_id}"
+                )

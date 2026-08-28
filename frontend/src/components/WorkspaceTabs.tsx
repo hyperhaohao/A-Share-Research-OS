@@ -316,7 +316,7 @@ export function WorkspaceReportsTab({ instrumentId }: { instrumentId: string }) 
     <div>
       {data.results.map((r) => (
         <div key={r.report_id} className="result-row">
-          <a href={`#/reports/${r.report_id}`} className="mono">
+          <a href={`/reports/${r.report_id}`} className="mono">
             {r.report_id}
           </a>
           <span className="mono">{r.language}</span>

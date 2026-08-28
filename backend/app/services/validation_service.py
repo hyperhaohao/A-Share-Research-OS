@@ -1,15 +1,15 @@
-"""Prediction validation service (任务书 §51).
+"""Prediction validation service (任务书 §51, 整改二轮 P0-04).
 
-Math is deterministic and covered by fixed-number tests (§80):
+Two distinct validation kinds:
 
-    instrument_return = P_end / P_start − 1
-    benchmark_return  = B_end / B_start − 1   (when benchmark prices exist)
-    excess_return     = instrument_return − benchmark_return
-    direction_correct = sign(return) matches expected direction
-    range_hit         = expected_return_range contains instrument_return
+  mark_to_market  — non-persistent, read-only snapshot of current P&L.
+                    Does NOT create a ValidationRecord.
+  final           — matured-horizon validation. Only allowed after
+                    due_at. Creates the one-shot immutable record that
+                    feeds the learning loop (M20).
 
-Prices come from quote evidence of the instrument (and benchmark index
-evidence when available) at or before the as_of / due timestamps.
+The old behaviour (mark-to-market at T0 poisoning the validation slot
+forever) is eliminated: ``validate()`` refuses to persist before maturity.
 """
 
 from __future__ import annotations
@@ -27,6 +27,10 @@ from app.domain.prediction import (
 from app.storage.prediction_repo import PredictionRepository, ValidationRepository
 from app.storage.repository import EvidenceRepository
 from app.storage.snapshot_repo import SnapshotRepository
+
+
+class PredictionNotMatured(Exception):
+    """The prediction has not reached its due date yet."""
 
 
 def _price_at(
@@ -56,11 +60,7 @@ def compute_validation(
     benchmark_end_price: float | None,
     evidence_refs: tuple[str, ...] = (),
 ) -> ValidationRecord:
-    """Pure math — deterministic, unit-testable without any storage.
-
-    All derived values are computed from the ROUNDED returns so the stored
-    record is internally consistent (§80 determinism).
-    """
+    """Pure math — deterministic, unit-testable without any storage."""
     instrument_return = round((end_price / start_price - 1) * 100, 6)
 
     benchmark_return: float | None = None
@@ -102,28 +102,54 @@ class ValidationService:
         self._validations = ValidationRepository(session)
         self._evidence = EvidenceRepository(session)
 
+    # -- mark-to-market: read-only, no persistence (P0-04) ---------------------
+    def mark_to_market(self, prediction_id: str, *, now: datetime | None = None) -> dict:
+        """Current P&L view. Read-only — does NOT create a ValidationRecord."""
+        prediction = self._predictions.get(prediction_id)
+        if prediction is None:
+            raise KeyError(prediction_id)
+        now = now or utc_now()
+
+        evidence = self._evidence.list_for_instrument(
+            prediction.instrument_id, visible_at=now
+        )
+        start = _price_at(evidence, at=prediction.as_of, instrument_id=prediction.instrument_id)
+        end = _price_at(evidence, at=now, instrument_id=prediction.instrument_id)
+        if start is None or end is None:
+            return {"prediction_id": prediction_id, "current_return_pct": None, "as_of": now.isoformat()}
+
+        current_return = round((end[0] / start[0] - 1) * 100, 4)
+        return {
+            "prediction_id": prediction_id,
+            "current_return_pct": current_return,
+            "as_of": now.isoformat(),
+            "matured": now >= prediction.due_at,
+        }
+
+    # -- final validation: only after maturity, one-shot (P0-04) -----------------
     def validate(self, prediction_id: str, *, now: datetime | None = None) -> ValidationRecord:
+        """Create the FINAL validation. Only allowed after due_at."""
         prediction = self._predictions.get(prediction_id)
         if prediction is None:
             raise KeyError(prediction_id)
         existing = self._validations.get_for_prediction(prediction_id)
         if existing is not None:
-            return existing  # validation is one-shot like the prediction
+            return existing  # one-shot
 
         now = now or utc_now()
-        # validate at the due date when due, else "mark-to-market" at now
-        as_of_target = prediction.due_at if now >= prediction.due_at else now
+        if now < prediction.due_at:
+            raise PredictionNotMatured(
+                f"prediction matures at {prediction.due_at.isoformat()}, now {now.isoformat()}"
+            )
 
         evidence = self._evidence.list_for_instrument(
-            prediction.instrument_id, visible_at=as_of_target
+            prediction.instrument_id, visible_at=prediction.due_at
         )
         start = _price_at(evidence, at=prediction.as_of, instrument_id=prediction.instrument_id)
-        end = _price_at(evidence, at=as_of_target, instrument_id=prediction.instrument_id)
+        end = _price_at(evidence, at=prediction.due_at, instrument_id=prediction.instrument_id)
         if start is None or end is None:
-            raise ValueError("missing quote evidence for validation window")
+            raise ValueError("missing quote evidence for matured validation window")
 
-        # Benchmark series (IDX quote evidence) is ingested from M20 onward;
-        # until then excess return stays explicitly None rather than guessed.
         record = compute_validation(
             prediction,
             start_price=start[0],

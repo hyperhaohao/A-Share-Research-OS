@@ -131,12 +131,16 @@ def test_r5_live_research_e2e_multi_instrument(e2e):
             },
         ).json()["prediction"]
         assert prediction["due_at"]
-        validated = client.post(
-            f"/api/v1/predictions/{prediction['prediction_id']}/validate"
-        ).json()["prediction"]
-        assert validated["validation"] is not None
-        # mark-to-market at creation time: return ~0, explicit numbers
-        assert validated["validation"]["instrument_return_pct"] == 0.0
+        # P0-04: mark-to-market is read-only, does NOT create a final record
+        mtm = client.get(
+            f"/api/v1/predictions/{prediction['prediction_id']}/mark-to-market"
+        ).json()
+        assert mtm["matured"] is False
+        assert mtm["current_return_pct"] is not None
+        # final validate must refuse (not matured yet)
+        prem = client.post(f"/api/v1/predictions/{prediction['prediction_id']}/validate")
+        assert prem.status_code == 422
+        assert prem.json()["error_code"] == "prediction.not_matured"
     finally:
         session.close()
 

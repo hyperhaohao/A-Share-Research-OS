@@ -125,7 +125,7 @@ class TestFinancials:
             '"TOTALOPERATEREVE":92278072083.21,"PARENTNETPROFIT":44516880421.86,'
             '"XSMLL":89.55,"XSJLL":50.75}]}'
         )
-        zcfzb = '{"data":[{"TOTAL_ASSETS":3.1e11,"TOTAL_LIABILITIES":4.5e10}]}'
+        zcfzb = '{"data":[{"REPORT_DATE":"2026-06-30 00:00:00","TOTAL_ASSETS":3.1e11,"TOTAL_LIABILITIES":4.5e10}]}'
         _patch(monkeypatch, {"ZYZBAjaxNew": zyzb, "zcfzbAjaxNew": zcfzb})
         result = EastmoneyFinancialsProvider().fetch(_req("financials"))
         assert result.status is SourceStatus.SUCCESS

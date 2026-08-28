@@ -74,28 +74,33 @@ class EastmoneyFinancialsProvider(BaseProvider):
                 attempted_at=attempted_at,
             )
 
-        # one balance-sheet snapshot for the latest period (net-debt inputs)
-        latest_period = (records_raw[0].get("REPORT_DATE") or "")[:10]
-        balance: dict = {}
-        bs_data, bs_failure = http_json(
-            _ZCFZB,
-            params={"companyType": 4, "reportDateType": 0, "reportType": 1,
-                    "dates": latest_period, "code": code},
-            headers=_HEADERS,
-        )
-        if bs_failure is None:
-            bs_rows = (bs_data or {}).get("data") or []
-            if bs_rows:
-                balance = {
-                    "total_assets_yuan": _num(bs_rows[0], "TOTAL_ASSETS"),
-                    "total_liabilities_yuan": _num(bs_rows[0], "TOTAL_LIABILITIES"),
-                    "monetary_funds_yuan": _num(bs_rows[0], "MONETARYFUNDS"),
-                }
+        # fetch balance sheets for ALL periods (PIT fix: each period gets
+        # its own balance data, never the latest merged into historical)
+        periods_needed = int(request.params.get("periods", 4))
+        all_periods = [(r.get("REPORT_DATE") or "")[:10] for r in records_raw[:periods_needed]]
+        balance_by_period: dict[str, dict] = {}
+        if all_periods:
+            bs_data, bs_failure = http_json(
+                _ZCFZB,
+                params={"companyType": 4, "reportDateType": 0, "reportType": 1,
+                        "dates": ",".join(all_periods), "code": code},
+                headers=_HEADERS,
+            )
+            if bs_failure is None:
+                for bs_row in (bs_data or {}).get("data") or []:
+                    period_key = (bs_row.get("REPORT_DATE") or "")[:10]
+                    balance_by_period[period_key] = {
+                        "total_assets_yuan": _num(bs_row, "TOTAL_ASSETS"),
+                        "total_liabilities_yuan": _num(bs_row, "TOTAL_LIABILITIES"),
+                        "monetary_funds_yuan": _num(bs_row, "MONETARYFUNDS"),
+                    }
 
         records: list[SourceRecord] = []
-        for rec in records_raw[: int(request.params.get("periods", 4))]:
+        for rec in records_raw[:periods_needed]:
             notice = _cn_date(rec.get("NOTICE_DATE"))
             report_date = _cn_date(rec.get("REPORT_DATE"))
+            period_key = (rec.get("REPORT_DATE") or "")[:10]
+            balance = balance_by_period.get(period_key, {})
             payload = {
                 "report_date": (rec.get("REPORT_DATE") or "")[:10],
                 "report_type": rec.get("REPORT_TYPE"),

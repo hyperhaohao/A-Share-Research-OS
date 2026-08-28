@@ -13,7 +13,7 @@ from app.core.errors import AppError
 from app.db import get_session
 from app.domain.prediction import Direction, Horizon, PredictionRecord
 from app.api.market_data import resolve_instrument_id
-from app.services.validation_service import ValidationService
+from app.services.validation_service import PredictionNotMatured, ValidationService
 from app.storage.prediction_repo import (
     PredictionORM,
     PredictionRepository,
@@ -122,18 +122,37 @@ def validate_prediction(
     prediction_id: str,
     session: Session = Depends(get_session),
 ) -> dict:
+    """FINAL validation — only after maturity (P0-04)."""
     service = ValidationService(session)
     try:
         record = service.validate(prediction_id)
     except KeyError:
         raise AppError("prediction.not_found", status_code=404) from None
+    except PredictionNotMatured as exc:
+        raise AppError(
+            "prediction.not_matured", status_code=422, detail=str(exc)
+        ) from None
     except ValueError as exc:
         raise AppError(
-            "prediction.validation_premature", status_code=422, detail=str(exc)
+            "prediction.validation_no_data", status_code=422, detail=str(exc)
         ) from None
     prediction = PredictionRepository(session).get(prediction_id)
     assert prediction is not None
     return {"prediction": _payload(prediction, record)}
+
+
+@router.get("/{prediction_id}/mark-to-market")
+def mark_to_market(
+    prediction_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """Read-only current P&L view. Does NOT create a ValidationRecord."""
+    service = ValidationService(session)
+    try:
+        result = service.mark_to_market(prediction_id)
+    except KeyError:
+        raise AppError("prediction.not_found", status_code=404) from None
+    return result
 
 
 @router.get("/due")

@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.domain.evidence import (
-    AuthorityLevel,
+    AuthorityLevel, utc_now,
     EvidenceRecord,
     EvidenceType,
     FactStatus,
@@ -118,12 +118,35 @@ def test_thesis_requires_existing_claims(dbsession, research_repo):
 
 def test_full_traceability_chain_thesis_claim_evidence(dbsession, evidence_repo, research_repo):
     """§75 前置：Thesis → Claim → Evidence 每一跳真实存在。"""
+    from app.domain.snapshot import EvidenceSnapshot, SnapshotItem
+    from app.storage.orm import SnapshotORM
+
     ev_id, _ = evidence_repo.save(_quote_evidence(1648.0))
 
-    claim = _claim((ev_id,))
+    snap = EvidenceSnapshot(
+        instrument_id="SSE:600519", as_of=utc_now(), items=(),
+        created_at=utc_now(),
+    )
+    # pin the evidence
+    snap = EvidenceSnapshot(
+        instrument_id="SSE:600519", as_of=utc_now(),
+        items=(SnapshotItem(evidence_id=ev_id, content_hash=snap.content_hash),),
+        created_at=utc_now(),
+    )
+    dbsession.add(
+        SnapshotORM(
+            snapshot_id=snap.snapshot_id, content_hash=snap.content_hash,
+            instrument_id=snap.instrument_id, as_of=snap.as_of,
+            items_json=[i.model_dump(mode="json") for i in snap.items],
+            created_at=snap.created_at,
+        )
+    )
+    dbsession.flush()
+
+    claim = _claim((ev_id,), snapshot_id=snap.snapshot_id)
     claim_id = research_repo.save_claim(claim)
 
-    thesis = _thesis((claim_id,))
+    thesis = _thesis((claim_id,), snapshot_id=snap.snapshot_id)
     thesis_id = research_repo.save_thesis(thesis)
 
     # walk the chain backwards through the repositories

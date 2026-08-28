@@ -18,7 +18,7 @@ services:
       disable: true  # worker loop, not an HTTP service
     env_file: .env
     environment:
-      - ASRO_DATABASE_URL=sqlite:////app/data/asro.db
+      - ASRO_DATABASE_URL=${ASRO_DATABASE_URL:-sqlite:////app/data/asro.db}
       - ASRO_SCHEDULER_INTERVAL=60
     volumes:
       - backend_data:/app/data

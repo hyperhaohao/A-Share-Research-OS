@@ -201,3 +201,32 @@ R5 PASS — 4 标的 live E2E+长时运行测试+三容器生产部署（全 hea
   引用完整性校验对 LLM 产物同等生效。
 - Quant：采用方案 A（TideQuantAdapter），完成后维持 M22 NOT_REQUIRED 结论。
 - 调度：第一版单进程 scheduler 服务（compose 第三服务），量大后再引入队列。
+
+---
+
+## Final Integrity Pass — COMPLETE（第二轮整改，2026-08-28）
+
+```text
+F0 PASS — FULL_RESEARCH/PERIODIC_FULL_RESEARCH → ResearchPipeline（唯一实现）；
+          AnalysisQualityGate 在 Claims 之后执行；Citation Gate 使用 Snapshot Evidence；
+          RunManifest 记录 LLM model/prompt versions（LLM 配置时）
+F1 PASS — MacroPolicyAnalyst 进 Analyst 集；Quant 创建 analyst_inference Claims；
+          Narrative Layer 接入 en-US 编译主路径；LLM 边界维持 Evidence First
+F2 PASS — 图谱补齐 corporate_event/valuation/prediction/validation 节点+边；
+          状态文件统一（STATUS=当前事实；REMEDIATION=历史）
+F3 PASS — 全量 285 backend tests + 8 frontend tests + build PASS；
+          4 标的 live E2E；备份/恢复演练；最终 Reviewer 全扫
+```
+
+### P0 修复清单
+
+```text
+P0-01 httpx 移入 production dependencies              ✓
+P0-02 scheduler/backend 同一 DB 变量 + psycopg driver  ✓
+P0-03 Financial balance sheet 按 REPORT_DATE 对齐      ✓
+P0-04 MarkToMarket vs FinalValidation 分离             ✓
+P0-05 Report Revision 生成一致 markdown/html            ✓（既有实现已正确）
+P0-06 Claim/Thesis 跨标的/跨快照引用拒绝               ✓
+P0-07 Narrative Layer 进入 Reports API 编译路径        ✓
+P0-08 状态文件统一（STATUS=当前事实）                  ✓
+```

@@ -154,7 +154,7 @@ def test_premature_validation_is_422(client, monkeypatch):
     ).json()["prediction"]
     resp = client.post(f"/api/v1/predictions/{created['prediction_id']}/validate")
     assert resp.status_code == 422
-    assert resp.json()["error_code"] == "prediction.validation_premature"
+    assert resp.json()["error_code"] == "prediction.not_matured"
 
 
 def test_validation_task_via_scheduler(client, monkeypatch):

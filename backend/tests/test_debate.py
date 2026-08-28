@@ -27,7 +27,7 @@ from app.storage.repository import EvidenceRepository
 from app.storage.research_repo import ReferenceNotFoundError, ResearchRepository
 
 AS_OF = datetime(2026, 8, 28, 10, 0, tzinfo=timezone.utc)
-SNAPSHOT_ID = "snap_test000000000000"
+SNAPSHOT_ID = "snap_debate_test_0001"
 
 
 @pytest.fixture()
@@ -66,6 +66,16 @@ def thesis_id(dbsession):
             metadata={"price": 1648.0},
         )
     )
+    from app.storage.orm import SnapshotORM
+    # Insert a snapshot ORM row directly with the hard-coded SNAPSHOT_ID
+    dbsession.add(SnapshotORM(
+        snapshot_id=SNAPSHOT_ID, content_hash="a" * 64,
+        instrument_id="SSE:600519", as_of=AS_OF,
+        items_json=[{"evidence_id": ev_id, "content_hash": "a" * 64}],
+        created_at=AS_OF,
+    ))
+    dbsession.flush()
+
     research = ResearchRepository(dbsession)
     claim_id = research.save_claim(
         Claim(
@@ -144,9 +154,6 @@ class TestScenarioSet:
         loaded = repo.list_scenarios("ths_test000000000001")
         assert sum(s.probability for s in loaded) == 100.0
         assert {s.kind for s in loaded} == {ScenarioKind.BEAR, ScenarioKind.BASE, ScenarioKind.BULL}
-
-
-thesis_id_stub = "ths_test000000000001"
 
 
 class TestDebate:
