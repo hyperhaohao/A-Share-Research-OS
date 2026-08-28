@@ -55,6 +55,7 @@
 
 ## 结论
 
-M0–M29 全部 DoD 通过，TASK §21 最终完成条件满足。容器化部署经真实运行验证
-（backend healthy / nginx 200 / live 数据）。后续加固项（不阻断交付）：
-Playwright 形式化套件、节假日历、基准指数序列（见 known-limitations.md）。
+**M0–M29 全部 DoD 通过；TASK §21 最终完成条件全部满足（含生产部署实测）。**
+容器化全栈运行验证：backend healthy / nginx 200 / live 行情经代理获取。
+后续加固项（不阻断交付）：Playwright 形式化套件、节假日历、基准指数序列
+（见 known-limitations.md）。

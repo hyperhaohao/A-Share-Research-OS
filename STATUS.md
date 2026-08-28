@@ -193,6 +193,8 @@ None（交付已完成）
 环境备注已解决：Docker Desktop 启动后完成镜像构建（基础镜像经 daocloud
 镜像源拉取，auth.docker.io 直连被网络阻断）与全栈启动 —— backend healthy /
 nginx 200 / live 行情经代理获取全部确认。
+**生产部署最终验证 PASS（2026-08-28）**：容器化全栈运行中（backend + frontend），
+live 数据链路经 nginx 代理确认。
 ```
 
 ---
