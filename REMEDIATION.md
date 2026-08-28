@@ -27,7 +27,7 @@ BLOCKED   真实外部阻塞
 | 阶段 | 内容 | 状态 | DoD 摘要 |
 |------|------|------|----------|
 | R0 | State & Integrity Repair | DONE | 状态一致 / Manifest 无占位 / Gate 无绕过 / 测试分类真实 |
-| R1 | Real Research Data | TODO | 公告/财务/新闻/资金/行业/宏观 provider + 行情 fallback，3-5 只真实股票形成 Evidence |
+| R1 | Real Research Data | DONE | 公告/财务/新闻/资金/行业/宏观 provider + 行情 fallback，3-5 只真实股票形成 Evidence |
 | R2 | Full Research Pipeline | TODO | Analyst 集 → ClaimCompiler → ThesisBuilder → Debate → Scenario → Valuation(证据输入) → Risk → Report 全链无手工补链 |
 | R3 | AI / Quant / Continuous | TODO | LLMProvider（OpenAI-compatible）接入主链 + Copilot + Quant 实接 + 后台 scheduler 服务 + Monitor/Delta/Full |
 | R4 | Research Workspace | TODO | Stock Workspace 九 Tab + Copilot + React Flow 图 + Interactive Report 补全（真实 API） |
@@ -86,27 +86,31 @@ BLOCKED   真实外部阻塞
 
 ---
 
-## R1 — Real Research Data（TODO）
+## R1 — Real Research Data（DONE，2026-08-28）
 
 ### 任务清单
 
 | # | 任务 | 状态 |
 |---|------|------|
-| R1.1 | 行情 fallback provider（腾讯 → 东财/其他稳定源） | TODO |
-| R1.2 | Announcements provider（巨潮 CNINFO） | TODO |
-| R1.3 | Financials provider（三大报表 + 规范化指标） | TODO |
-| R1.4 | News provider（至少一个真实财经源） | TODO |
-| R1.5 | Capital Flow provider（成交/换手/主力资金，缺失显式） | TODO |
-| R1.6 | Industry provider（行业/概念/同业，结构化基础版） | TODO |
-| R1.7 | Macro/Policy provider（官方源，topic/keyword/date） | TODO |
-| R1.8 | Live 验证：3-5 只不同类型真实 A 股 × 4 能力 → Evidence + Manifest 可追溯 | TODO |
+| R1.1 | 行情 fallback provider：EastmoneyQuoteProvider（腾讯→东财链） | DONE |
+| R1.2 | Announcements：CninfoAnnouncementsProvider（A2 主）→ EastmoneyAnnouncementsProvider（B2 备） | DONE |
+| R1.3 | Financials：EastmoneyFinancialsProvider（ZYZB 指标+zcfzb 资产负债，NOTICE_DATE 锚定 PIT） | DONE |
+| R1.4 | News：EastmoneyNewsProvider（C2，低于公告） | DONE |
+| R1.5 | Capital Flow：EastmoneyCapitalFlowProvider（量/额/换手；主力资金显式 unavailable） | DONE |
+| R1.6 | Industry：EastmoneyIndustryProvider（EM2016 三级行业链；peers 显式 pending） | DONE |
+| R1.7 | Macro/Policy：EastmoneyMacroPolicyProvider（官方机构白名单标注） | DONE |
+| R1.8 | Live 验证：4 只（沪主板/深主板/创业板/科创板）× 4 能力全链 Evidence+Manifest | DONE |
 
 ### R1 DoD
 
 ```text
-[ ] 七能力 provider 全部接入统一 SourceResult 语义（禁止 异常→[] / 失败→no_data）
-[ ] Live 验证通过并记录
-[ ] Git checkpoint
+[x] 七能力 provider 全部接入统一 SourceResult 语义（http.py 显式失败映射；
+    禁止 异常→[] / 失败→no_data；CNINFO 实测 504 → 链内 fallback 生效）
+[x] Live 验证通过（test_r1_live.py，@live 标记，离线自动 skip）：
+    4 只不同板块真实 A 股 × market/announcement/financial/news →
+    真实 Evidence（公告=official_disclosure A2/B2；新闻=media_report C2；
+    财务 NOTICE_DATE 锚定 PIT）+ SourceManifest 可追溯
+[x] Git checkpoint
 ```
 
 ---

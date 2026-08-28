@@ -24,10 +24,57 @@ from app.storage.repository import EvidenceRepository
 # key-free redistributors carry it onward. A quote is a confirmed market fact.
 _QUOTE_MAPPING = (EvidenceType.MARKET_QUOTE, FactStatus.CONFIRMED_FACT, AuthorityLevel.B2)
 
+# R1: per-source authority/fact-status overrides — authority follows the
+# SOURCE (who published it), not just the capability (整改 §6.4-6.6):
+#   announcements from the statutory platform (cninfo) → A2
+#   announcements relayed by a major data platform → B2
+#   financial filings relayed → B2, official_disclosure
+#   media news → C2, media_report (never same level as announcements)
+#   policy news mentioning official bodies → B2, media_report
+#   industry classification data → C1
+_SOURCE_MAPPINGS: dict[str, tuple[EvidenceType, FactStatus, AuthorityLevel]] = {
+    "cninfo_announcements": (
+        EvidenceType.ANNOUNCEMENT, FactStatus.OFFICIAL_DISCLOSURE, AuthorityLevel.A2,
+    ),
+    "eastmoney_announcements": (
+        EvidenceType.ANNOUNCEMENT, FactStatus.OFFICIAL_DISCLOSURE, AuthorityLevel.B2,
+    ),
+    "eastmoney_financials": (
+        EvidenceType.FINANCIAL_REPORT, FactStatus.OFFICIAL_DISCLOSURE, AuthorityLevel.B2,
+    ),
+    "eastmoney_news": (EvidenceType.NEWS, FactStatus.MEDIA_REPORT, AuthorityLevel.C2),
+    "eastmoney_macro_policy": (
+        EvidenceType.MACRO_INDICATOR, FactStatus.MEDIA_REPORT, AuthorityLevel.B2,
+    ),
+    "eastmoney_capital_flow": (
+        EvidenceType.CAPITAL_FLOW, FactStatus.CONFIRMED_FACT, AuthorityLevel.B2,
+    ),
+    "eastmoney_industry": (
+        EvidenceType.INDUSTRY_DATA, FactStatus.CONFIRMED_FACT, AuthorityLevel.C1,
+    ),
+}
 
-def evidence_type_for(capability: str) -> tuple[EvidenceType, FactStatus, AuthorityLevel]:
+
+def evidence_type_for(capability: str, source: str | None = None) -> tuple[
+    EvidenceType, FactStatus, AuthorityLevel
+]:
+    """Resolve (type, fact_status, authority) by source first, then capability."""
+    if source and source in _SOURCE_MAPPINGS:
+        return _SOURCE_MAPPINGS[source]
     mapping = {
         "market_data": _QUOTE_MAPPING,
+        "announcements": (
+            EvidenceType.ANNOUNCEMENT, FactStatus.OFFICIAL_DISCLOSURE, AuthorityLevel.B2,
+        ),
+        "financials": (
+            EvidenceType.FINANCIAL_REPORT, FactStatus.OFFICIAL_DISCLOSURE, AuthorityLevel.B2,
+        ),
+        "news": (EvidenceType.NEWS, FactStatus.MEDIA_REPORT, AuthorityLevel.C2),
+        "macro_policy": (
+            EvidenceType.MACRO_INDICATOR, FactStatus.MEDIA_REPORT, AuthorityLevel.B2,
+        ),
+        "capital_flow": (EvidenceType.CAPITAL_FLOW, FactStatus.CONFIRMED_FACT, AuthorityLevel.B2),
+        "industry": (EvidenceType.INDUSTRY_DATA, FactStatus.CONFIRMED_FACT, AuthorityLevel.C1),
     }
     return mapping.get(capability, (EvidenceType.NEWS, FactStatus.MEDIA_REPORT, AuthorityLevel.C2))
 
@@ -71,7 +118,7 @@ def store_result_as_evidence(
     *,
     repo: EvidenceRepository,
 ) -> CollectionOutcome:
-    type_mapping = evidence_type_for(result.capability)
+    type_mapping = evidence_type_for(result.capability, result.source)
     evidence: list[EvidenceRecord] = []
     created_ids: list[str] = []
     deduped = 0
@@ -134,6 +181,18 @@ def _summarize(evidence_type: EvidenceType, payload: dict) -> str:
         if payload.get("total_market_cap_yuan") is not None:
             parts.append(f"mcap={payload['total_market_cap_yuan']:.0f}")
         return "market quote: " + ", ".join(parts)
+    if evidence_type is EvidenceType.ANNOUNCEMENT:
+        return f"announcement: {payload.get('title')}"
+    if evidence_type is EvidenceType.FINANCIAL_REPORT:
+        return (
+            f"financial report {payload.get('report_date')}: "
+            f"eps={payload.get('eps')} roe={payload.get('roe_pct')} "
+            f"revenue={payload.get('revenue_yuan')}"
+        )
+    if evidence_type is EvidenceType.NEWS:
+        return f"news: {payload.get('title')}"
+    if evidence_type is EvidenceType.INDUSTRY_DATA:
+        return f"industry: {payload.get('industry_chain')}"
     return f"{evidence_type.value}: {payload}"
 
 

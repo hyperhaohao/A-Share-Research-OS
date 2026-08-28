@@ -10,13 +10,14 @@
 ## Current Phase
 
 ```text
-Remediation — R0 State & Integrity Repair
+Remediation — R2 Full Research Pipeline
 ```
 
 ## Current Milestone
 
 ```text
-R0.5–R0.8：RunManifest 真实值 / Gate 绕过修复 / 测试重分类 / 全量验证
+R2.1–R2.9：Analyst 集 → ClaimCompiler → ThesisBuilder → Debate/Scenario/
+ValuationInputBuilder → RiskManager → Pipeline 全链（无手工补链）
 ```
 
 ## Completed

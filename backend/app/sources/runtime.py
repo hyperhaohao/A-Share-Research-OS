@@ -7,6 +7,20 @@ from datetime import datetime, timezone
 
 from app.sources.base import SourceRequest, SourceResult, SourceStatus, SourceRecord, utc_now
 from app.sources.cache import TTLCache
+from app.sources.providers.announcements import (
+    CninfoAnnouncementsProvider,
+    EastmoneyAnnouncementsProvider,
+)
+from app.sources.providers.capital_industry import (
+    EastmoneyCapitalFlowProvider,
+    EastmoneyIndustryProvider,
+)
+from app.sources.providers.eastmoney_financials import EastmoneyFinancialsProvider
+from app.sources.providers.eastmoney_quote import EastmoneyQuoteProvider
+from app.sources.providers.news import (
+    EastmoneyMacroPolicyProvider,
+    EastmoneyNewsProvider,
+)
 from app.sources.providers.tencent_quote import TencentQuoteProvider
 from app.sources.registry import SourceRegistry
 
@@ -19,8 +33,23 @@ class SourceRuntime:
     cache: TTLCache = field(default_factory=TTLCache)
 
     def __post_init__(self) -> None:
+        # fallback chains (R1): tencent → eastmoney; cninfo → eastmoney
         if not self.registry.providers_for("market_data"):
             self.registry.register(TencentQuoteProvider())
+            self.registry.register(EastmoneyQuoteProvider())
+        if not self.registry.providers_for("announcements"):
+            self.registry.register(CninfoAnnouncementsProvider())
+            self.registry.register(EastmoneyAnnouncementsProvider())
+        if not self.registry.providers_for("financials"):
+            self.registry.register(EastmoneyFinancialsProvider())
+        if not self.registry.providers_for("news"):
+            self.registry.register(EastmoneyNewsProvider())
+        if not self.registry.providers_for("capital_flow"):
+            self.registry.register(EastmoneyCapitalFlowProvider())
+        if not self.registry.providers_for("industry"):
+            self.registry.register(EastmoneyIndustryProvider())
+        if not self.registry.providers_for("macro_policy"):
+            self.registry.register(EastmoneyMacroPolicyProvider())
 
     def resolve_cached(self, request: SourceRequest) -> SourceResult:
         """Resolve with a per-capability TTL cache in front of the registry."""
