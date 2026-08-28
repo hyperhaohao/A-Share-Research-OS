@@ -190,9 +190,9 @@ ROADMAP.md / PLAN.md / STATUS.md
 
 ```text
 None（交付已完成）
-环境备注：Docker Desktop 未运行（WSL docker-desktop 发行版 Stopped）——
-镜像级构建验证需用户启动 Docker Desktop GUI 后执行 docker compose build；
-compose 配置已校验；属运行环境项，非代码缺陷。
+环境备注已解决：Docker Desktop 启动后完成镜像构建（基础镜像经 daocloud
+镜像源拉取，auth.docker.io 直连被网络阻断）与全栈启动 —— backend healthy /
+nginx 200 / live 行情经代理获取全部确认。
 ```
 
 ---

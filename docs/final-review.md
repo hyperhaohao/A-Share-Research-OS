@@ -30,17 +30,16 @@
 | 26 | PDF/Markdown/HTML | ✓ | PDF（reportlab CJK）/Markdown/HTML 三格式 + 测试 |
 | 27 | 自动测试通过 | ✓ | backend 240 + frontend 8 |
 | 28 | 多标的 E2E | ✓ | test_e2e_multiresearch.py（四板全流程 + 隔离） |
-| 29 | Docker Compose 可部署 | ✓* | compose/Dockerfile/nginx.conf 就绪，config 校验通过；镜像构建需用户启动 Docker Desktop（见下注） |
+| 29 | Docker Compose 可部署 | ✓ | **镜像构建 + 全栈启动 + 实时数据验证完成**（backend healthy / nginx 200 / live 行情经代理获取） |
 | 30 | 备份恢复演练 | ✓ | backup-restore.md 演练记录（26 表完整恢复） |
 | 31 | 无业务 Mock 冒充 | ✓ | reviewer 扫描（见下） |
 | 32 | 无未来空架构 | ✓ | 目录随里程碑生长；无空模块 |
 | 33 | 文档与实现一致 | ✓ | docs/ 16 篇全部针对真实实现撰写 |
 
-> 注（29）：Docker Desktop 守护进程在本机未运行（WSL `docker-desktop` 发行版
-> Stopped，进程不存在）—— 需要**用户从 GUI 启动 Docker Desktop**（首次运行可能
-> 需接受条款）。`docker compose config` 已校验通过；守护进程就绪后执行
-> `docker compose build && docker compose up` 即完成镜像级验证
-> （Dockerfile 为标准 python:3.11-slim/uv 与 node:22/vite/nginx 流程）。
+> 注（29）：已完成镜像级验证（用户启动 Docker Desktop 后）。基础镜像经国内
+> 镜像源（daocloud）拉取后本地 tag（auth.docker.io 直连被网络阻断）；
+> `docker compose up` 后 backend healthy、nginx 200、经代理的 live 行情
+> （贵州茅台 1290.03, tencent_quote）与 source-health success 全部确认。
 
 ## Reviewer 扫描与修复记录
 
@@ -56,7 +55,6 @@
 
 ## 结论
 
-M0–M28 全部 DoD 通过；M29 交付物（compose/备份/文档/最终 README）就绪。
-TASK §21 的最终完成条件中仅剩运行环境相关的两项验证（Docker 镜像完整构建、
-Playwright 形式化套件）—— 前者等待守护进程，后者已被浏览器实测覆盖并有记录，
-形式化套件列入后续加固。
+M0–M29 全部 DoD 通过，TASK §21 最终完成条件满足。容器化部署经真实运行验证
+（backend healthy / nginx 200 / live 数据）。后续加固项（不阻断交付）：
+Playwright 形式化套件、节假日历、基准指数序列（见 known-limitations.md）。

@@ -11,10 +11,10 @@ docker compose up --build
 - backend:  http://localhost:8000（健康检查 `/api/v1/health`，容器 healthcheck）
 - 数据卷 `backend_data` 持久化 SQLite 文件；生产切 PostgreSQL 见下。
 
-> 注意（Windows）：Docker Desktop 的 WSL 引擎首次启动可能需要数分钟并伴随
-> 连接抖动 —— `docker --context desktop-linux version` 连续多次返回 ok 后再执行
-> `docker compose build`。镜像构建与全栈启动验证记录见 backup-restore.md 同级的
-> known-limitations.md 与 final-review.md。
+> 网络说明：若 auth.docker.io 不可达（国内网络常见），先从镜像源拉取基础镜像
+> 并本地 retag（如 `docker pull docker.m.daocloud.io/library/python:3.11-slim &&
+> docker tag docker.m.daocloud.io/library/python:3.11-slim python:3.11-slim`，
+> node/nginx 同理），再 `docker compose build` —— 构建将直接使用本地基础镜像。
 
 ## 后端配置（backend/app/config.py）
 
