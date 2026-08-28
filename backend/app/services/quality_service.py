@@ -65,7 +65,24 @@ class QualityService:
         ]
 
     # -- evaluation ----------------------------------------------------------
-    def run_evidence_and_analysis_gates(self, snapshot_id: str) -> list[GateResult]:
+    # Remediation F0.2: the two gates run at DIFFERENT pipeline stages —
+    # evidence gate right after the snapshot, analysis gate AFTER the
+    # analysts have produced claims. One combined method caused the
+    # analysis gate to run against an empty claim set (timing defect).
+    def run_evidence_gate(self, snapshot_id: str) -> GateResult:
+        snapshot = self._snapshots.get(snapshot_id)
+        if snapshot is None:
+            raise KeyError(snapshot_id)
+
+        evidence = self._evidence.list_for_instrument(
+            snapshot.instrument_id, visible_at=snapshot.as_of
+        )
+        manifests = self._evidence_recent_manifests(snapshot.instrument_id)
+        gate = EvidenceQualityGate().evaluate(snapshot, evidence, manifests=manifests)
+        self._persist(snapshot, gate)
+        return gate
+
+    def run_analysis_gate(self, snapshot_id: str) -> GateResult:
         snapshot = self._snapshots.get(snapshot_id)
         if snapshot is None:
             raise KeyError(snapshot_id)
@@ -77,21 +94,18 @@ class QualityService:
         claims = self._research.list_claims(
             snapshot.instrument_id, snapshot_id=snapshot.snapshot_id
         )
-        manifests = self._evidence_recent_manifests(snapshot.instrument_id)
-
-        results: list[GateResult] = []
-
-        evidence_gate = EvidenceQualityGate().evaluate(snapshot, evidence, manifests=manifests)
-        results.append(evidence_gate)
-        self._persist(snapshot, evidence_gate)
-
-        analysis_gate = AnalysisQualityGate().evaluate(
+        gate = AnalysisQualityGate().evaluate(
             claims, evidence_lookup=evidence_by_id
         )
-        results.append(analysis_gate)
-        self._persist(snapshot, analysis_gate)
+        self._persist(snapshot, gate)
+        return gate
 
-        return results
+    def run_evidence_and_analysis_gates(self, snapshot_id: str) -> list[GateResult]:
+        """Compatibility helper: run both in order. The pipeline now calls
+        the split methods at the correct stages instead."""
+        evidence_gate = self.run_evidence_gate(snapshot_id)
+        analysis_gate = self.run_analysis_gate(snapshot_id)
+        return [evidence_gate, analysis_gate]
 
     def run_final_report_gate(self, report: ReportGateInput) -> GateResult:
         """Run the publication gate over a report draft (M11 wires the real report)."""

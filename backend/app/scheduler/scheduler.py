@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.domain.evidence import utc_now
 from app.scheduler.tasks import TaskRepository, TaskType
 from app.services.monitor import MonitorService
-from app.services.pipeline import ResearchPipeline
+from app.services.pipeline import ResearchPipeline  # noqa: F401 (used by handlers below)
 
 
 @dataclass
@@ -28,80 +28,19 @@ class TickResult:
 
 
 def run_monitor_task(session: Session, task) -> None:
-    """Business function: monitor one instrument, then act on materiality
-    (整改 R3.7): DELTA → recompile the report on the new snapshot as a new
-    ReportVersion; FULL → run the complete research pipeline."""
-    decision = MonitorService(session).run_monitor(task.instrument_id)
-
-    if decision.decision.value == "no_material_change":
-        return
-
-    from app.services.report_compiler import ReportCompiler
-    from app.storage.manifest_repo import ReportVersionRepository
-    from app.storage.report_repo import ReportRepository
-
-    if decision.decision.value == "delta_research":
-        compiler = ReportCompiler(session)
-        structured = compiler.compile(decision.new_snapshot_id)
-        rendered = compiler.render_and_gate(structured, language="zh-CN")
-        # find the latest report for this instrument to extend its chain
-        reports = ReportRepository(session).list_for(task.instrument_id)
-        if reports:
-            latest = reports[0]
-            chain = ReportVersionRepository(session).list_chain(latest["report_id"])
-            previous = chain[-1] if chain else None
-            ReportVersionRepository(session).save(
-                __import__("app.domain.manifest", fromlist=["ReportVersion"]).ReportVersion(
-                    report_id=latest["report_id"],
-                    version_no=(previous.version_no + 1) if previous else 1,
-                    parent_version_id=previous.version_id if previous else None,
-                    change_reason=(
-                        f"delta research: {decision.decision.value} "
-                        f"({len(decision.added_evidence_ids)} new evidence, "
-                        f"price {decision.price_change_pct}%)"
-                    ),
-                    changed_sections=("market_and_capital",),
-                    language="zh-CN",
-                    markdown=rendered["markdown"],
-                    html=rendered["html"],
-                    content_json={"citations": sorted(set(structured.citations))},
-                )
-            )
+    """Monitor one instrument, act on materiality (DELTA → new version,
+    FULL → full pipeline) — the action dispatch lives in MonitorService
+    so both the scheduler and the /monitor/run API behave identically."""
+    MonitorService(session).run_monitor(task.instrument_id)
 
 
 def run_full_research_task(session: Session, task) -> None:
-    """Business function: full research pipeline for one instrument."""
+    """Business function: FULL research pipeline for one instrument.
+
+    This is the single Full Research implementation — the scheduler's
+    PERIODIC_FULL_RESEARCH tasks and the monitor's FULL_RESEARCH decision
+    both land here (整改二轮 F0.1)."""
     ResearchPipeline(session).run(task.instrument_id)
-
-
-def run_periodic_full_research(session: Session, task) -> None:
-    """Business function: full research — collect + snapshot + report."""
-    from app.services.evidence_collector import collect_capability_evidence
-    from app.services.report_compiler import ReportCompiler
-    from app.storage.report_repo import ReportRepository
-    from app.storage.repository import EvidenceRepository
-    from app.storage.snapshot_repo import SnapshotRepository
-
-    instrument_id = task.instrument_id
-    evidence_repo = EvidenceRepository(session)
-    collect_capability_evidence(
-        instrument_id, "market_data", repo=evidence_repo, fresh=True
-    )
-    snapshot = SnapshotRepository(session).build(
-        instrument_id, utc_now(), evidence_repo=evidence_repo
-    )
-    report = ReportCompiler(session).compile(snapshot.snapshot_id)
-    rendered = ReportCompiler(session).render_and_gate(report, language="zh-CN")
-    ReportRepository(session).save(
-        instrument_id=instrument_id,
-        snapshot_id=snapshot.snapshot_id,
-        language="zh-CN",
-        gate_status=rendered["gate"]["status"],
-        published=False,
-        markdown=rendered["markdown"],
-        html=rendered["html"],
-        content={},
-    )
 
 
 def run_prediction_validation(session: Session, task) -> None:
@@ -120,7 +59,7 @@ def run_prediction_validation(session: Session, task) -> None:
 # Registry: task type → business function.
 HANDLERS: dict[TaskType, Callable[[Session, object], None]] = {
     TaskType.MONITOR: run_monitor_task,
-    TaskType.PERIODIC_FULL_RESEARCH: run_periodic_full_research,
+    TaskType.PERIODIC_FULL_RESEARCH: run_full_research_task,
     TaskType.PREDICTION_VALIDATION: run_prediction_validation,
 }
 

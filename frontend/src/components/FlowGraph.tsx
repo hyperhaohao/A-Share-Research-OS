@@ -30,10 +30,14 @@ interface GraphEdge {
 const KIND_ORDER = [
   "source",
   "evidence",
+  "corporate_event",
   "snapshot",
   "claim",
   "thesis",
+  "valuation",
   "research_run",
+  "prediction",
+  "validation",
   "report",
   "report_version",
 ];

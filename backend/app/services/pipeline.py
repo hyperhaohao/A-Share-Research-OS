@@ -35,6 +35,7 @@ from app.services.analysts import (
     EventAnalyst,
     FinancialAnalyst,
     IndustryAnalyst,
+    MacroPolicyAnalyst,
     NewsAnalyst,
 )
 from app.services.evidence_collector import collect_capability_evidence
@@ -197,14 +198,11 @@ class ResearchPipeline:
                 events,
             )
 
-            # ---- 3) evidence quality gate ----------------------------------
+            # ---- 3) evidence quality gate (before analysts) ----------------
             from app.services.quality_service import QualityService
 
             quality_service = QualityService(self._session)
-            gate_results = quality_service.run_evidence_and_analysis_gates(
-                snapshot.snapshot_id
-            )
-            evidence_gate = gate_results[0]
+            evidence_gate = quality_service.run_evidence_gate(snapshot.snapshot_id)
             self._emit(
                 run_id, "quality_gate",
                 {"gate": "evidence", "status": evidence_gate.status.value,
@@ -217,7 +215,8 @@ class ResearchPipeline:
             brief_risks: list[str] = []
             analysts = [
                 IndustryAnalyst(), FinancialAnalyst(), EventAnalyst(),
-                NewsAnalyst(), CapitalFlowAnalyst(), MarketAnalyst(),
+                NewsAnalyst(), CapitalFlowAnalyst(), MacroPolicyAnalyst(),
+                MarketAnalyst(),
             ]
             thesis_id: str | None = None
             for analyst in analysts:
@@ -264,8 +263,8 @@ class ResearchPipeline:
                 run_id, "claims_compiled", {"count": len(claim_ids)}, events
             )
 
-            # ---- 5) analysis quality gate ----------------------------------
-            analysis_gate = gate_results[1]
+            # ---- 5) analysis quality gate (AFTER claims — F0.2) -------------
+            analysis_gate = quality_service.run_analysis_gate(snapshot.snapshot_id)
             self._emit(
                 run_id, "quality_gate",
                 {"gate": "analysis", "status": analysis_gate.status.value,
@@ -344,6 +343,15 @@ class ResearchPipeline:
             # ---- 11) report + gate + version --------------------------------
             compiler = ReportCompiler(self._session)
             structured = compiler.compile(snapshot.snapshot_id)
+            # F1.1: narrative layer — en-US reports get LLM-translated prose
+            narrative_summary = {"translated": 0, "kind": "skipped"}
+            if language == "en-US":
+                from app.ai.llm_provider import get_llm_provider
+                from app.ai.narrative import narrativize_report
+
+                narrative_summary = narrativize_report(
+                    structured, provider=get_llm_provider(), target_language="en-US",
+                )
             rendered = compiler.render_and_gate(structured, language=language)
             self._emit(
                 run_id, "quality_gate",
@@ -402,6 +410,10 @@ class ResearchPipeline:
                     VersionRef(component="provider:tencent_quote", version="1"),
                     VersionRef(component="provider:eastmoney_suite", version="1"),
                 ),
+                # F0.4: record the real LLM model/prompt when one participates
+                # in the run (narrative layer); empty when LLM-less.
+                model_versions=_llm_model_versions(),
+                prompt_versions=_llm_prompt_versions(),
             )
             self._manifests.save(manifest)
 
@@ -461,3 +473,38 @@ def _run_random_seed(run_id: str) -> int:
     import hashlib
 
     return int.from_bytes(hashlib.sha256(run_id.encode()).digest()[:4], "big")
+
+
+def _llm_model_versions() -> tuple:
+    """Real LLM model identity when a provider participates in the run;
+    empty tuple when the run is LLM-less (both are honest states)."""
+    from app.ai.llm_provider import get_llm_provider
+
+    provider = get_llm_provider()
+    if provider is None:
+        return ()
+    info = provider.model_info()
+    return (VersionRef(component=f"llm:{info.get('model', 'unknown')}",
+                       version=str(info.get("kind", "unknown"))),)
+
+
+def _llm_prompt_versions() -> tuple:
+    import hashlib
+    import json
+
+    from app.ai.llm_provider import get_llm_provider
+
+    provider = get_llm_provider()
+    if provider is None:
+        return ()
+    prompts = {
+        "copilot_system": "Evidence-first research copilot. Use only the provided context.",
+        "narrative_system": "Financial research translator. Never add or alter facts.",
+    }
+    return tuple(
+        VersionRef(
+            component=f"prompt:{name}",
+            version=hashlib.sha256(json.dumps(text, ensure_ascii=False).encode()).hexdigest()[:16],
+        )
+        for name, text in sorted(prompts.items())
+    )

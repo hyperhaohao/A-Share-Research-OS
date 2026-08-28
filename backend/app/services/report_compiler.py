@@ -245,8 +245,12 @@ class ReportCompiler:
         computable_valuations = [
             v for v in report.valuation_summaries if v.get("value") is not None
         ]
+        # F0.3: the citation universe is the SNAPSHOT's pinned evidence —
+        # not the report's own citations (which made the check self-referential
+        # and unable to catch out-of-snapshot citations).
+        pinned_universe = self._snapshot_evidence_ids(report.snapshot_id)
         gate_input = ReportGateInput(
-            known_evidence_ids=tuple(set(report.citations)),
+            known_evidence_ids=tuple(pinned_universe),
             citations=tuple(set(report.citations)),
             claim_support=self._claim_support(report),
             has_valuation=bool(computable_valuations),
@@ -276,6 +280,10 @@ class ReportCompiler:
                 "findings": [f.model_dump(mode="json") for f in gate.findings],
             },
         }
+
+    def _snapshot_evidence_ids(self, snapshot_id: str) -> set[str]:
+        snapshot = self._snapshots.get(snapshot_id)
+        return set(snapshot.evidence_ids) if snapshot else set()
 
     def _claim_support(self, report: StructuredReport) -> dict[str, tuple[str, ...]]:
         support: dict[str, tuple[str, ...]] = {}

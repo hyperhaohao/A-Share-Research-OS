@@ -165,8 +165,7 @@ class TestDeltaResearch:
         reset_runtime()
 
     def test_delta_creates_new_report_version(self, client, monkeypatch):
-        """Monitor DELTA decision via the scheduler → new ReportVersion on
-        the same chain (R3.7 — the delta action runs in the task handler)."""
+        """Monitor DELTA decision via the scheduler → new ReportVersion (R3.7)."""
         client, factory = client
         monkeypatch.setattr(httpx, "get", lambda url, timeout: httpx.Response(
             200, content=RAW_OK.encode("gbk")
@@ -174,10 +173,8 @@ class TestDeltaResearch:
         client.post("/api/v1/evidence/collect", params={"instrument": "600519"})
         snapshot = client.post(
             "/api/v1/snapshots",
-            params={"instrument": "600519", "as_of": "2026-08-28T15:00:00+00:00"},
+            params={"instrument": "600519", "as_of": "2026-08-01T15:00:00+00:00"},
         ).json()["snapshot"]
-
-        # build a report chain for the instrument (V1)
         report = client.post(
             "/api/v1/reports/compile",
             params={"snapshot_id": snapshot["snapshot_id"], "language": "zh-CN"},
@@ -187,33 +184,29 @@ class TestDeltaResearch:
             json={"language": "zh-CN", "markdown": report["markdown"]},
         )
 
-        # a small move (1.94% < 5%) triggers DELTA; ≥5% would be FULL
+        # monitor pass #1: same quote → NO_MATERIAL_CHANGE (only /monitor/run
+        # with act=True... default act dispatches; same evidence → no-op)
         client.post("/api/v1/monitor/run", params={"instrument": "600519"})
-        monkeypatch.setattr(httpx, "get", lambda url, timeout: httpx.Response(
-            200, content=RAW_OK.replace("1648.00~1651.00", "1680.00~1651.00", 1).encode("gbk")
-        ))
 
-        # drive the DELTA through the scheduler so the task handler (with its
-        # delta action) runs — not just the bare MonitorService
+        # create a scheduled monitor task
         task = client.post(
             "/api/v1/tasks",
             json={"instrument": "600519", "task_type": "monitor",
                   "schedule": "interval:0"},
         ).json()["task"]
+
+        # price moves 1.94% (< 5% FULL threshold) → DELTA
+        monkeypatch.setattr(httpx, "get", lambda url, timeout: httpx.Response(
+            200, content=RAW_OK.replace("1648.00~1651.00", "1680.00~1651.00", 1).encode("gbk")
+        ))
         tick = client.post("/api/v1/tasks/scheduler/tick").json()
-        assert task["task_id"] in tick["claimed"]
+        assert task["task_id"] in tick["claimed"], tick
 
-        decision = client.get(
-            "/api/v1/monitor/decisions", params={"instrument_id": "SSE:600519"}
-        ).json()["results"][0]
-        assert decision["decision"] in ("delta_research", "full_research", "no_material_change")
-
-        # the delta path appended a new version with a delta reason
         chain = client.get(
             f"/api/v1/reports/{report['report_id']}/versions"
         ).json()["results"]
         deltas = [v for v in chain if v["change_reason"] and "delta" in v["change_reason"]]
-        assert deltas, f"delta research must append a version; chain={chain}"
+        assert deltas, f"delta must append a version; chain={[v['version_no'] for v in chain]}"
         assert deltas[0]["version_no"] == chain[-1]["version_no"]
 
 

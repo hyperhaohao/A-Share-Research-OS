@@ -99,7 +99,7 @@ class MaterialityJudge:
             reasons.append("no evidence delta and no price change observed")
             return MaterialityDecision.NO_MATERIAL_CHANGE, reasons
 
-        if abs(price_change_pct) >= self._price_move_full_pct:
+        if price_change_pct is not None and abs(price_change_pct) >= self._price_move_full_pct:
             reasons.append(
                 f"price moved {price_change_pct:.2f}% (>= ±{self._price_move_full_pct}%)"
             )
@@ -185,7 +185,8 @@ class MonitorService:
         self._evidence = EvidenceRepository(session)
         self._repo = MaterialityRepository(session)
 
-    def run_monitor(self, instrument_id: str, *, judge: MaterialityJudge | None = None) -> MaterialityDecisionModel:
+    def run_monitor(self, instrument_id: str, *, judge: MaterialityJudge | None = None,
+                    act: bool = True) -> MaterialityDecisionModel:
         # 1) fresh collection + new snapshot at now
         collect_capability_evidence(
             instrument_id, "market_data", repo=self._evidence, fresh=True
@@ -234,7 +235,56 @@ class MonitorService:
             created_at=datetime.now(timezone.utc),
         )
         self._repo.save(model)
+
+        if act:
+            self._act_on_decision(model)
         return model
+
+    def _act_on_decision(self, decision: MaterialityDecisionModel) -> None:
+        """Dispatch the research action for the decision (整改二轮 F0.1):
+        NO_MATERIAL_CHANGE → nothing; DELTA → new ReportVersion on the
+        latest chain; FULL → the full ResearchPipeline (single implementation)."""
+        if decision.decision is MaterialityDecision.NO_MATERIAL_CHANGE:
+            return
+
+        if decision.decision is MaterialityDecision.FULL_RESEARCH:
+            from app.services.pipeline import ResearchPipeline
+
+            ResearchPipeline(self._session).run(decision.instrument_id)
+            return
+
+        # delta_research: recompile on the new snapshot, extend the chain
+        from app.domain.manifest import ReportVersion
+        from app.storage.report_repo import ReportRepository
+        from app.storage.manifest_repo import ReportVersionRepository
+        from app.services.report_compiler import ReportCompiler
+
+        compiler = ReportCompiler(self._session)
+        structured = compiler.compile(decision.new_snapshot_id)
+        rendered = compiler.render_and_gate(structured, language="zh-CN")
+        reports = ReportRepository(self._session).list_for(decision.instrument_id)
+        if not reports:
+            return
+        latest = reports[0]
+        chain = ReportVersionRepository(self._session).list_chain(latest["report_id"])
+        previous = chain[-1] if chain else None
+        ReportVersionRepository(self._session).save(
+            ReportVersion(
+                report_id=latest["report_id"],
+                version_no=(previous.version_no + 1) if previous else 1,
+                parent_version_id=previous.version_id if previous else None,
+                change_reason=(
+                    f"delta research: {decision.decision.value} "
+                    f"({len(decision.added_evidence_ids)} new evidence, "
+                    f"price {decision.price_change_pct}%)"
+                ),
+                changed_sections=("market_and_capital",),
+                language="zh-CN",
+                markdown=rendered["markdown"],
+                html=rendered["html"],
+                content_json={"citations": sorted(set(structured.citations))},
+            )
+        )
 
     def _previous_snapshot(self, instrument_id: str, current: EvidenceSnapshot) -> EvidenceSnapshot | None:
         """The most recent stored snapshot for the instrument strictly before

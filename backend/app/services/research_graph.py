@@ -27,8 +27,10 @@ from sqlalchemy.orm import Session
 
 from app.storage.manifest_repo import ReportVersionORM, _ensure_utc
 from app.storage.orm import EvidenceORM, ResearchRunORM, SnapshotORM
-from app.storage.research_orm import ClaimORM, ThesisORM
+from app.storage.prediction_repo import PredictionORM, ValidationORM
+from app.storage.research_orm import ClaimORM, CorporateEventORM, ThesisORM
 from app.storage.report_repo import ReportORM
+from app.storage.valuation_repo import ValuationORM
 
 
 @dataclass
@@ -77,6 +79,19 @@ class ResearchGraph:
         ).all()
         versions = self._session.scalars(select(ReportVersionORM)).all()
         versions = [v for v in versions if v.report_id in {r.report_id for r in reports}]
+        events = self._session.scalars(
+            select(CorporateEventORM).where(CorporateEventORM.instrument_id == instrument_id)
+        ).all()
+        valuations = self._session.scalars(
+            select(ValuationORM).where(ValuationORM.instrument_id == instrument_id)
+        ).all()
+        all_predictions = self._session.scalars(
+            select(PredictionORM).where(PredictionORM.instrument_id == instrument_id)
+        ).all()
+        all_validations = self._session.scalars(select(ValidationORM)).all()
+        validation_by_prediction = {
+            v.prediction_id: v for v in all_validations
+        }
 
         # source → evidence
         for ev in evidence_rows:
@@ -145,6 +160,22 @@ class ResearchGraph:
                 if c_id in self.nodes:
                     self._add_edge(c_id, thesis_id, "supports-or-opposes")
 
+        # corporate events: evidence → event
+        for ev_row in events:
+            ev_node = f"corporate_event:{ev_row.event_id}"
+            self._add_node(
+                GraphNode(
+                    ev_node, "corporate_event", ev_row.title[:80],
+                    created_at=_ensure_utc(ev_row.occurred_at).isoformat()
+                    if ev_row.occurred_at else None,
+                    detail={"event_type": ev_row.event_type},
+                )
+            )
+            for ref in ev_row.evidence_refs_json or []:
+                ev_id = f"evidence:{ref}"
+                if ev_id in self.nodes:
+                    self._add_edge(ev_id, ev_node, "evidences")
+
         # run → snapshot
         for r in runs:
             run_id = f"run:{r.run_id}"
@@ -159,6 +190,53 @@ class ResearchGraph:
                 snap_id = f"snapshot:{r.snapshot_id}"
                 if snap_id in self.nodes:
                     self._add_edge(snap_id, run_id, "bound-to")
+
+        # valuation nodes: claim/evidence → valuation
+        for v in valuations:
+            val_node = f"valuation:{v.valuation_id}"
+            self._add_node(
+                GraphNode(
+                    val_node, "valuation", f"{v.method} → {v.value if v.computable else 'N/A'}",
+                    created_at=_ensure_utc(v.created_at).isoformat()
+                    if v.created_at else None,
+                    detail={"method": v.method, "computable": v.computable},
+                )
+            )
+            if v.thesis_id:
+                t_id = f"thesis:{v.thesis_id}"
+                if t_id in self.nodes:
+                    self._add_edge(t_id, val_node, "valued-by")
+
+        # prediction/validation nodes
+        for p in all_predictions:
+            pred_node = f"prediction:{p.prediction_id}"
+            self._add_node(
+                GraphNode(
+                    pred_node, "prediction", f"{p.horizon} {p.expected_direction}",
+                    created_at=_ensure_utc(p.created_at).isoformat()
+                    if p.created_at else None,
+                    detail={"confidence": p.confidence},
+                )
+            )
+            if p.research_run_id:
+                run_id_node = f"run:{p.research_run_id}"
+                if run_id_node in self.nodes:
+                    self._add_edge(run_id_node, pred_node, "predicted-in")
+
+            val = validation_by_prediction.get(p.prediction_id)
+            if val:
+                val_node = f"validation:{val.validation_id}"
+                self._add_node(
+                    GraphNode(
+                        val_node, "validation",
+                        f"return {val.instrument_return_pct:.2f}%",
+                        created_at=_ensure_utc(val.validated_at).isoformat()
+                        if val.validated_at else None,
+                        detail={"direction_correct": val.direction_correct,
+                                "range_hit": val.range_hit},
+                    )
+                )
+                self._add_edge(pred_node, val_node, "validated-by")
 
         # thesis/claim/evidence → report version
         for rep in reports:

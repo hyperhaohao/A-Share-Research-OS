@@ -18,10 +18,12 @@ from app.domain.agents import (
     ResearchRequest,
     ResearchRequestStatus,
 )
-from app.domain.evidence import EvidenceType, utc_now
+from app.domain.evidence import EvidenceType
+from app.domain.research import Claim, ClaimStatus, ClaimType, FactStatus
 from app.quant.engine import factor_snapshot, run_backtest
 from app.services.evidence_collector import collect_capability_evidence
 from app.storage.agent_repo import AgentRepository
+from app.storage.research_repo import ResearchRepository
 from app.storage.repository import EvidenceRepository
 from app.storage.snapshot_repo import SnapshotRepository
 
@@ -158,12 +160,55 @@ class QuantBriefService:
                 "evidence_id": latest.evidence_id,
             },
         ]
+        # F1.4: quant claims — analyst_inference (never confirmed_fact),
+        # citing the kline evidence they were computed from
+        research = ResearchRepository(session)
+        claim_refs: list[str] = []
+        quant_specs = [
+            (
+                f"过去 {metrics['n_days']} 个交易日 5 日动量策略回测收益 "
+                f"{metrics['strategy_total_return_pct']}%（Sharpe {metrics['sharpe']}）",
+                "quant_backtest",
+            ),
+            (
+                f"5 日动量信号 {factors.get('momentum_5d')}",
+                "quant_momentum",
+            ),
+            (
+                f"20 日波动率 {factors.get('volatility_20d')}",
+                "quant_volatility",
+            ),
+        ]
+        for statement, tag in quant_specs:
+            claim = Claim(
+                instrument_id=snapshot.instrument_id,
+                snapshot_id=snapshot.snapshot_id,
+                statement=statement,
+                claim_type=ClaimType.INDUSTRY_TREND,  # quant signal ≈ trend claim
+                supporting_evidence_refs=(latest.evidence_id,),
+                fact_status=FactStatus.ANALYST_INFERENCE,
+                confidence=0.65 if metrics["n_days"] >= 10 else 0.5,
+                status=ClaimStatus.PROPOSED,
+                metadata={"analyst": "quant", "signal_type": tag},
+            )
+            try:
+                claim_refs.append(research.save_claim(claim))
+            except Exception:
+                existing = [
+                    c for c in research.list_claims(
+                        snapshot.instrument_id, snapshot_id=snapshot.snapshot_id
+                    ) if c.statement == statement
+                ]
+                if existing:
+                    claim_refs.append(existing[0].claim_id)
+
         brief = AnalystBrief(
             analyst_type=AnalystType.QUANT,
             instrument_id=snapshot.instrument_id,
             snapshot_id=snapshot.snapshot_id,
             run_id=run_id,
             conclusions=tuple(conclusions),
+            claim_refs=tuple(claim_refs),
             evidence_refs=(latest.evidence_id,),
             confidence=0.75,
             key_questions=("信号在更长窗口/同业上是否稳定？",),
