@@ -6,13 +6,15 @@ Prediction → Validation），而非一次性生成的互不关联的报告。
 
 ## 当前状态
 
-**整改进行中（R0–R5）**：首轮交付建立了完整的 Research OS Kernel（研究域模型/
-证据链/PIT/质量门/调度器/双语三态 UI），但按整改任务书核实，以下能力尚属未完成：
-真实多源数据链（公告/财务/新闻/资金/行业/宏观）、完整研究主链（Analyst 集→
-Claim→Thesis→Debate→Scenario→Valuation→Risk 全自动）、LLM 接入、Quant 实接、
-后台调度服务与 Live Research E2E。
+**Research OS Beta — Final Integrity Pass 完成。**
 
-- 整改状态源：[REMEDIATION.md](REMEDIATION.md)（当前阶段：R0）
+已完成：多源真实数据（公告/财务/新闻/资金/行业/宏观）、完整研究管线（8 分析师 → Claim → Thesis → Debate → Scenario → Valuation → Risk → Report）、LLM Provider + Copilot + Narrative Layer、确定性 Quant 引擎（Kline → 因子 → 回测 → 指标）、后台调度器（Monitor/Materiality/Delta/Full 三分支）、九 Tab Workspace + React Flow 图谱 + Copilot 侧栏 + Revision Diff、Live Research E2E（4 板块）。
+
+进行中/增强项：基准指数数据源、节假日历、公网认证/TLS。
+
+- 状态文件：[STATUS.md](STATUS.md)
+- 整改历史：[REMEDIATION.md](REMEDIATION.md)
+- 首轮 M0–M29：`docs/milestones/`
 - 历史 M0–M29 交付记录：`docs/milestones/`（保留，不代表当前完成结论）
 详见 [ROADMAP.md](ROADMAP.md) 与 [STATUS.md](STATUS.md)。
 

@@ -13,16 +13,21 @@
 ## 整改阶段（REMEDIATION，当前执行线）
 
 > 整改依据 `A-Share-Research-OS-整改实施任务书.md`；状态详情见 `REMEDIATION.md`。
-> 下方 M0–M29 为首轮交付历史记录（保留，不代表当前完成结论）。
+> 整改 R0–R5 已全部完成。下方 M0–M29 为首轮交付历史记录。
+
+### Final Integrity Pass — COMPLETE（第二轮整改）
+
+F0 Pipeline Integrity / F1 Research Integration / F2 Product Integrity /
+F3 Final Verification — 全部通过（详见 STATUS.md 与 git 历史 5a0cec7–HEAD）。
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| R0 | State & Integrity Repair（状态/Manifest/Gate/测试分类） | DOING |
-| R1 | Real Research Data（公告/财务/新闻/资金/行业/宏观 + 行情 fallback） | TODO |
-| R2 | Full Research Pipeline（Analyst 集→Claim→Thesis→Debate→Scenario→Valuation→Risk→Report） | TODO |
-| R3 | AI / Quant / Continuous（LLMProvider/Copilot/QuantAdapter/后台调度/Delta） | TODO |
-| R4 | Research Workspace Completion（九 Tab/Copilot/React Flow/Interactive Report） | TODO |
-| R5 | Production Research E2E（多标的 Live E2E/长时运行/生产复验） | TODO |
+| R0 | State & Integrity Repair（状态/Manifest/Gate/测试分类） | DONE |
+| R1 | Real Research Data（公告/财务/新闻/资金/行业/宏观 + 行情 fallback） | DONE |
+| R2 | Full Research Pipeline（Analyst 集→Claim→Thesis→Debate→Scenario→Valuation→Risk→Report） | DONE |
+| R3 | AI / Quant / Continuous（LLMProvider/Copilot/QuantAdapter/后台调度/Delta） | DONE |
+| R4 | Research Workspace Completion（九 Tab/Copilot/React Flow/Interactive Report） | DONE |
+| R5 | Production Research E2E（多标的 Live E2E/长时运行/生产复验） | DONE |
 
 ---
 

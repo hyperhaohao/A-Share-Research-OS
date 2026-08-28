@@ -1,8 +1,8 @@
 # REMEDIATION.md
 
-# A-Share Research OS — 整改状态源（唯一）
+# A-Share Research OS — 整改历史记录（R0–R5 已全部完成）
 
-> 本文件是整改（R0–R5）的执行状态唯一来源。
+> 本文件是 R0–R5 整改的历史记录。当前状态以 STATUS.md 为准。
 > 旧 M0–M29 记录保留于 git 历史与 `docs/milestones/`（历史，不代表当前完成结论）。
 >
 > 整改依据：`A-Share-Research-OS-整改实施任务书.md`

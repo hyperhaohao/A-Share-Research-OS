@@ -1,80 +1,76 @@
 # STATUS.md
 
-# Current Execution Status — Remediation（整改）
+# Current Execution Status
 
-> 本文件只描述当前状态。历史记录见 `docs/milestones/`。
-> 整改阶段详情与任务清单见 `REMEDIATION.md`（整改状态唯一来源）。
+> 本文件只描述当前事实。历史记录见 `docs/milestones/`。
+> 整改历史见 `REMEDIATION.md`。
 
 ---
 
 ## Current Phase
 
 ```text
-Remediation — R5 Production Research E2E
-```
-
-## Current Milestone
-
-```text
-R5.1–R5.4：多标的 Live Research E2E → 长时运行测试 → 生产复验 →
-Final Reviewer Pass
+Final Integrity Pass — COMPLETE
 ```
 
 ## Completed
 
 ```text
-R0.1  REMEDIATION.md 建立（整改状态源，含 14 项真实缺口基线）
-R0.2  STATUS 重写为整改态；旧状态归档 docs/milestones/M0-M29-initial-delivery-STATUS.md
+首轮 M0–M29（历史，docs/milestones/）
+首轮整改 R0–R5（历史，REMEDIATION.md）
+二轮 F0 Pipeline Integrity ✓
+二轮 F1 Research Integration ✓
+二轮 F2 Product Integrity ✓
+二轮 F3 Final Verification ✓
 ```
 
 ## In Progress
 
 ```text
-R0.5 RunManifest 真实值（git commit / SHA256 config digest / 真实 seed）
-R0.6 QualityGate 绕过修复（report_compiler data_quality or True、估值假设占位）
-R0.7 测试重分类（api_integration / live 标记）
+None（增强项按需排期，见 Open Issues）
 ```
 
 ## Next Action
 
 ```text
-整改 R0–R5 全部完成并通过各自 DoD（2026-08-28）。
 后续增强（不阻断交付，按需排期）：
-- 基准指数（IDX）数据源接入 → 超额收益补全
+- 基准指数（IDX）数据源 → 预测超额收益补全
 - 法定节假日历 → 预测到期日精确化
-- 公网部署认证/TLS（见 docs/security.md）
+- 公网部署认证/TLS
+- PostgreSQL 生产库迁移
 ```
 
 ## Tests
 
 ```text
-Baseline（整改前最后全量）：backend 240+ / frontend 8+ PASS
-R0 验证：待 R0.5–R0.7 完成后全量重跑
+backend: 283 passed
+frontend: 8 passed + build PASS
+docker compose: 3 services all running
+backup/restore: 演练 PASS（WAL 修复后）
 ```
 
 ## Live Verification
 
 ```text
-腾讯行情 live 验证历史 PASS（M3/M4）。
-R1 将扩展公告/财务/新闻 live 验证。
+R1: 4 只真实 A 股 × 4 能力 → Evidence + Manifest
+R2: 真实贵州茅台全链（无手工补链）
+R5: 4 标的 live E2E + 3 分支 continuous + scheduler
 ```
 
 ## Open Issues
 
 ```text
-1. Provider 仅腾讯行情（R1 补齐）
-2. Pipeline 主链不完整：仅 market→analyst(facts)→report（R2 重构）
-3. 无 LLM Provider 进主流程（R3）
-4. Quant 未进正式主链（R3 方案 A）
-5. Scheduler 无后台服务进程（R3 compose 第三服务）
-6. Workspace 信息架构不完整（R4）
-7. 现有 E2E 为 API Integration（monkeypatch），非 Live Research E2E（R5）
+1. 基准指数（IDX）行情数据未接入 → 预测超额收益显式 null
+2. 法定节假日历未接入 → 预测到期日 ±1-3 天
+3. 公网部署需认证/TLS（当前单用户/内网定位）
+4. SQLite 仅适合当前单机规模；生产多用户需 PostgreSQL
+5. Macro 官方原始源（gov.cn 等）未接入；当前为媒体转载 + 机构标注
 ```
 
 ## Branch / Commit
 
 ```text
 Branch: main
-Commit: 见 git log（整改起点 = d4c7cef 之后）
+Commit: 8aacbcf（Final Integrity Pass 完成后）
 Remote: github.com/hyperhaohao/A-Share-Research-OS.git
 ```

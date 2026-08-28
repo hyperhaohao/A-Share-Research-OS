@@ -14,3 +14,7 @@
 6. **指标数据**：估值引擎输入（EPS/BVPS 等）来自财报证据；财报 provider 接入前
    涉及财报的估值方法返回显式 not-computable。
 7. **假日历/港股/美股**：当前仅 A 股（沪深北）；架构已按市场参数化。
+8. **数据库规模**：当前默认 SQLite 仅适合单用户/内网/低并发试用规模；
+   多用户长期 scheduler 需迁移 PostgreSQL（docker-compose.production.yml 后续提供）。
+9. **Macro 官方源**：宏观/政策当前为 Eastmoney 搜索 + 机构标注（media_report B2）；
+   gov.cn 等官方原始源（B1/A1）待接入。
