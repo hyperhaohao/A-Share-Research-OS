@@ -32,6 +32,8 @@ class ArtifactType(str, Enum):
     EXPERIENCE_CARD = "experience_card"
     WORKFLOW_RUN = "workflow_run"
     SCREENING_RUN = "screening_run"
+    STRATEGY_VERSION = "strategy_version"
+    STRATEGY_BACKTEST = "strategy_backtest"
 
 
 class RelationType(str, Enum):

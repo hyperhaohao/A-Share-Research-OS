@@ -33,6 +33,54 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def collect_daily_bars(session: Session, instrument_id: str, *, limit: int = 1200) -> list[dict]:
+    """Collect REAL daily bars through the historical_data capability and
+    return the newest evidence's bars, chronological. Raises ValueError
+    honestly when the source is unavailable — never fabricated."""
+    from app.services.evidence_collector import collect_capability_evidence
+
+    outcome = collect_capability_evidence(
+        instrument_id, "historical_data",
+        repo=EvidenceRepository(session),
+        params={"bars": limit},
+    )
+    if outcome.manifest.final_status not in ("success", "partial") or not outcome.created_ids:
+        raise ValueError(f"historical bars unavailable ({outcome.manifest.final_status})")
+    bars = load_daily_bars(session, instrument_id)
+    if len(bars) < 2:
+        raise ValueError("fewer than 2 usable bars")
+    return bars
+
+
+def load_daily_bars(session: Session, instrument_id: str) -> list[dict]:
+    """Newest kline evidence's bars for the instrument, chronological."""
+    evidence_repo = EvidenceRepository(session)
+    now = datetime.now(timezone.utc)
+    kline = [
+        e for e in evidence_repo.list_for_instrument(instrument_id, visible_at=now)
+        if e.evidence_type is EvidenceType.MARKET_QUOTE
+        and (e.metadata or {}).get("bar_count") is not None
+        and isinstance((e.metadata or {}).get("bars"), list)
+    ]
+    if not kline:
+        return []
+    newest = max(kline, key=lambda e: e.available_time)
+    bars = [b for b in newest.metadata["bars"] if isinstance(b, dict) and b.get("close")]
+    bars.sort(key=lambda b: b["date"])
+    return bars
+
+
+def forward_returns(bars: list[dict], horizon: int, threshold: float) -> list[float]:
+    """Typed forward-return rule over a chronological close series."""
+    returns: list[float] = []
+    for i in range(len(bars) - horizon):
+        base = float(bars[i]["close"])
+        later = float(bars[i + horizon]["close"])
+        if base > 0:
+            returns.append((later / base - 1) * 100)
+    return returns
+
+
 def build_nodes() -> list[dict]:
     """The fixed first-batch DAG shape (§73): typed node descriptors."""
     return [
@@ -151,50 +199,18 @@ class WorkflowService:
 
     def _node_data(self, run: dict) -> str:
         """Collect REAL daily bars through the historical_data capability."""
-        from app.services.evidence_collector import collect_capability_evidence
-
-        outcome = collect_capability_evidence(
-            run["instrument_id"], "historical_data",
-            repo=EvidenceRepository(self._session),
-            params={"bars": 1200},
-        )
-        if outcome.manifest.final_status not in ("success", "partial") or not outcome.created_ids:
-            raise ValueError(
-                f"historical bars unavailable ({outcome.manifest.final_status})"
-            )
-        bars = self._load_bars(run["instrument_id"])
-        if len(bars) < 2:
-            raise ValueError("fewer than 2 usable bars")
+        bars = collect_daily_bars(self._session, run["instrument_id"])
         return f"{len(bars)} 根日线（{bars[0]['date']} → {bars[-1]['date']}）"
 
     def _load_bars(self, instrument_id: str) -> list[dict]:
-        """Newest kline evidence's bars, chronological."""
-        evidence_repo = EvidenceRepository(self._session)
-        now = datetime.now(timezone.utc)
-        kline = [
-            e for e in evidence_repo.list_for_instrument(instrument_id, visible_at=now)
-            if e.evidence_type is EvidenceType.MARKET_QUOTE
-            and (e.metadata or {}).get("bar_count") is not None
-            and isinstance((e.metadata or {}).get("bars"), list)
-        ]
-        if not kline:
-            return []
-        newest = max(kline, key=lambda e: e.available_time)
-        bars = [b for b in newest.metadata["bars"] if isinstance(b, dict) and b.get("close")]
-        bars.sort(key=lambda b: b["date"])
-        return bars
+        return load_daily_bars(self._session, instrument_id)
 
     def _node_rule(self, run: dict) -> str:
         """Apply the typed forward-return rule over the bar series."""
-        bars = self._load_bars(run["instrument_id"])
+        bars = load_daily_bars(self._session, run["instrument_id"])
         horizon = int(run["params"].get("horizon_days", 20))
         threshold = float(run["params"].get("threshold_pct", 0.0))
-        returns: list[float] = []
-        for i in range(len(bars) - horizon):
-            base = float(bars[i]["close"])
-            later = float(bars[i + horizon]["close"])
-            if base > 0:
-                returns.append((later / base - 1) * 100)
+        returns = forward_returns(bars, horizon, threshold)
         metrics = {
             "samples": len(returns),
             "threshold_pct": threshold,

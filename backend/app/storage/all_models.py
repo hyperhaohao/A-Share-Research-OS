@@ -20,6 +20,10 @@ from app.application.run_events import RunEventORM  # noqa: F401
 from app.application.handoff import HandoffORM  # noqa: F401
 from app.application.workflow import WorkflowRunORM  # noqa: F401
 from app.application.screening import ScreeningRunORM  # noqa: F401
+from app.application.strategy import (  # noqa: F401
+    StrategyBacktestRunORM,
+    StrategyVersionORM,
+)
 from app.application.experience import (  # noqa: F401
     ExperienceCardORM,
     ExperienceCardVersionORM,
