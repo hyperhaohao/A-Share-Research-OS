@@ -14,6 +14,8 @@ import { expect, test } from "@playwright/test";
  * E2E-11: card → screening run → candidates with why-selected (Phase E)
  * E2E-12: screening → strategy → backtest → §47 gate (Phase F)
  * E2E-13: strategy monitor with Observation/Signal/Decision separation (G)
+ * E2E-14: workspace → industry map / global context → context-preserving
+ *         return to the workspace (Phase H, §52/§77)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -322,6 +324,46 @@ test.describe.serial("000831 product flow", () => {
     } else {
       // honest gate disclosure on the strategy page (source-dependent path)
       await expect(page.getByTestId("strategy-detail")).toBeVisible();
+    }
+  });
+
+  test("E2E-14 research map views preserve context back to the workspace", async ({ page }) => {
+    // enter the workspace from the research we ran in this serial pass
+    await page.goto("/instrument/SZSE%3A000831");
+    await expect(page.getByTestId("workspace-name")).toContainText("中国稀土");
+
+    // §52: the views are Research Inputs reached from the instrument
+    await page.getByTestId("workspace-industry-map").click();
+    await expect(page.getByTestId("industry-map-page")).toBeVisible();
+    const mapReady = await page
+      .getByTestId("industry-chain")
+      .waitFor({ timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+
+    // §77: the views are not orphan dashboards — open_with_context returns
+    // to the instrument workspace carrying the handoff envelope
+    if (mapReady) {
+      await page.getByTestId("industry-map-open-workspace").click();
+    } else {
+      await page.getByRole("link", { name: "返回工作台" }).click();
+    }
+    // context preserved: back on the workspace with the SAME instrument
+    await expect(page.getByTestId("workspace-name")).toContainText("中国稀土", {
+      timeout: 20_000,
+    });
+
+    // global context page behaves the same way
+    await page.goto("/global-context/SZSE%3A000831");
+    const ctxReady = await page
+      .getByTestId("global-context-disclosure")
+      .waitFor({ timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (ctxReady) {
+      await expect(page.getByText(/官方宏观数值源未接入/)).toBeVisible();
+    } else {
+      await expect(page.getByText("宏观资讯未采集")).toBeVisible();
     }
   });
 

@@ -86,7 +86,9 @@
     "strategy.unassemblable": "尚不能组装策略",
     "strategy.validation_blocked": "验证门槛：需先完成一次跨标的回测",
     "monitor.not_found": "盯盘不存在",
-    "monitor.gate_blocked": "盯盘门槛：仅 EXPERIMENTAL（已验证）策略可建立盯盘"
+    "monitor.gate_blocked": "盯盘门槛：仅 EXPERIMENTAL（已验证）策略可建立盯盘",
+    "industry_map.not_collected": "产业资料未采集，先运行完整研究",
+    "global_context.not_collected": "宏观资讯未采集，先运行完整研究"
   },
   "watchlist": {
     "add": "添加关注",
@@ -471,5 +473,22 @@
       "research_review": "复核研究",
       "research_continue": "继续观察"
     }
+  },
+  "industryMap": {
+    "title": "产业研究地图",
+    "notReady": "产业地图尚未生成 —— 先运行完整研究采集产业资料",
+    "backToWorkspace": "返回工作台",
+    "chainTitle": "产业链位置",
+    "mainBusiness": "主营业务",
+    "relatedTitle": "相关公司（证据文本共现）",
+    "noRelated": "暂无共现公司 —— 继续研究积累证据后更新",
+    "openWorkspace": "带上下文打开工作台",
+    "disclosure": "相关公司由证据文本共现推导，关系源未接入"
+  },
+  "globalContext": {
+    "title": "全球宏观坐标",
+    "notReady": "全球坐标尚未生成 —— 先运行完整研究采集宏观资讯",
+    "themesTitle": "宏观/政策主题（含官方机构提及标注）",
+    "openWorkspace": "带上下文打开工作台"
   }
 }

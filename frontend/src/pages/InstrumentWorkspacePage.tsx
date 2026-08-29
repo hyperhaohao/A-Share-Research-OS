@@ -112,6 +112,20 @@ export function InstrumentWorkspacePage() {
           {inst ? `${inst.exchange}:${inst.code} · ${inst.market} · ${inst.board}` : instrumentId}
         </span>
         <span className="secondary">{inst?.industry ?? t("label.missing")}</span>
+        <Link
+          className="control-btn"
+          data-testid="workspace-industry-map"
+          to={`/industry-map/${instrumentId}`}
+        >
+          {t("industryMap.title")}
+        </Link>
+        <Link
+          className="control-btn"
+          data-testid="workspace-global-context"
+          to={`/global-context/${instrumentId}`}
+        >
+          {t("globalContext.title")}
+        </Link>
       </header>
 
       <div className="workspace-body">

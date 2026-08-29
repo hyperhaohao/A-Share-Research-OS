@@ -15,6 +15,7 @@ import { ExperienceCardPage } from "./pages/ExperienceCardPage";
 import { ScreeningRunsPage, ScreeningRunDetailPage } from "./pages/ScreeningPage";
 import { StrategyLabPage, StrategyDetailPage } from "./pages/StrategyLabPage";
 import { StrategyMonitorsPage, StrategyMonitorDetailPage } from "./pages/StrategyMonitorPage";
+import { IndustryMapPage, GlobalContextPage } from "./pages/ResearchMapPages";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 
@@ -64,6 +65,8 @@ function Shell() {
         <Route path="/strategy/:versionId" element={<StrategyDetailPage />} />
         <Route path="/monitoring" element={<StrategyMonitorsPage />} />
         <Route path="/monitoring/:monitorId" element={<StrategyMonitorDetailPage />} />
+        <Route path="/industry-map/:instrumentId" element={<IndustryMapPage />} />
+        <Route path="/global-context/:instrumentId" element={<GlobalContextPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
         <Route path="/instrument/:instrumentId" element={<InstrumentWorkspacePage />} />
