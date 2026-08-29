@@ -12,7 +12,8 @@
     "predictions": "预测",
     "evidence": "证据",
     "settings": "设置",
-    "experience": "经验卡"
+    "experience": "经验卡",
+    "screening": "智能选股"
   },
   "home": {
     "title": "研究总览",
@@ -77,7 +78,8 @@
     "experience.llm_unavailable": "未配置 LLM：卡片已带确定性提炼结果",
     "experience.validation_no_data": "暂无可比价数据，无法案例验证",
     "artifact.not_found": "产物档案缺失",
-    "workflow.not_found": "工作流不存在"
+    "workflow.not_found": "工作流不存在",
+    "screening.not_found": "筛选运行不存在"
   },
   "watchlist": {
     "add": "添加关注",
@@ -389,5 +391,21 @@
     "stepRunning": "执行中",
     "stepOk": "完成",
     "stepFailed": "失败"
+  },
+  "screening": {
+    "pageHint": "选股不是单纯条件过滤器：每个候选都带「为什么入选」，被排除原因按规则披露。",
+    "empty": "暂无筛选运行 —— 在经验卡页点击「按此经验筛选」开始",
+    "runTitle": "筛选运行（候选 {{rank}} / 全市场 {{universe}}）",
+    "detailTitle": "筛选运行",
+    "universeSize": "全市场 {{universe}} 标的",
+    "candidateCount": "入选 {{count}}",
+    "excludedTitle": "为什么没选中（按规则聚合）",
+    "noCandidates": "无候选 —— 全市场均未通过规则（原因见上）",
+    "launch": "按此经验筛选",
+    "rule": {
+      "has_report": "缺完整研究报告",
+      "thesis_direction": "论点方向不符",
+      "has_quote": "无可比价行情"
+    }
   }
 }

@@ -11,6 +11,7 @@ import { expect, test } from "@playwright/test";
  * E2E-08: conversation → plan → research run → report (V2 Phase B 中枢)
  * E2E-09: report → experience card → case validation → approve (Phase C)
  * E2E-10: card → validation workflow DAG → quant record (Phase D)
+ * E2E-11: card → screening run → candidates with why-selected (Phase E)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -226,6 +227,25 @@ test.describe.serial("000831 product flow", () => {
       // failure path: the data node's real error is disclosed on the node
       await expect(runPanel.locator(".status-error").first()).toBeVisible();
     }
+  });
+
+  test("E2E-11 card screens the market with why-selected candidates", async ({ page }) => {
+    await page.goto("/reports");
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+
+    // §45: experience card → screening run via the handoff envelope
+    await page.getByTestId("screening-launch").click();
+    await page.waitForURL(/\/screening\/sr_[0-9a-f]+\?handoff=ho_/);
+
+    // candidates carry why-selected explanations (§20)
+    await expect(page.getByTestId("screening-candidate").first()).toBeVisible({ timeout: 60_000 });
+    const detail = page.getByTestId("screening-detail");
+    await expect(detail.getByText(/全市场 .* 标的/)).toBeVisible();
+    await expect(page.getByTestId("candidate-explanation").first()).toContainText("命中全部");
+    await expect(page.getByTestId("candidate-explanation").first()).toContainText("经验依据");
+    // the exclusion summary is disclosed (为什么没选中)
+    await expect(page.getByTestId("screening-excluded")).toBeVisible();
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {

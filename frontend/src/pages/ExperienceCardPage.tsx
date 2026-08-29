@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { formatExperienceStatus, uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
 import { CardWorkflowPanel } from "../components/CardWorkflowPanel";
+import { ScreeningLaunchButton } from "../components/ScreeningLaunchButton";
 
 interface ValidationItem {
   validation_id: string;
@@ -173,6 +174,7 @@ export function ExperienceCardPage() {
       </section>
 
       <div className="header-controls" data-testid="experience-actions">
+        <ScreeningLaunchButton cardId={card.card_id} />
         <button
           type="button"
           className="control-btn"

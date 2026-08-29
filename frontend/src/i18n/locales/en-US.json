@@ -12,7 +12,8 @@
     "predictions": "Predictions",
     "evidence": "Evidence",
     "settings": "Settings",
-    "experience": "Experience"
+    "experience": "Experience",
+    "screening": "Screening"
   },
   "home": {
     "title": "Dashboard",
@@ -77,7 +78,8 @@
     "experience.llm_unavailable": "LLM not configured; card already carries the deterministic refine",
     "experience.validation_no_data": "No comparable prices for a case validation",
     "artifact.not_found": "Artifact record missing",
-    "workflow.not_found": "Workflow not found"
+    "workflow.not_found": "Workflow not found",
+    "screening.not_found": "Screening run not found"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -390,5 +392,21 @@
     "stepRunning": "running",
     "stepOk": "done",
     "stepFailed": "failed"
+  },
+  "screening": {
+    "pageHint": "Screening is not a bare filter: every candidate explains why it was selected; exclusions are disclosed per rule.",
+    "empty": "No screening runs yet — use 按此经验筛选 on an experience card",
+    "runTitle": "Screening run ({{rank}} candidates / {{universe}} universe)",
+    "detailTitle": "Screening run",
+    "universeSize": "{{universe}} instruments in universe",
+    "candidateCount": "{{count}} selected",
+    "excludedTitle": "Why excluded (aggregated per rule)",
+    "noCandidates": "No candidates — nothing passed the rules (see reasons above)",
+    "launch": "Screen by this card",
+    "rule": {
+      "has_report": "missing full report",
+      "thesis_direction": "thesis direction mismatch",
+      "has_quote": "no visible quote"
+    }
   }
 }
