@@ -179,6 +179,10 @@ def test_backtest_completes_with_failure_case_disclosure(client, monkeypatch, st
     assert backtest["aggregate"]["portfolio_avg_return_pct"] < 0
     assert len(backtest["failure_cases"]) == len(ok)
     assert backtest["failure_cases"][0]["reason"] in ("平均收益为负", "命中率不足 50%")
+    # §47 battery present in the aggregate
+    assert backtest["aggregate"]["sensitivity"], "sensitivity combos missing"
+    assert len(backtest["aggregate"]["sensitivity"]) >= 3
+    assert backtest["aggregate"]["regime_split"], "regime split missing"
 
     bt_artifacts = client.get(
         "/api/v1/artifacts", params={"artifact_type": "strategy_backtest"}
@@ -256,3 +260,83 @@ def test_strategy_from_missing_screening_is_404(client):
         json={"screening_run_id": "sr_missing00000"},
     )
     assert resp.status_code == 404
+
+
+def test_full_battery_validates_positive_strategy(client, monkeypatch, strategy_chain):
+    """§47: with the full battery (cross-instrument + regime split +
+    sensitivity) and a positive portfolio, the version earns VALIDATED."""
+    strategy = strategy_chain["strategy"]
+    # rising bars spanning TWO years → ≥2 regimes in the split
+    two_year_rising = {"data": {"klines": [
+        f"2025-{(i // 28) + 1:02d}-{(i % 28) + 1:02d},"
+        f"{10.0 + i * 0.1:.2f},{10.0 + i * 0.1:.2f},"
+        f"{10.5 + i * 0.1:.2f},{9.5 + i * 0.1:.2f},"
+        "1000,10000,1.0,1.0,0.1,1.0"
+        for i in range(40)
+    ] + [
+        f"2026-{(i - 40) + 1:02d}-{(i % 28) + 1:02d},"
+        f"{10.0 + i * 0.1:.2f},{10.0 + i * 0.1:.2f},"
+        f"{10.5 + i * 0.1:.2f},{9.5 + i * 0.1:.2f},"
+        "1000,10000,1.0,1.0,0.1,1.0"
+        for i in range(40, 80)
+    ]}}
+    def two_year_get(url, timeout=10.0, **kwargs):
+        if "kline" in url:
+            return httpx.Response(200, json=two_year_rising)
+        return httpx.Response(200, content=RAW_OK.encode("gbk"))
+    monkeypatch.setattr(httpx, "get", two_year_get)
+    launched = client.post(f"/api/v1/strategies/{strategy['version_id']}/backtest")
+    assert launched.status_code == 202
+    _await(
+        client,
+        f"/api/v1/strategies/backtests/{launched.json()['backtest']['backtest_id']}",
+        "backtest",
+    )
+    validated = client.post(f"/api/v1/strategies/{strategy['version_id']}/validate")
+    assert validated.status_code == 200, validated.text
+    body = validated.json()["strategy"]
+    assert body["status"] == "VALIDATED"
+    assert "VALIDATED" in body["verdict"]
+    assert "分域" in body["verdict"]
+
+
+def test_regime_split_uses_exit_year(client, monkeypatch, strategy_chain):
+    strategy = strategy_chain["strategy"]
+    # bars spanning two years: 40 bars in 2025, 20 in 2026
+    two_year = {
+        "data": {
+            "klines": [
+                (
+                    f"2025-{(i // 28) + 1:02d}-{(i % 28) + 1:02d},"
+                    if i < 40
+                    else f"2026-{(i - 40) + 1:02d}-"
+                )
+                + "15.00,15.00,15.50,14.50,1000,10000,1.0,1.0,0.1,1.0"
+                for i in range(BAR_COUNT)
+            ]
+        }
+    }
+
+    def fake_get(url, timeout=10.0, **kwargs):
+        if "kline" in url:
+            # flat closes → forward returns exactly 0 → hit at threshold 0
+            return httpx.Response(200, json={
+                "data": {"klines": [
+                    ("2025-%02d-%02d," % ((i // 28) + 1, (i % 28) + 1) if i < 40
+                     else "2026-%02d-%02d," % (i - 39, (i % 28) + 1))
+                    + "15.00,15.00,15.50,14.50,1000,10000,1.0,1.0,0.1,1.0"
+                    for i in range(BAR_COUNT)
+                ]}})
+        return httpx.Response(200, content=RAW_OK.encode("gbk"))
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    launched = client.post(f"/api/v1/strategies/{strategy['version_id']}/backtest")
+    assert launched.status_code == 202
+    backtest = _await(
+        client,
+        f"/api/v1/strategies/backtests/{launched.json()['backtest']['backtest_id']}",
+        "backtest",
+    )
+    regimes = backtest["aggregate"]["regime_split"]
+    assert set(regimes.keys()) == {"2025", "2026"}
+    assert all(r["samples"] > 0 for r in regimes.values())

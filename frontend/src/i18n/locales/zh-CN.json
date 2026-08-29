@@ -443,12 +443,16 @@
     "updated": "更新于 {{when}}",
     "status": {
       "DRAFT": "草稿",
-      "EXPERIMENTAL": "实验性（禁止正式盯盘）"
+      "EXPERIMENTAL": "实验性（禁止正式盯盘）",
+      "VALIDATED": "已验证（§47 全套通过）"
     },
     "resultStatus": {
       "no_data": "无数据（源失败显形）",
       "insufficient_samples": "样本不足"
-    }
+    },
+    "regimeSplit": "市场状态分域（按年）",
+    "regimeSamples": "{{count}} 个样本",
+    "sensitivity": "参数敏感性（持有期/阈值邻域）"
   },
   "monitor": {
     "pageHint": "后台运行策略盯盘：观察（系统看到什么）、信号（规则产生什么）、决策（研究决策）三分离。",

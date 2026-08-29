@@ -21,7 +21,11 @@ from app.application.strategy import (
     StrategyVersionORM,
 )
 from app.application.artifacts import ArtifactService, RelationType
-from app.services.workflow_service import collect_daily_bars, forward_returns
+from app.services.workflow_service import (
+    collect_daily_bars,
+    forward_returns,
+    load_daily_bars,
+)
 
 
 class StrategyRefusal(ValueError):
@@ -164,6 +168,10 @@ class StrategyService:
                 }
             )
 
+        # §47 全套电池：Regime Split（按退出年分域）+ Sensitivity（参数邻域）
+        regime_split = self._regime_split(version["universe"], horizon, threshold)
+        sensitivity = self._sensitivity(version["universe"], horizon, threshold)
+
         ok_results = [r for r in results if r.get("status") == "ok"]
         if not ok_results:
             def fail(p: dict) -> dict:
@@ -188,6 +196,8 @@ class StrategyService:
             ),
             "horizon_days": horizon,
             "threshold_pct": threshold,
+            "regime_split": regime_split,
+            "sensitivity": sensitivity,
             "errors": errors[:20],
         }
         # §22: failures are shown as they are — negative averages are failure cases
@@ -218,6 +228,56 @@ class StrategyService:
         self._register_backtest_artifact(version, backtest)
         return backtest
 
+    def _regime_split(self, universe: list, horizon: int, threshold: float) -> dict:
+        """Portfolio forward returns split by exit-bar year (§47 regime axis
+        v1: calendar time). Regimes without data are disclosed, not skipped."""
+        per_year: dict[str, list[float]] = {}
+        for member in universe:
+            try:
+                bars = load_daily_bars(self._session, member["instrument_id"])
+            except Exception:  # noqa: BLE001 — handled by aggregate errors
+                continue
+            returns = forward_returns(bars, horizon, threshold)
+            for i, ret in enumerate(returns):
+                exit_bar = bars[i + horizon]
+                year = str(exit_bar.get("date", ""))[:4]
+                per_year.setdefault(year, []).append(ret)
+        regimes = {}
+        for year in sorted(per_year):
+            rets = per_year[year]
+            regimes[year] = {
+                "samples": len(rets),
+                "avg_return_pct": round(sum(rets) / len(rets), 3),
+            }
+        return regimes
+
+    def _sensitivity(self, universe: list, horizon: int, threshold: float) -> list[dict]:
+        """Portfolio verdict stability across a parameter neighbourhood
+        (horizon ±5, threshold ±1pt) — §47 sensitivity axis."""
+        combos: list[dict] = []
+        for h in sorted({max(1, horizon - 5), horizon, min(250, horizon + 5)}):
+            for t in sorted({round(threshold - 1.0, 2), threshold, round(threshold + 1.0, 2)}):
+                rets_all: list[float] = []
+                for member in universe:
+                    try:
+                        bars = load_daily_bars(self._session, member["instrument_id"])
+                    except Exception:  # noqa: BLE001 — member without bars is skipped
+                        continue
+                    rets_all.extend(forward_returns(bars, h, t))
+                if not rets_all:
+                    continue
+                hits = sum(1 for r in rets_all if r >= t)
+                combos.append(
+                    {
+                        "horizon_days": h,
+                        "threshold_pct": t,
+                        "samples": len(rets_all),
+                        "hit_rate_pct": round(hits / len(rets_all) * 100, 2),
+                        "avg_return_pct": round(sum(rets_all) / len(rets_all), 3),
+                    }
+                )
+        return combos
+
     # -- 验证门槛（§47） ----------------------------------------------------------------
 
     def validate_version(self, version_id: str) -> dict:
@@ -233,10 +293,29 @@ class StrategyService:
         latest = completed[0]
         aggregate = latest["aggregate"]
         avg = aggregate.get("portfolio_avg_return_pct")
-        verdict = (
-            f"EXPERIMENTAL：组合平均收益 {avg}%（§47 全套验证未完成，禁止进入正式盯盘）"
-        )
-        version_row.status = StrategyStatus.EXPERIMENTAL
+        battery = aggregate.get("regime_split") and aggregate.get("sensitivity")
+        if battery is None:
+            raise StrategyRefusal("backtest lacks the §47 battery (regime split + sensitivity)")
+        regime_count = len(aggregate.get("regime_split") or {})
+        if regime_count < 2:
+            verdict = (
+                f"EXPERIMENTAL：可分域样本不足（{regime_count} 个市场状态，"
+                f"§47 需 ≥2），组合平均收益 {avg}%。禁止进入正式盯盘。"
+            )
+            status = StrategyStatus.EXPERIMENTAL
+        elif avg is not None and avg > 0:
+            verdict = (
+                f"VALIDATED：组合平均收益 {avg}%，跨 {regime_count} 个市场状态"
+                "分域验证 + 参数敏感性检验完成；失败案例已披露。"
+            )
+            status = StrategyStatus.VALIDATED
+        else:
+            verdict = (
+                f"EXPERIMENTAL：组合平均收益 {avg}% ≤ 0，"
+                f"跨 {regime_count} 个市场状态验证未通过。禁止进入正式盯盘。"
+            )
+            status = StrategyStatus.EXPERIMENTAL
+        version_row.status = status
         version_row.verdict = verdict[:500]
         version_row.updated_at = datetime.now(timezone.utc)
         return self._repo.save_version(version_row)

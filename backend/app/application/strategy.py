@@ -30,6 +30,7 @@ def _ensure_utc(value: datetime | None) -> datetime | None:
 class StrategyStatus:
     DRAFT = "DRAFT"
     EXPERIMENTAL = "EXPERIMENTAL"
+    VALIDATED = "VALIDATED"
 
 
 class BacktestStatus:

@@ -444,12 +444,16 @@
     "updated": "Updated {{when}}",
     "status": {
       "DRAFT": "Draft",
-      "EXPERIMENTAL": "Experimental (no live monitoring)"
+      "EXPERIMENTAL": "Experimental (no live monitoring)",
+      "VALIDATED": "Validated (full §47 battery)"
     },
     "resultStatus": {
       "no_data": "no data (source failure shown)",
       "insufficient_samples": "insufficient samples"
-    }
+    },
+    "regimeSplit": "Regime split (by year)",
+    "regimeSamples": "{{count}} samples",
+    "sensitivity": "Parameter sensitivity (horizon/threshold neighbourhood)"
   },
   "monitor": {
     "pageHint": "Background strategy monitoring with three-way separation: observations (what the system saw), signals (what the rules produced), decisions (the research decision).",

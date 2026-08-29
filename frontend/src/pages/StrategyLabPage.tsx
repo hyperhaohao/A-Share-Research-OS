@@ -81,6 +81,66 @@ export function StrategyLabPage() {
   );
 }
 
+function RegimeSplitBlock({ aggregate }: { aggregate: Record<string, unknown> }) {
+  const { t } = useTranslation();
+  const regimes = (aggregate.regime_split ?? {}) as Record<
+    string,
+    { samples: number; avg_return_pct: number }
+  >;
+  const years = Object.keys(regimes).sort();
+  if (years.length === 0) return null;
+  return (
+    <div data-testid="regime-split">
+      <h3>{t("strategy.regimeSplit")}</h3>
+      <ul className="watch-list">
+        {years.map((year) => (
+          <li className="result-row" key={year}>
+            <span>{year}</span>
+            <span className="secondary">
+              {t("strategy.regimeSamples", { count: regimes[year].samples })}
+            </span>
+            <span className="mono">
+              {regimes[year].avg_return_pct >= 0 ? "+" : ""}
+              {regimes[year].avg_return_pct}%
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SensitivityBlock({ aggregate }: { aggregate: Record<string, unknown> }) {
+  const { t } = useTranslation();
+  const combos = (aggregate.sensitivity ?? []) as Array<{
+    horizon_days: number;
+    threshold_pct: number;
+    samples: number;
+    hit_rate_pct: number;
+    avg_return_pct: number;
+  }>;
+  if (combos.length === 0) return null;
+  return (
+    <div data-testid="sensitivity">
+      <h3>{t("strategy.sensitivity")}</h3>
+      <ul className="watch-list">
+        {combos.map((c) => (
+          <li className="result-row" key={`${c.horizon_days}-${c.threshold_pct}`}>
+            <span className="mono">
+              h={c.horizon_days} / t={c.threshold_pct}%
+            </span>
+            <span className="mono">{c.hit_rate_pct}%</span>
+            <span className="mono">
+              {c.avg_return_pct >= 0 ? "+" : ""}
+              {c.avg_return_pct}%
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function BacktestBlock({ backtest }: { backtest: Backtest }) {
   const { t } = useTranslation();
   const agg = backtest.aggregate as Record<string, number | string | undefined>;
@@ -128,6 +188,8 @@ function BacktestBlock({ backtest }: { backtest: Backtest }) {
               </ul>
             </div>
           )}
+          <RegimeSplitBlock aggregate={backtest.aggregate} />
+          <SensitivityBlock aggregate={backtest.aggregate} />
           <ul className="watch-list">
             {backtest.results.map((r) => (
               <li className="result-row" key={r.instrument_id}>
