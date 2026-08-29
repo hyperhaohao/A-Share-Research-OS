@@ -88,10 +88,16 @@
 - [x] 卡片保留 report_version_id/claim_ids/evidence_ids；E2E-09
 - [x] 注：简单 Quant validation 由 Phase D 工作流节点承接（quant_expression 已保留）
 
-## Phase D — 研究验证工作流（DOING）
-- [ ] 最小强类型 DAG：Data → Factor/Rule → Validation → Output（§73）
-- [ ] 经验卡发起验证工作流（handoff experience→workflow:run_validation，§44）
-- [ ] 工作流运行落 Artifact + RunEvent；E2E-10
+## Phase D — 研究验证工作流（DONE v1）
+- [x] 最小强类型 DAG：Data(真实日线)→Rule(前向收益)→Validation(指标)→Output（§73）
+- [x] 经验卡发起验证工作流（handoff experience→workflow:run_validation，§44）
+- [x] 工作流运行落 Artifact + RunEvent；E2E-10（诚实终态契约）
+- [x] 注：自定义 quant_expression 表达式节点留待后续扩展
+
+## Phase E — 智能选股（DOING）
+- [ ] ScreeningRun + Candidate Artifact（Why Selected 解释，§74）
+- [ ] Universe 数据面 + 筛选规则（复用经验卡/工作流产物）
+- [ ] E2E-11
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

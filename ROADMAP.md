@@ -35,8 +35,8 @@
 | A | 统一研究基础协议（Artifact/Provenance/Context/Handoff/RunEvent 持久化；Registry+本地化已由 PW0 计入） | DONE |
 | B | AI 研究中枢 + 报告 Handoff | DONE |
 | C | 研究经验卡（原炼验用） | DONE |
-| D | 研究验证工作流（强类型 DAG） | DOING |
-| E | 智能选股（Why Selected） | PLANNED |
+| D | 研究验证工作流（强类型 DAG） | DONE |
+| E | 智能选股（Why Selected） | DOING |
 | F | 策略实验室 | PLANNED |
 | G | 策略盯盘（Observation/Signal/Decision 分离） | PLANNED |
 | H | 产业研究地图 + 全球宏观视图 | PLANNED |

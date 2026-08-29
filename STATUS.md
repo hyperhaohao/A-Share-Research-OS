@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C DONE（基础协议 + AI 研究中枢 + 研究经验卡，§72 原→炼→验→用闭环，
-E2E 9/9 于 compose 栈）。当前执行线：Phase D（研究验证工作流，总纲 §73）
+V2 Phase A/B/C/D(v1) DONE（基础协议 + AI 研究中枢 + 经验卡 + 最小强类型验证工作流 DAG，
+E2E 10/10 于 compose 栈）。当前执行线：Phase E（智能选股，总纲 §74）
 ```
 
 ## Completed
@@ -21,6 +21,17 @@ E2E 9/9 于 compose 栈）。当前执行线：Phase D（研究验证工作流�
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase D v1（本轮，DONE）：
+  - 后端：workflow_runs 表（迁移 e3f4a5b6c7d8）；最小强类型 DAG
+    Data(真实日线 historical_data)→Rule(前向收益 h/阈值)→Validation(确定性
+    指标：样本/命中率/收益分布，0 样本如实披露)→Output(quant validation
+    写入卡片 + workflow_run artifact registered generated_from 卡片)；
+    事件经 RunEvent 落库可回放（§37 通用 run_id）；handoff 注册
+    experience→workflow:run_validation（§44）
+  - 前端：卡片页验证工作流面板（期限选择→发起→节点进度→指标网格）；
+    workflow.* 全量本地化
+  - E2E-10：诚实终态契约（完成→指标+量化记录；失败→真实源错误显形于节点），
+    今日 kline 源被网络阻断故走失败显形路径（完成路径由后端测试覆盖）
 Phase C（本轮，DONE）：
   - 后端：experience_cards/versions/validations 表（迁移 d1e2f3a4b5c6）；
     ExperienceService 原→炼（确定性提炼，保留 report_id/version_id/claim_ids/
@@ -67,19 +78,17 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase D 研究验证工作流（总纲 §73）：最小强类型 DAG Data → Factor/Rule →
-   Validation → Output；经验卡 quant_expression 的简单 Quant validation
-   由工作流节点承接（字段已在卡上保留）；handoff 注册 experience→workflow:
-   run_validation（§44）；Phase D 完成定义：经验卡页发起验证工作流 →
-   DAG 运行落 Artifact → 卡片状态流转的产品 E2E（E2E-10）。
+1. Phase E 智能选股（总纲 §74）：ExperienceCard + Workflow + Universe →
+   ScreeningRun → Candidate Artifact（每个候选必须 Why Selected 解释）；
+   Phase E 完成定义：选股运行落 Artifact + 每个候选带解释的产品 E2E（E2E-11）。
 ```
 
 ## Tests
 
 ```text
-backend: 312 passed（+ Phase B command 6 测试：解析/拒绝/闭环/预测/无报告失败）
+backend: 322 passed（+ Phase D workflow 5 测试：确定性指标/零命中阈值/诚实失败/404）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 9/9 passed（E2E-01…09，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 10/10 passed（E2E-01…10，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -97,6 +106,11 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase D（本轮真机，000831，E2E-10 + compose API 实测）：
+  工作流 DAG 真实执行：kline 源被网络断连 → Data 节点诚实失败显形
+  （source_unavailable），DAG 终态 failed，无伪造指标 PASS（诚实路径）
+  完成路径（确定性指标/quant 记录/artifact 链接/事件回放）由后端
+  构造序列测试覆盖 PASS（5/5）
 Phase C（本轮真机，000831，E2E-09 + compose API 实测）：
   报告 → 炼成经验卡（信封溯源 URL）→ 来源显形（11 主张/17 证据）
   → 未验证批准被拦截 → 案例验证（PIT 24.83 → 最新价）→ 批准 APPROVED PASS
@@ -120,15 +134,18 @@ Phase A（真机 000831 全新 run，43 事件）：
 ## Open Issues
 
 ```text
-1. 资金流/历史行情对部分标的仍失败（源层真实失败，UI ⚠ 显形 —— 符合红线8）
+1. 资金流/历史行情对部分标的仍失败（源层真实失败，UI ⚠ 显形 —— 符合红线8）。
+   2026-08-29 实测：东方财富 kline 端点对本机网络直接断连（宿主机与容器一致，
+   疑似 TLS 指纹拦截），验证工作流 Data 节点诚实失败显形；恢复后完成路径
+   即在真机可用（后端测试已覆盖指标确定性）
 2. 预测区间由估值隐含价导出，000831 当前呈深度负区间（诚实推导，方向与区间
    可能异号 —— 来自论点与估值口径差异，待 Phase C 经验卡/策略线处理）
 3. 基准指数（IDX）行情未接入 → 超额收益显式 null
 4. 法定节假日历未接入 → 预测到期日 ±1-3 天
 5. 公网部署需认证/TLS；SQLite 单机规模；生产多用户需 PostgreSQL
 6. Macro 官方原始源未接入；Cost Ledger 待真实化；scheduler claim 待原子化
-8. 简单 Quant validation 暂由 Phase D 工作流承接（§72→§73 衔接）：
-   quant_expression 字段已在经验卡上保留，等 DAG 节点落地后接通
+8. [已承接 Phase D] 简单 Quant validation 由验证工作流前向收益规则实现；
+   quant_expression 自定义表达式仍留待后续工作流节点扩展
 7. [已解决 2026-08-29] Docker Desktop 引擎故障 —— 用户修复后 compose 重建完成，
    全链真机验证通过（见 Live Verification）。经验：多后端并存时先确认
    :5173 代理目标（vite ASRO_API_PROXY），E2E 断言须锁定自身创建的对象
