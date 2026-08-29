@@ -142,8 +142,18 @@
 - [x] d. §47 全套策略验证（regime split + sensitivity → VALIDATED 通道）
 - [x] e. 盯盘观察源扩展（公告/新闻/资金/宏观）
 
-## 部署准备 + 持续打磨（DOING）
+## 部署准备 + 持续打磨（PLANNED，UI Foundation 后恢复）
 - [x] 预测一致性披露（方向/区间异号显形）+ 中报口径年化修复（000831 问题）
+
+## UX Foundation（DOING，新任务书 docs/A-Share-Research-OS-UI信息架构与全产品体验重构任务说明书.md）
+- [x] UI2 首批：/views/watchlist + /views/instruments/{id}/overview（关注池已接视图）
+- [ ] UI0 Token 修复（CSS Token 统一/硬编码清理）
+- [ ] UI1 Sidebar 分组导航 + 四种 Layout
+- [ ] UI2 剩余 Read Model（CommandCenter/ReportLibrary/ContinuousResearch/PredictionReview）
+- [ ] UI3 语义组件库
+- [ ] UI4 基准页面重构（AI 中枢 + Instrument Workspace）
+- [ ] UI5-UI8 依次：核心库/验证与策略面/图谱画布/视觉回归
+- [ ] 冻结：UI4 验收前禁止新增一级业务模块
 - [ ] 认证（登录/会话）+ TLS 终止 + PostgreSQL 迁移验证
 - [ ] 宏观数值层扩指标；关系源扩展；LLM 润色开启
 

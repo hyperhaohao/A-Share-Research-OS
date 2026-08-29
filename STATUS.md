@@ -10,10 +10,11 @@
 
 ```text
 V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
-E2E 17/17 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地 + 验收复查
-（修复写后读竞态架构缺陷与 2 个红线缺口）+ 深度扩展 a–e 全部完成
-（关系源/宏观数值层/quant_expression/§47 全套验证/盯盘观察源）。
-当前执行线：部署准备（认证/TLS/PostgreSQL，Open Issues #5）与持续打磨
+E2E 17/17 于 compose 栈；全部已推送 GitHub main（13f7346..360b532 48 提交）。
+总纲 Phase A–J v1 + 验收复查 + 深度扩展 a–e 完成。
+当前执行线：UI Foundation（新任务书 docs/A-Share-Research-OS-UI信息架构与全产品
+体验重构任务说明书.md，UI0–UI8 九阶段，业务功能冻结）—— UI2 Read Model 已开工
+（/views/watchlist + /views/instruments/{id}/overview 已落地并接入关注池页面）
 ```
 
 ## Completed
@@ -24,6 +25,13 @@ E2E 17/17 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地 + �
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+UX Foundation 开工（本轮，UI2 首批 DONE）：
+  - 后端 Read Model：services/view_service.py + api/views.py
+    （GET /views/watchlist、GET /views/instruments/{id}/overview）——
+    一次请求装配身份/行情/研究判断/报告/预测/盯盘，纯只读投影不建第二 Domain
+  - 关注池页面重写为单请求消费视图（原每卡 3 个 useQuery 客户端拼装），
+    卡片新增 研究状态/预测摘要/盯盘状态 行（评审 §四 的架构缺口已闭合）
+  - 任务书入库并确立执行线（业务功能冻结，UI0–UI8）
 深度扩展 a–e（本轮，DONE）：
   a. 产业链关系源：eastmoney_industry_relations provider（suggest→板块→
      成员→规范 id）；产业地图 related=真实板块成员（basis 东财同业板块），
@@ -178,11 +186,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. 部署准备（Open Issues #5）：认证（登录/会话）、TLS 终止、
-   PostgreSQL 迁移（SQLite→PG 兼容性验证）、备份策略；
-2. 持续打磨：宏观数值层扩指标（利率/汇率/国债）、关系源扩展
-   （上下游关系而非仅同业板块）、经验卡 LLM 润色在配置 provider 后开启；
-3. 每项完成定义：产品 E2E + 真机验证 + 状态文件更新。
+1. UI0 Token 修复：统一 CSS Token、清理 hardcoded colors/undefined alias；
+2. UI1 App Shell：Sidebar 分组导航（中枢/研究/验证/策略/知识/系统）+
+   Reading/Workspace/CommandCenter/Canvas 四种 Layout（1920/1440/1280 无溢出）；
+3. UI2 剩余 Read Model：CommandCenterView/ReportLibraryView/
+   ContinuousResearchView/PredictionReviewView（消除 N+1/2N）；
+4. UI3 语义组件：Badge/Metric/Table/EntityHeader/Empty/Error/Degraded/
+   TechnicalDetails；UI4 重构基准页面（AI 中枢 + Instrument Workspace）；
+5. 全部按任务书 DoD（§41-§45）+ E2E-UI 系列；功能扩张冻结至 UI4 验收。
 ```
 
 ## Tests

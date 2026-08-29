@@ -44,7 +44,8 @@
 | J | 完整复盘回灌 | DONE |
 | 验收 | 总纲验收全链复查（Reviewer Pass） | DONE |
 | 深度 | 深度扩展（关系源/宏观/quant/§47 全套） | DONE |
-| 部署 | 认证 + TLS + PostgreSQL（公网部署准备） | DOING |
+| 部署 | 认证 + TLS + PostgreSQL（公网部署准备） | PLANNED |
+| UI | UX Foundation（UI0–UI8，业务冻结） | DOING |
 
 ---
 
