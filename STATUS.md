@@ -10,10 +10,10 @@
 
 ```text
 V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
-E2E 16/16 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地，
-验收全链复查（Reviewer Pass）完成：发现并修复 1 个架构级缺陷（写后读竞态）
-+ 2 个红线缺口（盯盘信封 / 回测与盯盘事件化）。
-当前执行线：深度扩展（关系源/官方宏观数值源/quant_expression/§47 全套验证）
+E2E 17/17 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地 + 验收复查
+（修复写后读竞态架构缺陷与 2 个红线缺口）+ 深度扩展 a–e 全部完成
+（关系源/宏观数值层/quant_expression/§47 全套验证/盯盘观察源）。
+当前执行线：部署准备（认证/TLS/PostgreSQL，Open Issues #5）与持续打磨
 ```
 
 ## Completed
@@ -24,6 +24,24 @@ E2E 16/16 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地，
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+深度扩展 a–e（本轮，DONE）：
+  a. 产业链关系源：eastmoney_industry_relations provider（suggest→板块→
+     成员→规范 id）；产业地图 related=真实板块成员（basis 东财同业板块），
+     证据共现保留为交叉参考，源不可用回落并披露
+  b. 宏观数值层：tencent_global_macro provider（上证/道指/纳指/恒指/金/油，
+     双响应形态解析）；GlobalContextSnapshot.indicators_json（迁移
+     d8e9f0a1b2c3）；真机验证 6 指标全通（numeric_source=tencent_global_macro）
+  c. quant_expression：受约束 DSL（无 eval）→ 类型化 DAG 表达式节点
+     （validation 后评 verdict，诚实记录成立/不成立）；卡片字段+API 透传
+     （迁移 e9f0a1b2c3d4）；解析失败 422
+  d. §47 全套验证：回测聚合含 regime_split（按退出年分域）+ sensitivity
+     （参数邻域 9 组合）；全电池+正收益 → VALIDATED（可进正式盯盘），
+     分域不足/负收益 → EXPERIMENTAL 并显式说明
+  e. 盯盘观察源：公告/新闻/资金/宏观证据入观察池（按种类去重+限额），
+     每种独立信号（new_announcement/new_news/…），rule_kind 按观察推导
+  - 产品面：工作流面板表达式输入；全球坐标指标网格；E2E-17 全链
+  - 附加修复：E2E-03 亚秒运行竞态（面板经 §37 回放补全）；WatchCard
+    瞬时失败回退裸 id → 回退纯代码（红线安全）
 验收 Reviewer Pass（本轮，DONE）：
   - 架构缺陷（复现并修复）：FastAPI 依赖 teardown 在响应送达后才 commit
     DB 会话 → 写后立即读可见预提交状态（真机复现：create 201 → 立即 GET 404）。
@@ -160,21 +178,19 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. 深度扩展（按优先级，接续总纲）：
-   a. 产业链上下游/同业关系源接入（产业地图 related 显式补全）；
-   b. 官方宏观数值源接入（全球坐标补利率/汇率/商品等数值层）；
-   c. quant_expression 自定义工作流节点（经验卡量化规则自由表达）；
-   d. §47 全套策略验证（Regime Split/Sensitivity）补齐后升级正式盯盘资格；
-   e. 盯盘观察源扩展（新公告/新闻/资金/宏观数据逐项接入）；
-2. 深度扩展每项完成定义：对应产品 E2E + 真机验证 + 状态文件更新。
+1. 部署准备（Open Issues #5）：认证（登录/会话）、TLS 终止、
+   PostgreSQL 迁移（SQLite→PG 兼容性验证）、备份策略；
+2. 持续打磨：宏观数值层扩指标（利率/汇率/国债）、关系源扩展
+   （上下游关系而非仅同业板块）、经验卡 LLM 润色在配置 provider 后开启；
+3. 每项完成定义：产品 E2E + 真机验证 + 状态文件更新。
 ```
 
 ## Tests
 
 ```text
-backend: 344 passed（+ 复查 6 测试：事件回放/stage 分类/信封注册等）
+backend: 349 passed
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 16/16 passed（E2E-01…16，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 17/17 passed（E2E-01…17，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -196,6 +212,14 @@ Phase J（本轮真机，000831，E2E-16 + compose API 实测）：
   盯盘决策 → 复盘回灌：链上无成熟验证 → 422 显式拒绝（不假装闭环）PASS
   完整回填（成熟预测→归因→卡片 v2→策略 v2→教训记录）后端 3/3 覆盖 PASS
   review artifact generated_from 预测；策略 v2 generated_from 复盘 PASS
+深度扩展（本轮真机，000831）：
+  宏观数值层：rebuild 后 6 指标全通（上证 3952.18 / 道指 53559.99 /
+  纳指100 29433.43 / 恒指 25584.79 / COMEX金 4503.37 / 布油 88.33，
+  numeric_source=tencent_global_macro，各带市场时间）PASS
+  产业地图：板块成员→related（basis 东财同业板块），回落路径披露 PASS
+  quant_expression：DAG 表达式节点 verdict 诚实记录（成立/不成立）PASS
+  盯盘多源观察：公告/新闻/宏观观察与独立信号 PASS
+  E2E-03 亚秒运行竞态：§37 回放补全面板 PASS
 验收复查（本轮真机，000831）：
   写后读竞态真机复现（create 201 → 立即 GET 404）→ 中间件修复 →
   立即读一致（create 200/validate 后 VALIDATING 即时可见）PASS
@@ -266,6 +290,9 @@ Phase A（真机 000831 全新 run，43 事件）：
 6. Macro 官方原始源未接入；Cost Ledger 待真实化；scheduler claim 待原子化
 8. [已承接 Phase D] 简单 Quant validation 由验证工作流前向收益规则实现；
    quant_expression 自定义表达式仍留待后续工作流节点扩展
+9. [已解决 2026-08-29] 东财 push2 系端点对本机网络断连 → 宏观数值层改用
+   腾讯行情源（容器内可达）；K线源仍断连（产业地图同业板块用 searchapi
+   + clist 可达端点，K线恢复后回测/工作流自动恢复全量指标）
 7. [已解决 2026-08-29] Docker Desktop 引擎故障 —— 用户修复后 compose 重建完成，
    全链真机验证通过（见 Live Verification）。经验：多后端并存时先确认
    :5173 代理目标（vite ASRO_API_PROXY），E2E 断言须锁定自身创建的对象
