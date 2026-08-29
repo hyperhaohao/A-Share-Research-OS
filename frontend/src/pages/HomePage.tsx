@@ -31,7 +31,20 @@ interface PredictionItem {
   horizon: string;
   expected_direction: string;
   due_at: string;
-  validation?: { instrument_return_pct: number };
+  confidence?: number;
+  consistency?: string;
+  instrument?: { name: string | null; code: string } | null;
+}
+
+interface CommandCenterView {
+  running_runs: RunItem[];
+  recent_runs: RunItem[];
+  active_tasks: TaskItem[];
+  current_plan: Plan | null;
+  recent_plans: Plan[];
+  pending_predictions: PredictionItem[];
+  names: Record<string, { name: string | null; code: string }>;
+  generated_at: string;
 }
 
 /**
@@ -55,58 +68,28 @@ export function HomePage() {
 
   const [sessionId] = useEnsureSession();
 
-  const plansQuery = useQuery({
-    queryKey: ["command-plans"],
-    queryFn: async (): Promise<Plan[]> => {
-      const resp = await fetch("/api/v1/command/plans?limit=8");
-      if (!resp.ok) return [];
+  // UX Foundation §10/§53: 首屏单请求聚合（请求预算 <= 3）
+  const ccQuery = useQuery({
+    queryKey: ["command-center-view"],
+    queryFn: async (): Promise<CommandCenterView> => {
+      const resp = await fetch("/api/v1/views/command-center");
+      if (!resp.ok) throw new Error("network.unreachable");
       const body = await resp.json();
-      return body.results;
+      return body.view;
     },
-    refetchInterval: 4000,
+    refetchInterval: 5000,
   });
-  const plans = plansQuery.data ?? [];
-  const activePlan = plans.find((p) => p.status === "running") ?? plans[0] ?? null;
-
-  const runsQuery = useQuery({
-    queryKey: ["recent-runs"],
-    queryFn: async (): Promise<RunItem[]> => {
-      const resp = await fetch("/api/v1/research-runs?limit=6");
-      if (!resp.ok) return [];
-      const body = await resp.json();
-      return body.results;
-    },
-    refetchInterval: 8000,
-  });
-
-  const tasksQuery = useQuery({
-    queryKey: ["tasks"],
-    queryFn: async (): Promise<TaskItem[]> => {
-      const resp = await fetch("/api/v1/tasks");
-      if (!resp.ok) return [];
-      const body = await resp.json();
-      return body.results;
-    },
-    refetchInterval: 8000,
-  });
-
-  const predsQuery = useQuery({
-    queryKey: ["predictions"],
-    queryFn: async (): Promise<PredictionItem[]> => {
-      const resp = await fetch("/api/v1/predictions");
-      if (!resp.ok) return [];
-      const body = await resp.json();
-      return body.results;
-    },
-    refetchInterval: 15000,
-  });
-
-  const runningRuns = (runsQuery.data ?? []).filter((r) => r.status === "running");
-  const activeTasks = (tasksQuery.data ?? []).filter((task) => task.status === "running");
-  const duePreds = (predsQuery.data ?? []).filter((p) => !p.validation).slice(0, 4);
+  const plans = ccQuery.data?.recent_plans ?? [];
+  const activePlan =
+    ccQuery.data?.current_plan ??
+    (ccQuery.data?.recent_plans ?? [])[0] ??
+    null;
+  const runningRuns = ccQuery.data?.running_runs ?? [];
+  const activeTasks = ccQuery.data?.active_tasks ?? [];
+  const duePreds = (ccQuery.data?.pending_predictions ?? []).slice(0, 4);
 
   return (
-    <main className="page" data-testid="commander-page">
+    <main className="page layout-command" data-testid="commander-page">
       <h1>{t("home.title")}</h1>
       <p className="secondary">{t("home.description")}</p>
 
