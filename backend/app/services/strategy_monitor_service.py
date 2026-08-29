@@ -33,10 +33,21 @@ from app.application.strategy_monitor import (
 )
 from app.domain.evidence import EvidenceType
 from app.storage.orm import EvidenceORM
+from app.storage.repository import EvidenceRepository
 from app.storage.research_orm import CorporateEventORM
 
 QUOTE_MOVE_THRESHOLD_PCT = 2.0
 DEFAULT_INTERVAL_SECONDS = 3600
+
+# 盯盘观察源扩展（深度扩展 e）：证据账本驱动的观察种类
+# （种类名 → 证据类型值）；新证据（相对上次观察）即成为新观察。
+EVIDENCE_OBS_KINDS: dict[str, str] = {
+    "announcement": "announcement",
+    "news": "news",
+    "capital_flow": "capital_flow",
+    "macro_change": "macro_indicator",
+}
+_MAX_PER_KIND = 10
 
 
 class StrategyMonitorRefusal(ValueError):
@@ -164,6 +175,9 @@ class StrategyMonitorService:
 
     def _observe(self, instrument_id: str, monitor_id: str, now: datetime) -> list[dict]:
         observations: list[dict] = []
+        all_evidence = EvidenceRepository(self._session).list_for_instrument(
+            instrument_id, visible_at=now
+        )
 
         # quote_change: the two newest quote evidences that carry a price
         # (kline evidence is also market_quote-typed but has no price key,
@@ -202,6 +216,32 @@ class StrategyMonitorService:
                                 "change_pct": change_pct,
                             },
                             evidence_ids_json=[new_id, old_id],
+                            observed_at=now,
+                        )
+                    )
+                )
+
+        # 证据账本驱动的观察（§48：新公告/新新闻/资金变化/宏观变化）
+        for obs_kind, evidence_type_value in EVIDENCE_OBS_KINDS.items():
+            since = self._repo.latest_observation_at(monitor_id, instrument_id, obs_kind)
+            new_items = [
+                e
+                for e in all_evidence
+                if e.evidence_type.value == evidence_type_value
+                and (since is None or e.available_time > since)
+            ]
+            new_items.sort(key=lambda e: e.available_time, reverse=True)
+            for item in new_items[:_MAX_PER_KIND]:
+                observations.append(
+                    self._repo.add_observation(
+                        ObservationORM(
+                            observation_id=f"obs_{_short_hex()}",
+                            monitor_id=monitor_id,
+                            instrument_id=instrument_id,
+                            kind=obs_kind,
+                            text=f"{item.title}",
+                            payload_json={"evidence_type": evidence_type_value},
+                            evidence_ids_json=[item.evidence_id],
                             observed_at=now,
                         )
                     )
@@ -259,16 +299,24 @@ class StrategyMonitorService:
                             )
                         )
                     )
-            elif obs["kind"] == "corporate_event":
+            elif obs["kind"] in ("corporate_event", "announcement", "news", "capital_flow", "macro_change"):
+                rule_kind = f"new_{obs['kind']}"
+                label = {
+                    "corporate_event": "新公司事件信号",
+                    "announcement": "新公告信号",
+                    "news": "新新闻信号",
+                    "capital_flow": "资金变化信号",
+                    "macro_change": "宏观变化信号",
+                }.get(obs["kind"], "新观察信号")
                 signals.append(
                     self._repo.add_signal(
                         SignalORM(
                             signal_id=f"sig_{_short_hex()}",
                             monitor_id=monitor_id,
                             instrument_id=instrument_id,
-                            rule_kind="new_event",
+                            rule_kind=rule_kind,
                             strength=1.0,
-                            text=f"新公司事件信号：{obs['text']}",
+                            text=f"{label}：{obs['text']}",
                             observation_ids_json=[obs["observation_id"]],
                             created_at=datetime.now(timezone.utc),
                         )

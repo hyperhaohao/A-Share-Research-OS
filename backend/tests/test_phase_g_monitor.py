@@ -171,8 +171,8 @@ def test_monitor_gate_and_three_way_separation(client, monkeypatch):
     assert decision["decision"] in ("research_review", "research_continue")
     assert decision["version_id"] == strategy["version_id"]
     assert "Research Decision" in decision["rationale"]
-    assert decision["observation_ids"] == [o["observation_id"] for o in detail["observations"]]
-    assert decision["signal_ids"] == [s["signal_id"] for s in detail["signals"]]
+    assert set(decision["observation_ids"]) == {o["observation_id"] for o in detail["observations"]}
+    assert set(decision["signal_ids"]) == {s["signal_id"] for s in detail["signals"]}
     # quote_change observation derives from REAL pinned quote evidence
     quote_obs = [o for o in detail["observations"] if o["kind"] == "quote_change"]
     assert quote_obs and quote_obs[0]["evidence_ids"]
@@ -276,3 +276,69 @@ def test_monitor_creation_handoff_is_registered(client, monkeypatch):
     )
     assert ok.status_code == 201
     assert ok.json()["handoff"]["action"] == "create_monitor"
+
+
+def test_monitor_observes_announcements_and_news(client, monkeypatch):
+    """深度扩展 e: the observation pool includes announcements/news/capital/
+    macro evidence, each producing its own signal on first sight."""
+    strategy = _experimental_strategy(client, monkeypatch)
+    monitor = client.post(
+        "/api/v1/strategy-monitors", json={"version_id": strategy["version_id"]}
+    ).json()["monitor"]
+    # seed a news + announcement + macro evidence so the ledger has multiple
+    # observation sources (quote evidence already exists via the pipeline)
+    from datetime import datetime, timedelta, timezone
+
+    from app.db import session_scope
+    from app.domain.evidence import (
+        AuthorityLevel,
+        EvidenceRecord,
+        EvidenceType,
+        FactStatus,
+    )
+    from app.storage.repository import EvidenceRepository
+
+    now = datetime.now(timezone.utc)
+    earlier = now - timedelta(hours=2)
+    seeds = [
+        (EvidenceType.ANNOUNCEMENT, "重大事项公告（测试）", AuthorityLevel.A2),
+        (EvidenceType.NEWS, "行业新闻（测试）", AuthorityLevel.C2),
+        (EvidenceType.MACRO_INDICATOR, "宏观政策资讯（测试）", AuthorityLevel.B2),
+    ]
+    with session_scope(client.app.state._test_factory) as session:
+        for ev_type, title, authority in seeds:
+            EvidenceRepository(session).save(
+                EvidenceRecord(
+                    instrument_id="SZSE:000831",
+                    evidence_type=ev_type,
+                    title=title,
+                    summary="盯盘观察源扩展测试证据",
+                    source="test",
+                    source_type="test",
+                    authority_level=authority,
+                    fact_status=FactStatus.CONFIRMED_FACT,
+                    event_time=earlier,
+                    available_time=earlier,
+                    ingested_time=earlier,
+                    revision_time=earlier,
+                    metadata={},
+                )
+            )
+
+    run = client.post(f"/api/v1/strategy-monitors/{monitor['monitor_id']}/run")
+    assert run.status_code == 202
+    for _ in range(200):
+        detail = client.get(f"/api/v1/strategy-monitors/{monitor['monitor_id']}").json()
+        if detail["monitor"]["last_run_at"]:
+            break
+        import time
+
+        time.sleep(0.05)
+    detail = client.get(f"/api/v1/strategy-monitors/{monitor['monitor_id']}").json()
+    kinds = {o["kind"] for o in detail["observations"]}
+    assert {"announcement", "news", "macro_change"} <= kinds
+    signal_kinds = {s["rule_kind"] for s in detail["signals"]}
+    assert "new_announcement" in signal_kinds
+    assert "new_news" in signal_kinds
+    # every observation cites its evidence provenance
+    assert all(o["evidence_ids"] for o in detail["observations"])
