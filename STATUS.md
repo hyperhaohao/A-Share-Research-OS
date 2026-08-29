@@ -10,8 +10,10 @@
 
 ```text
 V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
-E2E 16/16 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地。
-当前执行线：总纲验收全链复查（CLAUDE.md §12 Reviewer Pass）→ 修复后进入深度扩展
+E2E 16/16 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地，
+验收全链复查（Reviewer Pass）完成：发现并修复 1 个架构级缺陷（写后读竞态）
++ 2 个红线缺口（盯盘信封 / 回测与盯盘事件化）。
+当前执行线：深度扩展（关系源/官方宏观数值源/quant_expression/§47 全套验证）
 ```
 
 ## Completed
@@ -22,6 +24,15 @@ E2E 16/16 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地。
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+验收 Reviewer Pass（本轮，DONE）：
+  - 架构缺陷（复现并修复）：FastAPI 依赖 teardown 在响应送达后才 commit
+    DB 会话 → 写后立即读可见预提交状态（真机复现：create 201 → 立即 GET 404）。
+    修复：commit 中间件在响应返回前提交请求会话（get_session 挂载
+    request.state.db_session）；真机结构验证：create/validate 后立即读
+    状态一致 PASS
+  - 红线5：strategy→monitor:create_monitor 注册 + CTA 携信封
+  - 红线6：回测/盯盘运行事件落库（BACKTESTING/MONITORING stage）+ 回测事件路由
+  - 复查测试 +6（事件回放/stage 分类/信封注册）；套件 344；E2E 16/16
 Phase J v1（本轮，DONE）：
   - 后端：ReplayFeedbackService（§79 编排）：Decision → 链上最新已验证
     Prediction（无则 422 replay.chain_incomplete 显式拒绝，§50 不伪造预测）→
@@ -149,16 +160,19 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. 总纲验收全链复查（CLAUDE.md §12 Reviewer Pass）：按 §80-§86 验收清单
-   逐项复核 A–J 十阶段产物，发现问题直接修复并重测（不生成仅报告）；
-2. 深度扩展（复查后按优先级）：关系源/官方宏观数值源接入、quant_expression
-   自定义节点、Regime Split/Sensitivity 全套 §47 验证、盯盘观察源扩展。
+1. 深度扩展（按优先级，接续总纲）：
+   a. 产业链上下游/同业关系源接入（产业地图 related 显式补全）；
+   b. 官方宏观数值源接入（全球坐标补利率/汇率/商品等数值层）；
+   c. quant_expression 自定义工作流节点（经验卡量化规则自由表达）；
+   d. §47 全套策略验证（Regime Split/Sensitivity）补齐后升级正式盯盘资格；
+   e. 盯盘观察源扩展（新公告/新闻/资金/宏观数据逐项接入）；
+2. 深度扩展每项完成定义：对应产品 E2E + 真机验证 + 状态文件更新。
 ```
 
 ## Tests
 
 ```text
-backend: 341 passed（+ Phase J replay 3 测试：完整回填/缺环拒绝/404）
+backend: 344 passed（+ 复查 6 测试：事件回放/stage 分类/信封注册等）
 frontend: 7 passed + build PASS
 e2e: Playwright 产品 E2E 16/16 passed（E2E-01…16，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
@@ -182,6 +196,12 @@ Phase J（本轮真机，000831，E2E-16 + compose API 实测）：
   盯盘决策 → 复盘回灌：链上无成熟验证 → 422 显式拒绝（不假装闭环）PASS
   完整回填（成熟预测→归因→卡片 v2→策略 v2→教训记录）后端 3/3 覆盖 PASS
   review artifact generated_from 预测；策略 v2 generated_from 复盘 PASS
+验收复查（本轮真机，000831）：
+  写后读竞态真机复现（create 201 → 立即 GET 404）→ 中间件修复 →
+  立即读一致（create 200/validate 后 VALIDATING 即时可见）PASS
+  回测事件回放（backtest_started→completed，stage BACKTESTING）PASS
+  盯盘事件回放（monitor_started/completed，stage MONITORING）PASS
+  strategy→monitor 信封注册（POST /handoffs 201）PASS
 Phase I（本轮真机，000831，E2E-15 + compose API 实测）：
   /artifacts/graph 返回 5 节点 4 边（run/version/report/prediction 链）PASS
   Lineage Explorer：报告节点上溯 研究运行(产出) PASS
