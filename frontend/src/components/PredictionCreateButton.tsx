@@ -2,12 +2,24 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { newResearchContext } from "../shared/context";
+import { artifactByDomain, handoffPath, recordHandoff } from "../shared/handoff";
 
 /**
- * Report → [生成预测] → PredictionBuilder (PW2 §17).
+ * Report → [生成预测] → HandoffEnvelope + PredictionBuilder
+ * (V2 Phase A: 跨模块动作走信封, HANDOFF-PROTOCOL §2; PW2 §17).
+ *
+ * 顺序：先创建（失败显形、无信封不留死信封）→ 解析报告 artifact →
+ * 记录 report→prediction:create_prediction 信封 → 携 handoff/context 跳转。
  * Refusals (422 prediction.underivable) surface the honest reason.
  */
-export function PredictionCreateButton({ reportId }: { reportId: string }) {
+export function PredictionCreateButton({
+  reportId,
+  instrumentId,
+}: {
+  reportId: string;
+  instrumentId?: string | null;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [horizon, setHorizon] = useState("5D");
@@ -25,9 +37,28 @@ export function PredictionCreateButton({ reportId }: { reportId: string }) {
         const body = (await resp.json().catch(() => null)) as { error_code?: string } | null;
         throw new Error(body?.error_code ?? "network.unreachable");
       }
-      return resp.json() as Promise<{ prediction: { prediction_id: string } }>;
+      const created = (await resp.json()) as { prediction: { instrument_id: string } };
+
+      // the prediction now exists → its source report artifact is registered
+      // (pipeline on fresh reports, from-report fallback on legacy ones)
+      const reportArtifact = await artifactByDomain("Report", reportId);
+      if (reportArtifact == null) {
+        throw new Error("artifact.not_found");
+      }
+      const envelope = await recordHandoff({
+        source_module: "report",
+        target_module: "prediction",
+        action: "create_prediction",
+        artifact_ids: [reportArtifact.artifact_id],
+        context: newResearchContext({
+          primary_instrument_id: instrumentId ?? created.prediction.instrument_id,
+          instrument_ids: [created.prediction.instrument_id],
+        }),
+        message: "report → create_prediction",
+      });
+      return handoffPath("/predictions", envelope);
     },
-    onSuccess: () => navigate("/predictions"),
+    onSuccess: (path) => navigate(path),
     onError: (err: Error) => setError(err.message),
   });
 

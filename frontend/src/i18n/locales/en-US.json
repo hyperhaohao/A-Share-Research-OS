@@ -297,5 +297,15 @@
       "failed": "Failed",
       "pending": "Queued"
     }
+  },
+  "lineage": {
+    "show": "Research lineage",
+    "hide": "Hide lineage",
+    "upstreamTitle": "Upstream: how this report was produced",
+    "downstreamTitle": "Downstream: what it led to",
+    "depth_one": "{{count}} hop",
+    "depth_other": "{{count}} hops",
+    "noArtifact": "No artifact record (report predates Phase A)",
+    "empty": "(none)"
   }
 }

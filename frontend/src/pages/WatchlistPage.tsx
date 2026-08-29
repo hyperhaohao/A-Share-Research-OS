@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatBoard, formatExchange, uiLang } from "../presentation/enumLabels";
 import { formatPct, formatWhen } from "../presentation/format";
+import { contextPath, newResearchContext } from "../shared/context";
 
 interface WatchlistItem {
   instrument_id: string;
@@ -51,6 +52,11 @@ async function removeWatchItem(instrumentId: string): Promise<void> {
 /** One watchlist entry: identity + quote + research state + actions (PW2). */
 function WatchCard({ instrumentId, onRemove }: { instrumentId: string; onRemove: (id: string) => void }) {
   const { t, i18n } = useTranslation();
+  // V2 Phase A: every cross-page CTA carries a fresh ResearchContext
+  const ctx = newResearchContext({
+    primary_instrument_id: instrumentId,
+    instrument_ids: [instrumentId],
+  });
   const lang = uiLang(i18n.language);
 
   const profileQuery = useQuery({
@@ -136,18 +142,18 @@ function WatchCard({ instrumentId, onRemove }: { instrumentId: string; onRemove:
       </div>
 
       <div className="header-controls">
-        <Link className="control-btn" to={`/instrument/${instrumentId}`}>
+        <Link className="control-btn" to={contextPath(`/instrument/${instrumentId}`, ctx)}>
           {t("workspace.open")}
         </Link>
-        <Link className="control-btn" to={`/?instrument=${encodeURIComponent(instrumentId)}&run=1`}>
+        <Link className="control-btn" to={contextPath("/", ctx, { run: true })}>
           {t("watchlist.researchNow")}
         </Link>
         {report && (
-          <Link className="control-btn" to={`/reports/${report.report_id}`}>
+          <Link className="control-btn" to={contextPath(`/reports/${report.report_id}`, ctx)}>
             {t("watchlist.viewReport")}
           </Link>
         )}
-        <Link className="control-btn" to={`/tasks?instrument=${encodeURIComponent(instrumentId)}`}>
+        <Link className="control-btn" to={contextPath("/tasks", ctx)}>
           {t("watchlist.continuous")}
         </Link>
         <button

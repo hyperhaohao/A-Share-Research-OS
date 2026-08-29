@@ -297,5 +297,14 @@
       "failed": "失败",
       "pending": "排队中"
     }
+  },
+  "lineage": {
+    "show": "研究脉络",
+    "hide": "收起脉络",
+    "upstreamTitle": "上游：由什么研究过程产生",
+    "downstreamTitle": "下游：衍生了什么动作",
+    "depth": "溯源 {{count}} 层",
+    "noArtifact": "该报告暂无产物档案（Phase A 之前的报告）",
+    "empty": "（无）"
   }
 }

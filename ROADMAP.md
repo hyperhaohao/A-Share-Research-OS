@@ -20,7 +20,7 @@
 | PW0 | Instrument Identity & Localization（持久化 Registry / 统一 Service / 本地化 / 单 Select） | DONE |
 | PW1 | Research Live Experience（SSE 实时 / 逐项进度 / 中文化 / CTA） | DONE |
 | PW2 | Watchlist / Task / Report / Prediction Closure | DONE |
-| PW3 | Command Center & Product E2E（Playwright / 000831 全链） | DOING |
+| PW3 | Command Center & Product E2E（Playwright / 000831 全链） | DONE |
 
 ---
 
@@ -32,8 +32,8 @@
 
 | Phase | 内容 | 状态 |
 |-------|------|------|
-| A | 统一研究基础协议（Artifact/Provenance/Context/Handoff/RunEvent 持久化；Registry+本地化已由 PW0 计入） | PLANNED |
-| B | AI 研究中枢 + 报告 Handoff | PLANNED |
+| A | 统一研究基础协议（Artifact/Provenance/Context/Handoff/RunEvent 持久化；Registry+本地化已由 PW0 计入） | DONE |
+| B | AI 研究中枢 + 报告 Handoff | DOING |
 | C | 研究经验卡（原炼验用） | PLANNED |
 | D | 研究验证工作流（强类型 DAG） | PLANNED |
 | E | 智能选股（Why Selected） | PLANNED |

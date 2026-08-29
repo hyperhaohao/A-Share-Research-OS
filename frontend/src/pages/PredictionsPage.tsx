@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDirection, formatHorizon, uiLang } from "../presentation/enumLabels";
 import { formatPct, formatWhen } from "../presentation/format";
+import { useInstrumentName } from "../shared/instrument";
 
 interface Performance {
   total_validations: number;
@@ -38,20 +39,6 @@ async function fetchAllPredictions(): Promise<PredictionItem[]> {
   if (!resp.ok) throw new Error("network.unreachable");
   const body = await resp.json();
   return body.results;
-}
-
-function useInstrumentName(instrumentId: string) {
-  const { data } = useQuery({
-    queryKey: ["instrument", instrumentId],
-    staleTime: 60000,
-    queryFn: async (): Promise<{ name: string; code: string } | null> => {
-      const resp = await fetch(`/api/v1/instruments/${encodeURIComponent(instrumentId)}`);
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return body.instrument;
-    },
-  });
-  return data;
 }
 
 function PredictionCard({ prediction: p }: { prediction: PredictionItem }) {

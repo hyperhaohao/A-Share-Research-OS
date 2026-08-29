@@ -93,7 +93,9 @@ def list_run_events(session: Session, run_id: str) -> list[dict]:
     from app.storage.agent_repo import _ensure_utc
 
     rows = session.scalars(
-        select(RunEventORM).where(RunEventORM.run_id == run_id).order_by(RunEventORM.at)
+        select(RunEventORM)
+        .where(RunEventORM.run_id == run_id)
+        .order_by(RunEventORM.at, RunEventORM.id)  # id breaks same-instant ties
     ).all()
     return [
         {

@@ -6,6 +6,8 @@ import { InstrumentSearch } from "../components/InstrumentSearch";
 import { ResearchPipelineCard } from "../components/ResearchPipelineCard";
 import { formatTaskStatus, uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
+import { useInstrumentName } from "../shared/instrument";
+import { contextFromParams } from "../shared/context";
 
 interface RunItem {
   run_id: string;
@@ -36,21 +38,6 @@ interface ReportItem {
   latest_version_no: number;
 }
 
-function useInstrumentName(instrumentId: string | null) {
-  const { data } = useQuery({
-    queryKey: ["instrument", instrumentId],
-    enabled: instrumentId != null,
-    staleTime: 60000,
-    queryFn: async (): Promise<{ name: string; code: string } | null> => {
-      const resp = await fetch(`/api/v1/instruments/${encodeURIComponent(instrumentId ?? "")}`);
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return body.instrument;
-    },
-  });
-  return data;
-}
-
 function RunRow({ run }: { run: RunItem }) {
   const { t, i18n } = useTranslation();
   const lang = uiLang(i18n.language);
@@ -77,7 +64,9 @@ function RunRow({ run }: { run: RunItem }) {
 export function HomePage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const instrumentParam = searchParams.get("instrument");
+  // V2 Phase A: deep links are decoded through the shared ResearchContext
+  const ctx = contextFromParams(searchParams);
+  const instrumentParam = ctx.primary_instrument_id;
   const autoRun = searchParams.get("run") === "1";
   const [selectedInstrument, setSelectedInstrument] = useState<string | null>(
     instrumentParam,

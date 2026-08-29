@@ -184,3 +184,37 @@ export function formatSchedule(schedule: string | null | undefined, lang: UiLang
 export function uiLang(language: string): UiLanguage {
   return language.startsWith("zh") ? "zh" : "en";
 }
+
+// -- Artifact Registry / lineage（V2 Phase A） --------------------------------
+
+const ARTIFACT_TYPE_LABELS: Record<string, Record<UiLanguage, string>> = {
+  research_run: { zh: "研究运行", en: "Research run" },
+  report: { zh: "研究报告", en: "Report" },
+  report_version: { zh: "报告版本", en: "Report version" },
+  prediction: { zh: "预测", en: "Prediction" },
+  validation: { zh: "验证结果", en: "Validation" },
+  evidence: { zh: "证据", en: "Evidence" },
+  claim: { zh: "研究主张", en: "Claim" },
+  thesis: { zh: "研究论点", en: "Thesis" },
+};
+
+/** Artifact 类型 → 业务名（技术 id 不裸显，进技术详情）。 */
+export function formatArtifactType(value: string | null | undefined, lang: UiLanguage): string {
+  return lookup(ARTIFACT_TYPE_LABELS, value ?? "", lang);
+}
+
+const RELATION_LABELS: Record<string, Record<UiLanguage, string>> = {
+  produced: { zh: "产出", en: "produced" },
+  derived_from: { zh: "派生自", en: "derived from" },
+  generated_from: { zh: "生成自", en: "generated from" },
+  validated_by: { zh: "验证于", en: "validated by" },
+  supersedes: { zh: "取代", en: "supersedes" },
+  triggered_by: { zh: "触发于", en: "triggered by" },
+  supported_by: { zh: "支撑于", en: "supported by" },
+  used_by: { zh: "用于", en: "used by" },
+};
+
+/** 溯源关系 → 业务名。 */
+export function formatRelation(value: string | null | undefined, lang: UiLanguage): string {
+  return lookup(RELATION_LABELS, value ?? "", lang);
+}

@@ -147,6 +147,10 @@ def _execute_task_in_background(engine, task_id: str) -> None:
             handler(worker_session, task)
             repo.complete(task_id, utc_now(), success=True)
         except Exception:  # noqa: BLE001 — failures mark the task, not the process
+            # a handler may have poisoned the session (failed flush); roll
+            # back so the failure mark itself can never fail — otherwise the
+            # task would stay "running" until lease recovery
+            worker_session.rollback()
             repo.complete(task_id, utc_now(), success=False)
 
 

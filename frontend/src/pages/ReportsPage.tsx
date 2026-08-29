@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PredictionCreateButton } from "../components/PredictionCreateButton";
+import { ReportLineage } from "../components/ReportLineage";
+import { useInstrumentName } from "../shared/instrument";
 import { formatGate, uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
 
@@ -55,19 +57,7 @@ function ReportCard({ report }: { report: ReportSummary }) {
   const lang = uiLang(i18n.language);
   const judgment = useJudgment(report.instrument_id, report.snapshot_id);
 
-  const profileQuery = useQuery({
-    queryKey: ["instrument", report.instrument_id],
-    queryFn: async () => {
-      const resp = await fetch(
-        `/api/v1/instruments/${encodeURIComponent(report.instrument_id)}`,
-      );
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return body.instrument as { code: string; name: string };
-    },
-    staleTime: 60000,
-  });
-  const profile = profileQuery.data;
+  const profile = useInstrumentName(report.instrument_id);
 
   return (
     <li className="card watch-card" data-testid="report-card">
@@ -90,11 +80,16 @@ function ReportCard({ report }: { report: ReportSummary }) {
         <span>{formatGate(report.gate_status, lang)}</span>
       </div>
 
+      <ReportLineage reportId={report.report_id} />
+
       <div className="header-controls">
         <Link className="control-btn" to={`/reports/${report.report_id}`}>
           {t("report.open")}
         </Link>
-        <PredictionCreateButton reportId={report.report_id} />
+        <PredictionCreateButton
+          reportId={report.report_id}
+          instrumentId={report.instrument_id}
+        />
       </div>
     </li>
   );

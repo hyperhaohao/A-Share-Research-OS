@@ -72,9 +72,11 @@
 - [x] Presentation Localization（PW0 已完成，计入 Phase A）
 - [x] ReportVersion / Prediction / ResearchRun(+Validation) 注册为 Artifact，
       lineage/replay 真机验证（000831 全新 run 43 事件 43/43 回放）
-- [ ] 前端 shared/handoff.ts + context.ts；Playwright E2E-07 lineage
+- [x] 前端 shared/context.ts + handoff.ts + instrument.ts；报告→预测 CTA 走信封；
+      ReportCard 研究脉络 lineage；Playwright E2E-07（7/7 绿）
+- [x] 代码审查修复（from-report 标题覆盖 / run-now 失败标记 / 回放排序 / 导入）
 
-## Phase B — AI 研究中枢 + 报告 Handoff（DOING next）
+## Phase B — AI 研究中枢 + 报告 Handoff（DOING）
 - [ ] ResearchCommandCenter（计划/运行中/产物三栏，§38）
 - [ ] ResearchPlan + ConversationSession（先只控制 Search/Pipeline/Report/
       Continuous Research/Prediction，§87）

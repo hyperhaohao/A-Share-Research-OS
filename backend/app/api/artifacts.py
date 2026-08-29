@@ -29,6 +29,15 @@ def list_artifacts(
     return {"count": len(results), "results": results}
 
 
+@router.get("/artifacts/by-domain/{domain_type}/{domain_id}")
+def artifact_by_domain(domain_type: str, domain_id: str, session: Session = Depends(get_session)) -> dict:
+    """Resolve a domain object (e.g. Report rpt_xxx) to its registry artifact."""
+    artifact = ArtifactService(session).by_domain(domain_type, domain_id)
+    if artifact is None:
+        raise AppError("artifact.not_found", status_code=404)
+    return {"artifact": artifact}
+
+
 @router.get("/artifacts/{artifact_id}")
 def get_artifact(artifact_id: str, session: Session = Depends(get_session)) -> dict:
     artifact = ArtifactService(session).get(artifact_id)

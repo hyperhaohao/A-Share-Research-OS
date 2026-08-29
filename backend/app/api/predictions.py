@@ -17,6 +17,7 @@ from app.services.validation_service import PredictionNotMatured, ValidationServ
 from app.storage.prediction_repo import (
     PredictionORM,
     PredictionRepository,
+    ValidationRecord,
     ValidationRepository,
 )
 
@@ -162,18 +163,24 @@ def create_prediction_from_report(
 
     service = ArtifactService(session)
     prediction_artifact = _register_prediction(session, prediction)
-    report_artifact = service.register(
-        artifact_type="report",
-        domain_type="Report",
-        domain_id=payload.report_id,
-        title=f"完整研究报告 {payload.report_id[:16]}",
-        instrument_ids=(prediction.instrument_id,),
-        created_by="api",
-        route=f"/reports/{payload.report_id}",
-    )
+    # Reuse the pipeline-registered report artifact when it exists — a fresh
+    # registration here would overwrite its business title with a generic one.
+    report_artifact = service.by_domain("Report", payload.report_id)
+    if report_artifact is None:
+        report_artifact_id = service.register(
+            artifact_type="report",
+            domain_type="Report",
+            domain_id=payload.report_id,
+            title=f"完整研究报告 {payload.report_id[:16]}",
+            instrument_ids=(prediction.instrument_id,),
+            created_by="api",
+            route=f"/reports/{payload.report_id}",
+        )
+    else:
+        report_artifact_id = report_artifact["artifact_id"]
     service.link(
         from_artifact_id=prediction_artifact,
-        to_artifact_id=report_artifact,
+        to_artifact_id=report_artifact_id,
         relation=RelationType.GENERATED_FROM,
     )
     return {"prediction": _payload(prediction)}

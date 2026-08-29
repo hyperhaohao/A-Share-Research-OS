@@ -156,7 +156,7 @@ export function InteractiveReportPage() {
 
       {/* Text actions (任务书 §61) + prediction handoff (PW2 §17) */}
       <div className="report-actions" role="group" aria-label={t("report.actions")}>
-        <PredictionCreateButton reportId={reportId} />
+        <PredictionCreateButton reportId={reportId} instrumentId={reportQuery.data?.instrument_id ?? null} />
         <button type="button" className="control-btn" onClick={() => explainMutation.mutate()} disabled={explainMutation.isPending}>
           {t("report.explain")}
         </button>

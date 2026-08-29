@@ -199,3 +199,20 @@ def test_replay_404_for_unknown_run(client):
     resp = client.get("/api/v1/research-runs/run_missing000/events")
     assert resp.status_code == 404
     assert resp.json()["error_code"] == "run.events_not_found"
+
+
+def test_artifact_by_domain_route(client, monkeypatch):
+    body = _run_full_pipeline(client, monkeypatch)
+    report_id = body["report_id"]
+
+    found = client.get(f"/api/v1/artifacts/by-domain/Report/{report_id}")
+    assert found.status_code == 200
+    artifact = found.json()["artifact"]
+    assert artifact["domain_type"] == "Report"
+    assert artifact["domain_id"] == report_id
+    # pipeline registered the business title — never a generic handle
+    assert "完整研究报告" in artifact["title"]
+
+    missing = client.get("/api/v1/artifacts/by-domain/Report/rpt_missing000")
+    assert missing.status_code == 404
+    assert missing.json()["error_code"] == "artifact.not_found"

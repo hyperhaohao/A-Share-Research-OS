@@ -5,8 +5,9 @@ import { expect, test } from "@playwright/test";
  * E2E-01/02: identity + watchlist + workspace
  * E2E-03: SSE live research stages
  * E2E-04: task create → run → delete → history preserved
- * E2E-05: report → prediction
+ * E2E-05: report → prediction via handoff envelope (V2 Phase A)
  * E2E-06: single-select appearance/language + no raw enums in zh-CN
+ * E2E-07: report lineage backtracks to its research run (V2 Phase A)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -91,11 +92,31 @@ test.describe.serial("000831 product flow", () => {
     await card.getByLabel("预测期限").selectOption("20D");
     await card.getByRole("button", { name: "确认生成" }).click();
 
-    await page.waitForURL("**/predictions");
+    // V2 Phase A: the CTA records a report→prediction handoff envelope and
+    // lands on /predictions carrying its handoff + context ids
+    await page.waitForURL(/\/predictions\?handoff=ho_[0-9a-f]+&context=ctx_[0-9a-f]+/);
     const predCard = page.getByTestId("prediction-card").filter({ hasText: "中国稀土" }).first();
     await expect(predCard).toBeVisible();
     const text = await predCard.innerText();
     expect(text).not.toContain("SZSE");
+  });
+
+  test("E2E-07 report lineage backtracks to the research run", async ({ page }) => {
+    await page.goto("/reports");
+    const card = page.getByTestId("report-card").filter({ hasText: "中国稀土" }).first();
+    await expect(card).toBeVisible();
+
+    await card.getByRole("button", { name: "研究脉络" }).click();
+    const lineage = card.getByTestId("report-lineage");
+    // upstream: 报告版本 (派生自) ← 研究运行 (产出) — the run is reachable
+    await expect(lineage.getByText("报告版本")).toBeVisible({ timeout: 15_000 });
+    await expect(lineage.getByText("派生自")).toBeVisible();
+    await expect(lineage.getByText("研究运行")).toBeVisible({ timeout: 15_000 });
+    await expect(lineage.getByText("产出")).toBeVisible();
+
+    // downstream: the E2E-05 prediction is linked 生成自 this report
+    await expect(lineage.getByText("预测")).toBeVisible();
+    await expect(lineage.getByText("生成自")).toBeVisible();
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {
