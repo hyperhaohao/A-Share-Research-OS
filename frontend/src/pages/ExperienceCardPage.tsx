@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatExperienceStatus, uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
+import { CardWorkflowPanel } from "../components/CardWorkflowPanel";
 
 interface ValidationItem {
   validation_id: string;
@@ -153,6 +154,8 @@ export function ExperienceCardPage() {
           <span>{card.source_evidence_ids.length}</span>
         </div>
       </section>
+
+      <CardWorkflowPanel cardId={card.card_id} />
 
       <section className="card">
         <h2>{t("experience.validationsTitle")}</h2>

@@ -10,6 +10,7 @@ import { expect, test } from "@playwright/test";
  * E2E-07: report lineage backtracks to its research run (V2 Phase A)
  * E2E-08: conversation → plan → research run → report (V2 Phase B 中枢)
  * E2E-09: report → experience card → case validation → approve (Phase C)
+ * E2E-10: card → validation workflow DAG → quant record (Phase D)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -197,6 +198,34 @@ test.describe.serial("000831 product flow", () => {
     await expect(page.getByText("验证中")).toBeVisible();
     await page.getByTestId("experience-approve").click();
     await expect(page.getByText("已批准")).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("E2E-10 card launches the validation workflow DAG", async ({ page }) => {
+    await page.goto("/reports");
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+
+    // §44: experience card → validation workflow (real daily bars on the stack).
+    // The kline source is an external dependency that is sometimes unreachable
+    // from this network — the product contract is an HONEST terminal state:
+    // either completed with real metrics, or failed with the source error shown.
+    await page.getByTestId("workflow-horizon").selectOption("20");
+    await page.getByTestId("workflow-launch").click();
+    const runPanel = page.getByTestId("workflow-run");
+    const terminal = runPanel.getByText(/工作流完成|工作流失败/);
+    await expect(terminal).toBeVisible({ timeout: 120_000 });
+    const outcome = (await terminal.innerText()).trim();
+
+    if (outcome.includes("工作流完成")) {
+      const metrics = page.getByTestId("workflow-metrics");
+      await expect(metrics.getByText("样本数")).toBeVisible();
+      await expect(metrics.getByText("命中率")).toBeVisible();
+      // the quant validation landed in the card's validation records
+      await expect(page.getByText("量化验证").first()).toBeVisible({ timeout: 20_000 });
+    } else {
+      // failure path: the data node's real error is disclosed on the node
+      await expect(runPanel.locator(".status-error").first()).toBeVisible();
+    }
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {

@@ -76,7 +76,8 @@
     "experience.underivable": "该报告缺少可提炼的研究论点",
     "experience.llm_unavailable": "未配置 LLM：卡片已带确定性提炼结果",
     "experience.validation_no_data": "暂无可比价数据，无法案例验证",
-    "artifact.not_found": "产物档案缺失"
+    "artifact.not_found": "产物档案缺失",
+    "workflow.not_found": "工作流不存在"
   },
   "watchlist": {
     "add": "添加关注",
@@ -366,5 +367,27 @@
       "deterministic": "确定性提炼",
       "llm": "LLM 润色"
     }
+  },
+  "workflow": {
+    "title": "验证工作流",
+    "hint": "最小强类型 DAG：真实日线 → 前向收益规则 → 指标评估 → 落库。数据不可得时如实失败，绝不编造。",
+    "launch": "发起验证工作流",
+    "horizon": "持有期（交易日）",
+    "h5": "5 交易日",
+    "h20": "20 交易日",
+    "h60": "60 交易日",
+    "running": "工作流执行中…",
+    "completed": "工作流完成，量化验证已写入验证记录",
+    "failed": "工作流失败",
+    "noRuns": "尚未发起过验证工作流",
+    "samples": "样本数",
+    "hitRate": "命中率",
+    "avgReturn": "平均收益",
+    "worst": "最差",
+    "best": "最好",
+    "stepPending": "等待",
+    "stepRunning": "执行中",
+    "stepOk": "完成",
+    "stepFailed": "失败"
   }
 }

@@ -76,7 +76,8 @@
     "experience.underivable": "This report has no thesis to distill",
     "experience.llm_unavailable": "LLM not configured; card already carries the deterministic refine",
     "experience.validation_no_data": "No comparable prices for a case validation",
-    "artifact.not_found": "Artifact record missing"
+    "artifact.not_found": "Artifact record missing",
+    "workflow.not_found": "Workflow not found"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -367,5 +368,27 @@
       "deterministic": "deterministic distillation",
       "llm": "LLM polished"
     }
+  },
+  "workflow": {
+    "title": "Validation workflow",
+    "hint": "Minimal strongly-typed DAG: real daily bars → forward-return rule → metrics → persist. Fails honestly when data is unavailable.",
+    "launch": "Launch validation workflow",
+    "horizon": "Holding period (trading days)",
+    "h5": "5 trading days",
+    "h20": "20 trading days",
+    "h60": "60 trading days",
+    "running": "Workflow running…",
+    "completed": "Workflow completed; the quant validation was recorded",
+    "failed": "Workflow failed",
+    "noRuns": "No validation workflow launched yet",
+    "samples": "Samples",
+    "hitRate": "Hit rate",
+    "avgReturn": "Avg return",
+    "worst": "Worst",
+    "best": "Best",
+    "stepPending": "pending",
+    "stepRunning": "running",
+    "stepOk": "done",
+    "stepFailed": "failed"
   }
 }
