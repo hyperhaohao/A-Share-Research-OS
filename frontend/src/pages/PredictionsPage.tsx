@@ -18,6 +18,8 @@ interface PredictionItem {
   horizon: string;
   expected_direction: string;
   expected_return_range: [number, number];
+  consistency?: "consistent" | "conflict";
+  consistency_note?: string;
   due_at: string;
   supporting_thesis_id: string | null;
   validation?: {
@@ -63,6 +65,11 @@ function PredictionCard({ prediction: p }: { prediction: PredictionItem }) {
         <span className="mono">
           {formatPct(lo)} ~ {formatPct(hi)}
         </span>
+        {p.consistency === "conflict" && (
+          <span className="status-error" data-testid="prediction-conflict">
+            ⚠ {p.consistency_note}
+          </span>
+        )}
         <span>{t("predictions.statusLabel")}</span>
         {p.validation ? (
           <span className={p.validation.direction_correct ? "status-ok" : "status-error"}>

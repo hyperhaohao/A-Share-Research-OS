@@ -46,7 +46,7 @@ def factory():
 QUOTE_METADATA = {"price": 24.83, "name": "中国稀土"}
 
 
-def _seed_state(factory, *, with_thesis=True, with_valuation=True):
+def _seed_state(factory, *, with_thesis=True, with_valuation=True, valuation_values=None):
     """Real research state: quote evidence → snapshot → claim → thesis → valuation."""
     with session_scope(factory) as session:
         evidence_repo = EvidenceRepository(session)
@@ -94,10 +94,8 @@ def _seed_state(factory, *, with_thesis=True, with_valuation=True):
             )
             thesis_id = research.save_thesis(thesis)
         if with_valuation:
-            for method, value in (
-                (ValuationMethod.PE, 30.0),
-                (ValuationMethod.PB, 27.314),
-            ):
+            pairs = valuation_values or ((ValuationMethod.PE, 30.0), (ValuationMethod.PB, 27.314))
+            for method, value in pairs:
                 ValuationRepository(session).save(
                     ValuationResult(method=method, value=value, inputs_used={}, detail={}),
                     ValuationIn(
@@ -146,3 +144,34 @@ def test_prediction_from_missing_report_is_keyerror(factory):
     with session_scope(factory) as session:
         with pytest.raises(KeyError):
             PredictionBuilder(session).build_and_save("rpt_missing0000", Horizon.D60)
+
+
+
+
+def test_payload_discloses_direction_range_conflict(factory):
+    """看多论点 + 低于现价的估值 → payload 携带 conflict 显式说明（红线8）。"""
+    from app.api.predictions import _payload
+
+    report_id = _seed_state(
+        factory,
+        valuation_values=((ValuationMethod.PE, 5.0), (ValuationMethod.PB, 8.0)),
+    )
+    with session_scope(factory) as session:
+        prediction = PredictionBuilder(session).build_and_save(report_id, Horizon.D5)
+        payload = _payload(prediction)
+    lo, hi = prediction.expected_return_range
+    assert hi < 0  # both implied prices below the 24.83 quote
+    assert payload["consistency"] == "conflict"
+    assert "方向与估值区间异号" in payload["consistency_note"]
+
+
+def test_payload_consistent_when_same_side(factory):
+    from app.api.predictions import _payload
+
+    report_id = _seed_state(factory)  # PE 30 / PB 27.314 → range above the quote
+    with session_scope(factory) as session:
+        prediction = PredictionBuilder(session).build_and_save(report_id, Horizon.D5)
+        payload = _payload(prediction)
+    lo, hi = prediction.expected_return_range
+    assert hi > 0 and lo > 0
+    assert payload["consistency"] == "consistent"

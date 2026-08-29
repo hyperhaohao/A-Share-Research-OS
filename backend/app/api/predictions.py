@@ -56,13 +56,15 @@ def _register_prediction(session: Session, prediction: PredictionRecord) -> str:
             name = f"{profile.name} · {profile.code}"
     except Exception:  # noqa: BLE001 — identity must not block registration
         pass
+    consistency, _note = _consistency(prediction)
+    marker = "⚠ 方向与区间异号" if consistency == "conflict" else ""
     return ArtifactService(session).register(
         artifact_type="prediction",
         domain_type="PredictionRecord",
         domain_id=prediction.prediction_id,
         title=f"{name} · {prediction.horizon.value} 预测",
         summary=f"{prediction.expected_direction.value} "
-                f"[{prediction.expected_return_range[0]}, {prediction.expected_return_range[1]}]%",
+                f"[{prediction.expected_return_range[0]}, {prediction.expected_return_range[1]}]% {marker}".strip(),
         instrument_ids=(prediction.instrument_id,),
         as_of_time=prediction.as_of,
         created_by="api",
@@ -70,8 +72,34 @@ def _register_prediction(session: Session, prediction: PredictionRecord) -> str:
     )
 
 
+def _consistency(p: PredictionRecord) -> tuple[str, str]:
+    """方向与区间的符号一致性（诚实原则：两个独立信号的冲突显形，
+    不调和）。up 区间上界 < 0 / down 区间下界 > 0 / neutral 区间
+    整体偏一侧 —— 皆视为 conflict。"""
+    direction = p.expected_direction.value
+    lo, hi = p.expected_return_range
+    if direction == "up" and hi < 0:
+        return "conflict", (
+            "方向与估值区间异号：看多来自论点主张计数（定性信号）；"
+            "负区间来自估值隐含价（基本面锚低于现价）。两个独立信号冲突，"
+            "均已如实呈现。"
+        )
+    if direction == "down" and lo > 0:
+        return "conflict", (
+            "方向与估值区间异号：看空来自论点主张计数（定性信号）；"
+            "正区间来自估值隐含价（基本面锚高于现价）。两个独立信号冲突，"
+            "均已如实呈现。"
+        )
+    if direction == "neutral" and (lo > 0 or hi < 0):
+        return "conflict", "论点多空均衡但区间整体偏一侧：依据分别来自主张计数与估值隐含价。"
+    return "consistent", "方向与区间同侧。"
+
+
 def _payload(p: PredictionRecord, validation: ValidationRecord | None = None) -> dict:
+    consistency, consistency_note = _consistency(p)
     data = {
+        "consistency": consistency,
+        "consistency_note": consistency_note,
         "prediction_id": p.prediction_id,
         "instrument_id": p.instrument_id,
         "research_run_id": p.research_run_id,

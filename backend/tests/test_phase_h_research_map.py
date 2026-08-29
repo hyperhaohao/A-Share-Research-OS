@@ -92,8 +92,9 @@ def _run_pipeline(client, monkeypatch) -> dict:
         if "qt.gtimg" in url:
             # both tencent shapes: stock (~) + futures (,)
             return httpx.Response(200, content=(
-                'v_sh000001="1~上证指数~000001~3952.18~3956.57~3950.24~~~~~~'
-                + "~" * 25 + '~2026-08-28 17:15:59~~~~~~0.62~";'
+                # indices: 3=price 30=market_time 32=change_pct (real layout)
+                'v_sh000001="1~上证指数~000001~3952.18~3956.57~3950.24'
+                + "~" * 24 + '~2026-08-28 17:15:59~~0.62~";'
                 'v_hf_GC="4503.37,-3.44,4503.80,4504.30,4688.00,4495.00,04:59:58,'
                 '4664.00,4656.00,0,4,2,2026-08-29,纽约黄金";'
             ).encode("gbk"))
@@ -153,8 +154,9 @@ def test_global_context_from_real_macro_evidence(client, monkeypatch):
     data = resp.json()["global_context"]
     assert data["instrument_id"] == "SZSE:000831"
     assert data["as_of"] is not None
-    assert data["disclosures"]["official_macro_source"] == "not_connected"
-    assert "官方" in data["disclosures"]["note"]
+    # numeric layer (深度扩展 b): the mock serves the tencent feed
+    assert data["disclosures"]["numeric_source"] == "tencent_global_macro"
+    assert "数值层" in data["disclosures"]["note"]
     for theme in data["themes"]:
         assert theme["evidence_id"]
         assert theme["available_time"]

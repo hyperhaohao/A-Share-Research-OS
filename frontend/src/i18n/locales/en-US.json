@@ -287,7 +287,8 @@
     "directionMiss": "direction missed",
     "emptyHint": "No predictions yet — create one from a report via \"Create prediction\".",
     "viewBasis": "View research basis",
-    "dueBy": "due {{date}}"
+    "dueBy": "due {{date}}",
+    "conflictLabel": "direction/range conflict"
   },
   "copilot": {
     "title": "Research Copilot",

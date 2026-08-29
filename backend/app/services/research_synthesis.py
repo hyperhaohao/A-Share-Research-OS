@@ -202,10 +202,35 @@ class ValuationInputBuilder:
         bvps = fin.get("bvps")
         revenue = fin.get("revenue_yuan")
 
+        # 报告期口径：最新财报为中报/季报时，eps 与收入按期间数年化
+        # （BVPS 是时点值不年化），并在假设中显式披露口径
+        report_date = str(fin.get("report_date") or "")
+        interim_factor = 1.0
+        if report_date and not report_date.endswith("-12-31"):
+            month = report_date.split("-")[1] if "-" in report_date else ""
+            interim_factor = {"03": 4.0, "06": 2.0, "09": 4.0 / 3.0}.get(month, 1.0)
+            if interim_factor != 1.0:
+                assumptions_annualize = (
+                    f"最新财报为期{'中' if month == '06' else '间'}报告"
+                    f"（{report_date}）：EPS/收入按 ×{interim_factor:.2f} 年化，"
+                    "显式假设（非 TTM）"
+                )
+            else:
+                assumptions_annualize = None
+        else:
+            assumptions_annualize = None
+        if interim_factor != 1.0:
+            if eps:
+                eps = round(eps * interim_factor, 4)
+            if revenue:
+                revenue = round(revenue * interim_factor, 2)
+
         assumptions: list[str] = []
         methods: list[str] = []
         built: dict = {}
 
+        if assumptions_annualize:
+            assumptions.append(assumptions_annualize)
         if price in (None, 0):
             return {"__assumptions__": assumptions, "__methods__": methods}
 

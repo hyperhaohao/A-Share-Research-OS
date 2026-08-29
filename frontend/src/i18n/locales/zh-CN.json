@@ -287,7 +287,8 @@
     "directionMiss": "方向错误",
     "emptyHint": "还没有预测 —— 在报告页点「生成预测」即可创建。",
     "viewBasis": "查看研究依据",
-    "dueBy": "到期 {{date}}"
+    "dueBy": "到期 {{date}}",
+    "conflictLabel": "方向与区间异号"
   },
   "copilot": {
     "title": "研究 Copilot",
