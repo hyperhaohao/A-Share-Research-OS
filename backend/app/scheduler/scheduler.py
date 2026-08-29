@@ -93,4 +93,21 @@ class Scheduler:
                 self._repo.complete(task.task_id, utc_now(), success=False)
                 result.failed.append(task.task_id)
 
+        # strategy monitors run in the SAME background loop (§23: 后台由
+        # Scheduler Worker 运行，不是页面打开才工作)
+        from app.services.strategy_monitor_service import (
+            StrategyMonitorRefusal,
+            StrategyMonitorService,
+        )
+
+        monitor_service = StrategyMonitorService(self._session)
+        for monitor_row in monitor_service._repo.due_monitors(now):  # noqa: SLF001
+            try:
+                monitor_service.run_monitor(monitor_row.monitor_id)
+                result.succeeded.append(monitor_row.monitor_id)
+            except StrategyMonitorRefusal as exc:
+                result.failed.append(f"{monitor_row.monitor_id}: {exc}")
+            except Exception:  # noqa: BLE001 — one monitor must not kill the tick
+                result.failed.append(monitor_row.monitor_id)
+
         return result
