@@ -12,9 +12,12 @@
 V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
 E2E 17/17 于 compose 栈；全部已推送 GitHub main（13f7346..360b532 48 提交）。
 总纲 Phase A–J v1 + 验收复查 + 深度扩展 a–e 完成。
-当前执行线：UI Foundation（新任务书 docs/A-Share-Research-OS-UI信息架构与全产品
-体验重构任务说明书.md，UI0–UI8 九阶段，业务功能冻结）—— UI2 Read Model 已开工
-（/views/watchlist + /views/instruments/{id}/overview 已落地并接入关注池页面）
+当前执行线：UI Foundation（任务书 docs/A-Share-Research-OS-UI信息架构与全产品
+体验重构任务说明书.md，业务冻结）。进度：UI0 Token/PASS、UI1 AppShell+Sidebar+
+Layout/PASS、UI2 Read Model 六端点全落地并接入五页、UI3 语义组件首批、
+UI4 基准页重构（中枢 layout-command / Workspace Overview 网格+Tab 收敛）。
+全面自查报告：docs/ux-foundation-self-review.md（§66 总表 29 PASS/4 部分/1 待做）。
+下一步：UI5 经验卡/持续研究深化 → UI6 策略面 → UI7 画布 → UI8 视觉回归
 ```
 
 ## Completed
@@ -25,6 +28,12 @@ E2E 17/17 于 compose 栈；全部已推送 GitHub main（13f7346..360b532 48 �
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+UX Foundation 全面自查（本轮，DONE）：
+  - §66 验收总表 34 项逐项核查：29 PASS / 4 部分（UI5-UI7 深化项）/ 1 待做（UI8 截图）
+  - 自查过程修复 8 项（详见 docs/ux-foundation-self-review.md 第二节），
+    含 2 个 500 级缺陷（watchlist 视图列名、prediction-review str/enum shim）
+  - 渲染层裸枚举扫描（E2E-UI-08）：reports/experience/strategy/graph/source-health 0 命中
+  - 请求预算：五张基准页全部单视图请求（≤3 预算达标）
 UX Foundation 开工（本轮，UI2 首批 DONE）：
   - 后端 Read Model：services/view_service.py + api/views.py
     （GET /views/watchlist、GET /views/instruments/{id}/overview）——
