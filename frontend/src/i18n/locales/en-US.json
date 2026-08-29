@@ -162,7 +162,27 @@
     "upstream": "Upstream",
     "downstream": "Downstream",
     "close": "Close",
-    "open": "Open"
+    "open": "Open",
+    "primaryTab": {
+      "overview": "Overview",
+      "research": "Research",
+      "fundamentals": "Fundamentals",
+      "evidence": "Evidence",
+      "artifacts": "Artifacts"
+    },
+    "overviewStance": "Research stance",
+    "overviewValuation": "Valuation",
+    "overviewCatalysts": "Key catalysts",
+    "overviewRisks": "Main risks",
+    "overviewLatest": "Latest change",
+    "overviewQuality": "Data quality",
+    "currentPrice": "Current",
+    "quality": "Data quality",
+    "qualityGood": "Good",
+    "qualitySources": "{count} source kinds",
+    "updated": "Updated",
+    "openLatestReport": "Open latest report",
+    "more": "More"
   },
   "report": {
     "title": "Research Report",

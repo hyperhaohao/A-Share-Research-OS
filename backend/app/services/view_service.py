@@ -338,7 +338,9 @@ class ViewService:
             lo, hi = r.expected_return_min, r.expected_return_max
 
             class _Shim:
-                expected_direction = r.expected_direction
+                # Direction may be a str (ORM row) — _consistency expects the enum
+                class expected_direction:
+                    value = r.expected_direction
                 expected_return_range = (lo, hi)
 
             consistency, note = _consistency(_Shim())

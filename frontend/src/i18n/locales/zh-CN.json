@@ -162,7 +162,27 @@
     "upstream": "向上追溯",
     "downstream": "向下追溯",
     "close": "关闭",
-    "open": "打开"
+    "open": "打开",
+    "primaryTab": {
+      "overview": "总览",
+      "research": "研究",
+      "fundamentals": "基本面",
+      "evidence": "证据",
+      "artifacts": "产物"
+    },
+    "overviewStance": "核心观点",
+    "overviewValuation": "估值",
+    "overviewCatalysts": "关键催化",
+    "overviewRisks": "主要风险",
+    "overviewLatest": "最新变化",
+    "overviewQuality": "数据质量",
+    "currentPrice": "当前价",
+    "quality": "数据质量",
+    "qualityGood": "良好",
+    "qualitySources": "覆盖 {count} 类来源",
+    "updated": "更新",
+    "openLatestReport": "查看最新报告",
+    "more": "更多"
   },
   "report": {
     "title": "研究报告",

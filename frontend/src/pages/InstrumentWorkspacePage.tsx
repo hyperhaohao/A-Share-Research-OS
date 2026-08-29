@@ -57,24 +57,22 @@ async function fetchPredictions(id: string): Promise<PredictionItem[]> {
   return body.results;
 }
 
-const TABS = [
-  "overview",
-  "timeline",
-  "graph",
-  "thesis",
-  "financials",
-  "valuation",
-  "evidence",
-  "reports",
-  "predictions",
-] as const;
-type WorkspaceTab = (typeof TABS)[number];
+const PRIMARY_TABS = ["overview", "research", "fundamentals", "evidence", "artifacts"] as const;
+type PrimaryTab = (typeof PRIMARY_TABS)[number];
+
+const SUB_TABS: Record<Exclude<PrimaryTab, "overview">, Array<{ key: string }>> = {
+  research: [{ key: "timeline" }, { key: "graph" }, { key: "thesis" }],
+  fundamentals: [{ key: "financials" }, { key: "valuation" }],
+  evidence: [{ key: "evidence" }],
+  artifacts: [{ key: "reports" }, { key: "predictions" }],
+};
 
 /** Stock Workspace (任务书 §58): header + Overview/Timeline/Graph/Evidence/Predictions. */
 export function InstrumentWorkspacePage() {
   const { instrumentId = "" } = useParams();
   const { t } = useTranslation();
-  const [tab, setTab] = useState<WorkspaceTab>("overview");
+  const [primaryTab, setPrimaryTab] = useState<PrimaryTab>("overview");
+  const [subTab, setSubTab] = useState("timeline");
 
   const instrumentQuery = useQuery({
     queryKey: ["instrument", instrumentId],
@@ -131,21 +129,45 @@ export function InstrumentWorkspacePage() {
       <div className="workspace-body">
       <div className="workspace-main">
       <div className="workspace-tabs" role="tablist" aria-label={t("workspace.tabs")}>
-        {TABS.map((key) => (
+        {PRIMARY_TABS.map((key) => (
           <button
             key={key}
             type="button"
             role="tab"
-            aria-selected={tab === key}
-            className={tab === key ? "control-btn active" : "control-btn"}
-            onClick={() => setTab(key)}
+            aria-selected={primaryTab === key}
+            className={primaryTab === key ? "control-btn active" : "control-btn"}
+            onClick={() => {
+              setPrimaryTab(key);
+              setSubTab(
+                key === "overview" ? "timeline" : SUB_TABS[key as Exclude<PrimaryTab, "overview">][0].key,
+              );
+            }}
           >
-            {t(`workspace.tab.${key}`)}
+            {t(`workspace.primaryTab.${key}`)}
           </button>
         ))}
       </div>
 
-      {tab === "overview" && (
+      {primaryTab !== "overview" && (
+        <div className="workspace-tabs" role="tablist" aria-label={t("workspace.subtabs")}>
+          {SUB_TABS[primaryTab as Exclude<PrimaryTab, "overview">].map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              role="tab"
+              aria-selected={subTab === s.key}
+              className={subTab === s.key ? "control-btn active" : "control-btn"}
+              onClick={() => setSubTab(s.key)}
+            >
+              {t(`workspace.tab.${s.key}`)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {primaryTab === "overview" && <OverviewGrid instrumentId={instrumentId} />}
+
+      {primaryTab === "research" && (
         <section className="card">
           <h2>{t("workspace.market")}</h2>
           {latestQuote ? (
@@ -165,14 +187,20 @@ export function InstrumentWorkspacePage() {
         </section>
       )}
 
-      {tab === "timeline" && <TimelineTab instrumentId={instrumentId} />}
-      {tab === "graph" && <FlowGraphTab instrumentId={instrumentId} />}
-      {tab === "thesis" && <ThesisTab instrumentId={instrumentId} />}
-      {tab === "financials" && <FinancialsTab instrumentId={instrumentId} />}
-      {tab === "valuation" && <ValuationTab instrumentId={instrumentId} />}
-      {tab === "reports" && <WorkspaceReportsTab instrumentId={instrumentId} />}
+      {primaryTab === "research" && subTab === "timeline" && <TimelineTab instrumentId={instrumentId} />}
+      {primaryTab === "research" && subTab === "graph" && <FlowGraphTab instrumentId={instrumentId} />}
+      {primaryTab === "research" && subTab === "thesis" && <ThesisTab instrumentId={instrumentId} />}
+      {primaryTab === "fundamentals" && subTab === "financials" && (
+        <FinancialsTab instrumentId={instrumentId} />
+      )}
+      {primaryTab === "fundamentals" && subTab === "valuation" && (
+        <ValuationTab instrumentId={instrumentId} />
+      )}
+      {primaryTab === "artifacts" && subTab === "reports" && (
+        <WorkspaceReportsTab instrumentId={instrumentId} />
+      )}
 
-      {tab === "evidence" && (
+      {primaryTab === "evidence" && (
         <section className="card">
           <h2>{t("workspace.evidence")}</h2>
           {evidence.length === 0 && <p className="secondary">{t("label.no_data")}</p>}
@@ -188,7 +216,7 @@ export function InstrumentWorkspacePage() {
         </section>
       )}
 
-      {tab === "predictions" && (
+      {primaryTab === "artifacts" && subTab === "predictions" && (
         <section className="card">
           <h2>{t("workspace.predictions")}</h2>
           {predictionsQuery.data?.length === 0 && (
@@ -220,5 +248,96 @@ export function InstrumentWorkspacePage() {
         </Link>
       </p>
     </main>
+  );
+}
+
+/** Overview 网格（§16）：来自 InstrumentOverviewView 的 L1/L2。 */
+interface OverviewView {
+  instrument: { instrument_id: string; code: string; name: string | null } | null;
+  quote: { price: number; change_pct: number | null; quote_time: string | null } | null;
+  research: { judgment: string | null; confidence: number | null; thesis_title: string | null };
+  catalysts: string[];
+  risks: string[];
+  report: { report_id: string; created_at: string | null } | null;
+  prediction: { prediction_id: string; horizon: string; expected_direction: string; validated: boolean; due_at: string | null } | null;
+  monitor: { monitor_id: string; enabled: boolean; next_run_at: string | null } | null;
+  data_quality: { evidence_count: number; source_kinds: number };
+}
+
+function OverviewGrid({ instrumentId }: { instrumentId: string }) {
+  const { t } = useTranslation();
+  const ovQuery = useQuery({
+    queryKey: ["instrument-overview", instrumentId],
+    enabled: instrumentId !== "",
+    queryFn: async (): Promise<OverviewView> => {
+      const resp = await fetch(
+        `/api/v1/views/instruments/${encodeURIComponent(instrumentId)}/overview`,
+      );
+      if (!resp.ok) throw new Error("instrument.not_found");
+      const body = await resp.json();
+      return body.overview;
+    },
+  });
+  const ov = ovQuery.data;
+  if (ovQuery.isPending) return <p className="secondary">{t("common.loading")}</p>;
+  if (ovQuery.isError || !ov) return <p className="secondary">{t("label.no_data")}</p>;
+
+  return (
+    <div className="overview-grid" data-testid="workspace-overview">
+      <section className="card">
+        <h2>{t("workspace.overviewStance")}</h2>
+        <p>
+          {ov.research.judgment ? t(`workspace.direction.${ov.research.judgment}`) : "—"}
+          {ov.research.confidence != null ? ` · ${Math.round(ov.research.confidence * 100)}%` : ""}
+        </p>
+        {ov.research.thesis_title && <p className="secondary">{ov.research.thesis_title}</p>}
+      </section>
+      <section className="card">
+        <h2>{t("workspace.overviewValuation")}</h2>
+        {ov.quote ? (
+          <p className="mono">
+            {t("workspace.currentPrice")}: {ov.quote.price}
+          </p>
+        ) : (
+          <p className="secondary">{t("label.no_data")}</p>
+        )}
+      </section>
+      <section className="card">
+        <h2>{t("workspace.overviewCatalysts")}</h2>
+        {ov.catalysts.length ? (
+          <ul className="watch-list">
+            {ov.catalysts.map((c) => (
+              <li key={c}>• {c}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="secondary">—</p>
+        )}
+      </section>
+      <section className="card">
+        <h2>{t("workspace.overviewRisks")}</h2>
+        {ov.risks.length ? (
+          <ul className="watch-list">
+            {ov.risks.map((r) => (
+              <li key={r}>• {r}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="secondary">—</p>
+        )}
+      </section>
+      <section className="card">
+        <h2>{t("workspace.overviewLatest")}</h2>
+        <p className="secondary">
+          {t("workspace.evidenceCount", { count: ov.data_quality.evidence_count })}
+        </p>
+      </section>
+      <section className="card">
+        <h2>{t("workspace.overviewQuality")}</h2>
+        <p className="secondary">
+          {t("workspace.qualitySources", { count: ov.data_quality.source_kinds })}
+        </p>
+      </section>
+    </div>
   );
 }
