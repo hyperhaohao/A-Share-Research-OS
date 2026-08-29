@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C/D(v1) DONE（基础协议 + AI 研究中枢 + 经验卡 + 最小强类型验证工作流 DAG，
-E2E 10/10 于 compose 栈）。当前执行线：Phase E（智能选股，总纲 §74）
+V2 Phase A/B/C/D/E(v1) DONE（基础协议 + AI 研究中枢 + 经验卡 + 验证工作流 DAG + 智能选股，
+E2E 11/11 于 compose 栈）。当前执行线：Phase F（策略实验室，总纲 §75）
 ```
 
 ## Completed
@@ -21,6 +21,18 @@ E2E 10/10 于 compose 栈）。当前执行线：Phase E（智能选股，总纲
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase E v1（本轮，DONE）：
+  - 后端：screening_runs 表（迁移 f4a5b6c7d8e9）；§45 流程 ExperienceCard →
+    强类型规则（has_report/thesis_direction/has_quote，全部由真实研究状态
+    求值）→ 全市场评估 → 候选排序；每候选 rank/score/factor_scores/
+    matched_rules/explanation（事实拼装，卡片标题引用，无裸 id）/risks（§20）；
+    被排除原因按规则聚合 + 示例（为什么没选中）；screening_run artifact
+    registered generated_from 卡片；RunEvent（stage SCREENING）可回放；
+    handoff 注册 experience→screening:run_screening
+  - 前端：/screening 列表 + /screening/:runId 详情（候选卡 + 排除聚合）；
+    卡片页「按此经验筛选」CTA 走信封；screening.* 全量本地化
+  - E2E-11：卡片 → 筛选（信封溯源）→ 候选带「命中全部…经验依据」解释 +
+    排除聚合披露
 Phase D v1（本轮，DONE）：
   - 后端：workflow_runs 表（迁移 e3f4a5b6c7d8）；最小强类型 DAG
     Data(真实日线 historical_data)→Rule(前向收益 h/阈值)→Validation(确定性
@@ -78,17 +90,19 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase E 智能选股（总纲 §74）：ExperienceCard + Workflow + Universe →
-   ScreeningRun → Candidate Artifact（每个候选必须 Why Selected 解释）；
-   Phase E 完成定义：选股运行落 Artifact + 每个候选带解释的产品 E2E（E2E-11）。
+1. Phase F 策略实验室（总纲 §75）：Screening + ExperienceCards + Workflow →
+   StrategyDefinition → StrategyVersion → Cross-Instrument Backtest →
+   Validation（真实失败不隐藏，§21/§47）；handoff 注册 screening→strategy:
+   create_strategy（§46）；Phase F 完成定义：筛选候选 → 建策略 → 回测运行
+   落 Artifact + 失败案例显形的产品 E2E（E2E-12）。
 ```
 
 ## Tests
 
 ```text
-backend: 322 passed（+ Phase D workflow 5 测试：确定性指标/零命中阈值/诚实失败/404）
+backend: 326 passed（+ Phase E screening 4 测试：解释/排除聚合/方向规则/回放）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 10/10 passed（E2E-01…10，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 11/11 passed（E2E-01…11，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -106,6 +120,11 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase E（本轮真机，000831，E2E-11 + compose API 实测）：
+  卡片 → 筛选运行（信封溯源 URL）→ 候选含 中国稀土（命中全部 3 规则，
+  解释含完整研究报告/论点方向/可见行情证据）PASS
+  排除聚合按规则披露（缺报告/方向不符/无可比价 + 示例标的）PASS
+  screening_run artifact generated_from 经验卡 PASS
 Phase D（本轮真机，000831，E2E-10 + compose API 实测）：
   工作流 DAG 真实执行：kline 源被网络断连 → Data 节点诚实失败显形
   （source_unavailable），DAG 终态 failed，无伪造指标 PASS（诚实路径）

@@ -94,10 +94,16 @@
 - [x] 工作流运行落 Artifact + RunEvent；E2E-10（诚实终态契约）
 - [x] 注：自定义 quant_expression 表达式节点留待后续扩展
 
-## Phase E — 智能选股（DOING）
-- [ ] ScreeningRun + Candidate Artifact（Why Selected 解释，§74）
-- [ ] Universe 数据面 + 筛选规则（复用经验卡/工作流产物）
-- [ ] E2E-11
+## Phase E — 智能选股（DONE v1）
+- [x] ScreeningRun + Candidate Artifact（Why Selected 解释，§74）
+- [x] Universe 数据面 + 筛选规则（复用经验卡/工作流产物）
+- [x] E2E-11（候选解释 + 排除聚合披露）
+- [x] 注：因子/模型打分规则留待 Phase F 策略线扩展（v1 规则集为研究状态规则）
+
+## Phase F — 策略实验室（DOING）
+- [ ] StrategyDefinition/StrategyVersion（Screening+Cards+Workflow 组装，§21/§75）
+- [ ] Cross-Instrument Backtest + 失败案例显形（§47）
+- [ ] handoff screening→strategy:create_strategy；E2E-12
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

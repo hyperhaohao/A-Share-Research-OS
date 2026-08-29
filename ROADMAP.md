@@ -36,8 +36,8 @@
 | B | AI 研究中枢 + 报告 Handoff | DONE |
 | C | 研究经验卡（原炼验用） | DONE |
 | D | 研究验证工作流（强类型 DAG） | DONE |
-| E | 智能选股（Why Selected） | DOING |
-| F | 策略实验室 | PLANNED |
+| E | 智能选股（Why Selected） | DONE |
+| F | 策略实验室 | DOING |
 | G | 策略盯盘（Observation/Signal/Decision 分离） | PLANNED |
 | H | 产业研究地图 + 全球宏观视图 | PLANNED |
 | I | 全库研究图谱 | PLANNED |
