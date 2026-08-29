@@ -33,6 +33,7 @@ from app.api.artifacts import router as artifacts_router
 from app.api.command import router as command_router
 from app.api.experience import router as experience_router
 from app.api.workflows import router as workflows_router
+from app.api.screening import router as screening_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -85,6 +86,7 @@ def create_app() -> FastAPI:
     app.include_router(command_router, prefix="/api/v1")
     app.include_router(experience_router, prefix="/api/v1")
     app.include_router(workflows_router, prefix="/api/v1")
+    app.include_router(screening_router, prefix="/api/v1")
     return app
 
 

@@ -37,6 +37,9 @@ EVENT_STAGE = {
     "node_updated": "VALIDATING",
     "workflow_completed": "COMPLETED",
     "workflow_failed": "FAILED",
+    "screening_started": "SCREENING",
+    "screening_completed": "SCREENING",
+    "screening_failed": "SCREENING",
 }
 
 # 业务可读标题（中文为用户语言基线；前端本地化层可再映射）
@@ -60,6 +63,9 @@ EVENT_TITLE = {
     "node_updated": "工作流节点更新",
     "workflow_completed": "验证工作流完成",
     "workflow_failed": "验证工作流失败",
+    "screening_started": "智能筛选启动",
+    "screening_completed": "智能筛选完成",
+    "screening_failed": "智能筛选失败",
 }
 
 

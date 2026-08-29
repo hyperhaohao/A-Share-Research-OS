@@ -30,6 +30,8 @@ class ArtifactType(str, Enum):
     CLAIM = "claim"
     THESIS = "thesis"
     EXPERIENCE_CARD = "experience_card"
+    WORKFLOW_RUN = "workflow_run"
+    SCREENING_RUN = "screening_run"
 
 
 class RelationType(str, Enum):
