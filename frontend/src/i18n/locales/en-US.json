@@ -307,5 +307,31 @@
     "depth_other": "{{count}} hops",
     "noArtifact": "No artifact record (report predates Phase A)",
     "empty": "(none)"
+  },
+  "commander": {
+    "conversation": "Research conversation",
+    "inputPlaceholder": "e.g. research the recent restructuring signs of 中国稀土",
+    "inputHint": "Give one command; I will refuse explicitly rather than guess.",
+    "send": "Send",
+    "currentPlan": "Current plan",
+    "recentPlans": "Recent research",
+    "runningNow": "Running now",
+    "noPlanYet": "No plan yet — type a research command below",
+    "planRunning": "Plan running…",
+    "planCompleted": "Plan completed",
+    "planFailed": "Plan failed",
+    "openReport": "Open report",
+    "artifacts": "Current research artifacts",
+    "noArtifacts": "No artifacts yet — finish a research run to see reports here",
+    "artifactsHint": "Artifacts are traceable research objects, not chat history.",
+    "stepPending": "pending",
+    "stepRunning": "running",
+    "stepOk": "done",
+    "stepFailed": "failed",
+    "status": {
+      "running": "running",
+      "completed": "completed",
+      "failed": "failed"
+    }
   }
 }

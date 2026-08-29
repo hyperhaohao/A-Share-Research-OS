@@ -306,5 +306,31 @@
     "depth": "溯源 {{count}} 层",
     "noArtifact": "该报告暂无产物档案（Phase A 之前的报告）",
     "empty": "（无）"
+  },
+  "commander": {
+    "conversation": "研究对话",
+    "inputPlaceholder": "例如：研究中国稀土最近的资产重组迹象",
+    "inputHint": "用一句话下达研究指令；识别不了标的时我会直接说，不会猜。",
+    "send": "发送",
+    "currentPlan": "当前计划",
+    "recentPlans": "最近研究",
+    "runningNow": "正在运行",
+    "noPlanYet": "暂无计划 —— 用一句话下达研究指令",
+    "planRunning": "计划执行中…",
+    "planCompleted": "计划完成",
+    "planFailed": "计划失败",
+    "openReport": "打开报告",
+    "artifacts": "当前研究产物",
+    "noArtifacts": "暂无产物 —— 完成一次研究后这里会出现报告",
+    "artifactsHint": "产物是可追溯的研究对象（Artifact），不是聊天记录。",
+    "stepPending": "等待",
+    "stepRunning": "执行中",
+    "stepOk": "完成",
+    "stepFailed": "失败",
+    "status": {
+      "running": "执行中",
+      "completed": "已完成",
+      "failed": "失败"
+    }
   }
 }

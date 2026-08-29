@@ -8,6 +8,7 @@ import { expect, test } from "@playwright/test";
  * E2E-05: report → prediction via handoff envelope (V2 Phase A)
  * E2E-06: single-select appearance/language + no raw enums in zh-CN
  * E2E-07: report lineage backtracks to its research run (V2 Phase A)
+ * E2E-08: conversation → plan → research run → report (V2 Phase B 中枢)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -117,6 +118,29 @@ test.describe.serial("000831 product flow", () => {
     // downstream: the E2E-05 prediction is linked 生成自 this report
     await expect(lineage.getByText("预测")).toBeVisible();
     await expect(lineage.getByText("生成自")).toBeVisible();
+  });
+
+  test("E2E-08 conversation plans and completes a research run", async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId("commander-input").fill("研究中国稀土最近的资产重组迹象");
+    await page.getByTestId("commander-send").click();
+
+    // commander refuses nothing here — the plan appears with structured steps
+    const progress = page.getByTestId("commander-plan-progress");
+    await expect(progress.getByText("解析研究标的")).toBeVisible({ timeout: 20_000 });
+    await expect(progress.getByText("运行完整研究管线")).toBeVisible();
+
+    // §42 closed loop: 对话 → ResearchRun → ReportVersion → Artifact → 右栏报告
+    await expect(
+      page.getByTestId("commander-artifacts").getByTestId("artifact-open").first(),
+    ).toBeVisible({ timeout: 180_000 });
+    const artifactsText = await page.getByTestId("commander-artifacts").innerText();
+    expect(artifactsText).toContain("研究报告");
+    expect(artifactsText).not.toContain("rpt_");
+
+    // the right column opens the produced report
+    await page.getByTestId("artifact-open").first().click();
+    await expect(page).toHaveURL(/\/reports\//);
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {
