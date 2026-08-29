@@ -38,8 +38,8 @@
 | D | 研究验证工作流（强类型 DAG） | DONE |
 | E | 智能选股（Why Selected） | DONE |
 | F | 策略实验室 | DONE |
-| G | 策略盯盘（Observation/Signal/Decision 分离） | DOING |
-| H | 产业研究地图 + 全球宏观视图 | PLANNED |
+| G | 策略盯盘（Observation/Signal/Decision 分离） | DONE |
+| H | 产业研究地图 + 全球宏观视图 | DOING |
 | I | 全库研究图谱 | PLANNED |
 | J | 完整复盘回灌 | PLANNED |
 

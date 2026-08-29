@@ -106,10 +106,16 @@
 - [x] handoff screening→strategy:create_strategy；E2E-12
 - [x] 注：Regime Split/Sensitivity 等全套 §47 验证留待后续版本（v1 一律 EXPERIMENTAL）
 
-## Phase G — 策略盯盘（DOING）
-- [ ] MonitorDefinition + Scheduler Worker 后台运行（§48）
-- [ ] Observation/Signal/DecisionRecord 三分离（§24，仅 Paper/Research Decision §25）
-- [ ] E2E-13
+## Phase G — 策略盯盘（DONE v1）
+- [x] MonitorDefinition + Scheduler Worker 后台运行（§48）
+- [x] Observation/Signal/DecisionRecord 三分离（§24，仅 Paper/Research Decision §25）
+- [x] E2E-13
+- [x] 注：新公告/新闻/资金/宏观观察源按数据可用性逐项接入（v1 行情变化+公司事件）
+
+## Phase H — 产业研究地图 + 全球宏观（DOING）
+- [ ] 产业链示图 + 宏观指标视图（Research Inputs，§76）
+- [ ] open_with_context 衔接（视图 → 标的研究上下文不丢失）
+- [ ] E2E-14
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C/D/E/F(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室，
-E2E 12/12 于 compose 栈）。当前执行线：Phase G（策略盯盘，总纲 §23/§48）
+V2 Phase A/B/C/D/E/F/G(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室 + 策略盯盘，
+E2E 13/13 于 compose 栈）。当前执行线：Phase H（产业研究地图+全球宏观，总纲 §76）
 ```
 
 ## Completed
@@ -21,6 +21,19 @@ E2E 12/12 于 compose 栈）。当前执行线：Phase G（策略盯盘，总纲
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase G v1（本轮，DONE）：
+  - 后端：strategy_monitors/observations/signals/decisions 四表
+    （迁移 b6c7d8e9f0a1）；create_monitor 门槛=EXPERIMENTAL（§47 衔接，
+    DRAFT → 422）；一次运行三分离：Observation（真实数据：最近两条含价
+    行情证据的变化 + 自上次观察以来的新公司事件）→ Signal（强类型规则
+    quote_move≥阈值/new_event，强度落库）→ DecisionRecord（§49 全字段：
+    决策/置信度/理由/观察与信号与证据引用/as_of；§25 仅 Research
+    Decision，rationale 显式注明，无任何下单对象）
+  - Scheduler.tick 后台运行 due monitors（§23：不是页面打开才工作）
+  - 前端：/monitoring 列表 + 详情（观察/信号/决策三个独立分区=§24 的
+    UI 结构本身）；策略页「建立盯盘」CTA（门槛拒绝显形）；monitor.* 本地化
+  - E2E-13：诚实双路径（EXPERIMENTAL→建立+运行+三分区可见；DRAFT→门槛
+    拒绝显形）
 Phase F v1（本轮，DONE）：
   - 后端：strategy_versions/strategy_backtest_runs 表（迁移 a5b6c7d8e9f0）；
     §46 组装（筛选候选=typed universe，理念=卡片机制，前向收益入场规则，
@@ -104,20 +117,18 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase G 策略盯盘（总纲 §23/§24/§48/§49）：StrategyVersion →
-   MonitorDefinition → Scheduler Worker 后台运行 → Observation / Signal /
-   DecisionRecord 三分离（技术指标不得冒充 AI Decision）；§25 决策支持
-   仅 Paper/Research Decision，不接真实下单；Phase G 完成定义：
-   EXPERIMENTAL 策略产生 Observation→Signal→Decision 记录且可在产品面
-   回放的产品 E2E（E2E-13）。
+1. Phase H 产业研究地图 + 全球宏观（总纲 §76）：产业链示图 + 宏观指标
+   视图作为 Research Inputs（非孤立 Dashboard）；handoff 节点
+   open_with_context 衔接；Phase H 完成定义：从产业/宏观视图进入标的
+   研究上下文不丢失的产品 E2E（E2E-14）。
 ```
 
 ## Tests
 
 ```text
-backend: 332 passed（+ Phase F strategy 6 测试：组装/失败案例披露/门槛/EXPERIMENTAL/诚实失败/404）
+backend: 335 passed（+ Phase G monitor 3 测试：三分离/门槛/Scheduler 集成）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 12/12 passed（E2E-01…12，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 13/13 passed（E2E-01…13，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -135,6 +146,10 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase G（本轮真机，000831，E2E-13 + compose API 实测）：
+  盯盘门槛：DRAFT 版本 422 拒绝显形 PASS
+  三分离记录落库且互相引用（观察引用真实行情证据，决策引用全部观察/信号）PASS
+  Scheduler.tick 后台拾取 due monitor 并完成一次运行 PASS
 Phase F（本轮真机，000831，E2E-12 + compose API 实测）：
   筛选 → 组装策略（信封溯源 URL，universe=筛选候选）PASS
   §47 门槛：无回测时验证 422 拒绝显形 PASS
