@@ -14,7 +14,8 @@
     "settings": "Settings",
     "experience": "Experience",
     "screening": "Screening",
-    "strategy": "Strategy Lab"
+    "strategy": "Strategy Lab",
+    "monitoring": "Monitoring"
   },
   "home": {
     "title": "Dashboard",
@@ -83,7 +84,9 @@
     "screening.not_found": "Screening run not found",
     "strategy.not_found": "Strategy not found",
     "strategy.unassemblable": "Cannot assemble yet",
-    "strategy.validation_blocked": "§47 gate: complete a backtest first"
+    "strategy.validation_blocked": "§47 gate: complete a backtest first",
+    "monitor.not_found": "Monitor not found",
+    "monitor.gate_blocked": "Monitor gate: only EXPERIMENTAL (validated) strategies"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -442,6 +445,32 @@
     "resultStatus": {
       "no_data": "no data (source failure shown)",
       "insufficient_samples": "insufficient samples"
+    }
+  },
+  "monitor": {
+    "pageHint": "Background strategy monitoring with three-way separation: observations (what the system saw), signals (what the rules produced), decisions (the research decision).",
+    "empty": "No monitors yet — use 建立盯盘 on a strategy detail page",
+    "universeLabel": "Universe {{count}}",
+    "lastRun": "Last run {{when}}",
+    "nextRun": "Next run {{when}}",
+    "active": "active",
+    "paused": "paused",
+    "runNow": "Run now",
+    "create": "Create monitor",
+    "observationsTitle": "Observations (what the system saw)",
+    "signalsTitle": "Signals (what the rules produced)",
+    "decisionsTitle": "Decisions (the research decision)",
+    "noRecords": "No records yet — run the monitor to collect",
+    "obsQuote": "Quote change",
+    "obsEvent": "Corporate event",
+    "obsNews": "News",
+    "decisionLabel": "Decision",
+    "confidence": "Confidence",
+    "rationale": "Rationale",
+    "asOf": "As of",
+    "decision": {
+      "research_review": "Review research",
+      "research_continue": "Keep observing"
     }
   }
 }

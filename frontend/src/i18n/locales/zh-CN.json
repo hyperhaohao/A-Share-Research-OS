@@ -14,7 +14,8 @@
     "settings": "设置",
     "experience": "经验卡",
     "screening": "智能选股",
-    "strategy": "策略实验室"
+    "strategy": "策略实验室",
+    "monitoring": "策略盯盘"
   },
   "home": {
     "title": "研究总览",
@@ -83,7 +84,9 @@
     "screening.not_found": "筛选运行不存在",
     "strategy.not_found": "策略不存在",
     "strategy.unassemblable": "尚不能组装策略",
-    "strategy.validation_blocked": "验证门槛：需先完成一次跨标的回测"
+    "strategy.validation_blocked": "验证门槛：需先完成一次跨标的回测",
+    "monitor.not_found": "盯盘不存在",
+    "monitor.gate_blocked": "盯盘门槛：仅 EXPERIMENTAL（已验证）策略可建立盯盘"
   },
   "watchlist": {
     "add": "添加关注",
@@ -441,6 +444,32 @@
     "resultStatus": {
       "no_data": "无数据（源失败显形）",
       "insufficient_samples": "样本不足"
+    }
+  },
+  "monitor": {
+    "pageHint": "后台运行策略盯盘：观察（系统看到什么）、信号（规则产生什么）、决策（研究决策）三分离。",
+    "empty": "暂无盯盘 —— 在策略详情页点击「建立盯盘」",
+    "universeLabel": "标的池 {{count}}",
+    "lastRun": "上次运行 {{when}}",
+    "nextRun": "下次运行 {{when}}",
+    "active": "运行中",
+    "paused": "已暂停",
+    "runNow": "立即运行",
+    "create": "建立盯盘",
+    "observationsTitle": "观察（系统观察到什么）",
+    "signalsTitle": "信号（策略规则产生什么）",
+    "decisionsTitle": "决策（最终研究决策）",
+    "noRecords": "暂无记录 —— 点击「立即运行」采集",
+    "obsQuote": "行情变化",
+    "obsEvent": "公司事件",
+    "obsNews": "新闻",
+    "decisionLabel": "决策",
+    "confidence": "置信度",
+    "rationale": "理由",
+    "asOf": "截至",
+    "decision": {
+      "research_review": "复核研究",
+      "research_continue": "继续观察"
     }
   }
 }

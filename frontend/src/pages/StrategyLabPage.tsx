@@ -198,6 +198,24 @@ export function StrategyDetailPage() {
       return body.backtest;
     },
   });
+  const monitorM = useMutation({
+    mutationFn: async () => {
+      const resp = await fetch("/api/v1/strategy-monitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ version_id: versionId }),
+      });
+      if (!resp.ok) {
+        const err = (await resp.json().catch(() => null)) as { error_code?: string } | null;
+        throw new Error(err?.error_code ?? "network.unreachable");
+      }
+      const body = (await resp.json()) as { monitor: { monitor_id: string } };
+      return body.monitor.monitor_id;
+    },
+    onSuccess: (monitorId: string) => {
+      window.location.assign(`/monitoring/${monitorId}`);
+    },
+  });
   const validateM = useMutation({
     mutationFn: async () => {
       const resp = await fetch(`/api/v1/strategies/${versionId}/validate`, {
@@ -217,11 +235,13 @@ export function StrategyDetailPage() {
     ? backtestQuery.data ?? null
     : strategy?.backtests[0] ?? null;
   const gateError =
-    backtestM.error instanceof Error
-      ? backtestM.error.message
-      : validateM.error instanceof Error
-        ? validateM.error.message
-        : null;
+    monitorM.error instanceof Error
+      ? monitorM.error.message
+      : backtestM.error instanceof Error
+        ? backtestM.error.message
+        : validateM.error instanceof Error
+          ? validateM.error.message
+          : null;
 
   if (detailQuery.isPending) {
     return (
@@ -275,6 +295,15 @@ export function StrategyDetailPage() {
       )}
 
       <div className="header-controls" data-testid="strategy-actions">
+        <button
+          type="button"
+          className="control-btn"
+          data-testid="monitor-create"
+          disabled={monitorM.isPending}
+          onClick={() => monitorM.mutate()}
+        >
+          {t("monitor.create")}
+        </button>
         <button
           type="button"
           className="control-btn"

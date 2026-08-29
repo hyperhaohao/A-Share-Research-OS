@@ -13,6 +13,7 @@ import { expect, test } from "@playwright/test";
  * E2E-10: card → validation workflow DAG → quant record (Phase D)
  * E2E-11: card → screening run → candidates with why-selected (Phase E)
  * E2E-12: screening → strategy → backtest → §47 gate (Phase F)
+ * E2E-13: strategy monitor with Observation/Signal/Decision separation (G)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -286,6 +287,41 @@ test.describe.serial("000831 product flow", () => {
     } else {
       // honest path: the source failure is disclosed on the block
       await expect(block.locator(".status-error").first()).toBeVisible();
+    }
+  });
+
+  test("E2E-13 strategy monitor separates observations, signals and decisions", async ({ page }) => {
+    // drive the chain to a strategy (same as E2E-12) and try to create a monitor
+    await page.goto("/reports");
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+    await page.getByTestId("screening-launch").click();
+    await page.waitForURL(/\/screening\/sr_[0-9a-f]+\?handoff=ho_/);
+    await expect(page.getByTestId("screening-candidate").first()).toBeVisible({ timeout: 60_000 });
+    await page.getByTestId("strategy-launch").click();
+    await page.waitForURL(/\/strategy\/strat_[0-9a-f]+\?handoff=ho_/);
+
+    // §47 gate: DRAFT strategy → the monitor creation is refused honestly
+    await page.getByTestId("monitor-create").click();
+    const gate = page.getByText("盯盘门槛");
+    const created = await gate
+      .waitFor({ timeout: 20_000 })
+      .then(() => false)
+      .catch(() => true);
+
+    if (created) {
+      // the version was EXPERIMENTAL → monitor page opened
+      await expect(page.getByTestId("monitor-detail")).toBeVisible();
+      await page.getByTestId("monitor-run").click();
+      // §24 three-way separation is visible as three distinct record sets
+      await expect(page.getByTestId("monitor-observations").getByText("行情变化").first())
+        .toBeVisible({ timeout: 60_000 });
+      await expect(page.getByTestId("monitor-decisions").getByText(/复核研究|继续观察/))
+        .toBeVisible({ timeout: 20_000 });
+      await expect(page.getByTestId("monitor-decisions").getByText("Research Decision")).toBeVisible();
+    } else {
+      // honest gate disclosure on the strategy page (source-dependent path)
+      await expect(page.getByTestId("strategy-detail")).toBeVisible();
     }
   });
 
