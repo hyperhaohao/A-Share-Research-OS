@@ -5,10 +5,10 @@
 open_with_context 信封进入标的研究上下文，上下文不丢失。
 
 诚实边界：
-  - 产业链上下游/同业关系源未接入 → 相关公司由「证据文本共现」推导
-    （真实、可溯源），peers 状态显式披露 pending_relationship_source；
-  - 官方宏观数据源未接入 → 全球视图当前为政策/宏观资讯层（真实资讯，
-    显式披露），绝不伪造利率/汇率数值。
+  - 产业地图：同业关系源（东财板块成员）接入；源不可用时回落到证据文本
+    共现并显式披露；
+  - 全球坐标：数值层（腾讯行情：指数/商品）+ 资讯层（政策/宏观）双源；
+    任一层不可用都显式披露，绝不伪造数值。
 """
 
 from __future__ import annotations
@@ -61,6 +61,7 @@ class GlobalContextSnapshotORM(Base):
     topic: Mapped[str] = mapped_column(String(64))
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     themes_json: Mapped[list] = mapped_column(JSON, default=list)
+    indicators_json: Mapped[list] = mapped_column(JSON, default=list)
     evidence_ids_json: Mapped[list] = mapped_column(JSON, default=list)
     disclosures_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -88,6 +89,7 @@ def _context_to_dict(row: GlobalContextSnapshotORM) -> dict:
         "topic": row.topic,
         "as_of": _ensure_utc(row.as_of).isoformat() if row.as_of else None,
         "themes": [dict(t) for t in (row.themes_json or [])],
+        "indicators": [dict(i) for i in (row.indicators_json or [])],
         "evidence_ids": list(row.evidence_ids_json or []),
         "disclosures": dict(row.disclosures_json or {}),
         "created_at": _ensure_utc(row.created_at).isoformat() if row.created_at else None,

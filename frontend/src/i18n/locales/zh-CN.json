@@ -495,7 +495,8 @@
     "title": "全球宏观坐标",
     "notReady": "全球坐标尚未生成 —— 先运行完整研究采集宏观资讯",
     "themesTitle": "宏观/政策主题（含官方机构提及标注）",
-    "openWorkspace": "带上下文打开工作台"
+    "openWorkspace": "带上下文打开工作台",
+    "indicatorsTitle": "全球宏观数值（指数/商品）"
   },
   "researchGraph": {
     "pageHint": "Phase A 起积累的产物与溯源关系：任一节点可上溯到研究运行、下探到验证。",

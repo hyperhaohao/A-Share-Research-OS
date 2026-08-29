@@ -496,7 +496,8 @@
     "title": "Global context",
     "notReady": "Global context not generated yet — run full research first",
     "themesTitle": "Macro/policy themes (official-body mentions flagged)",
-    "openWorkspace": "Open workspace with context"
+    "openWorkspace": "Open workspace with context",
+    "indicatorsTitle": "Global macro indicators (indices/commodities)"
   },
   "researchGraph": {
     "pageHint": "Artifacts and provenance edges accumulated since Phase A: trace any node up to runs and down to validations.",

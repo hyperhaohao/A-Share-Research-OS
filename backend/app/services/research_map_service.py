@@ -86,6 +86,39 @@ class ResearchMapService:
             if len(related) >= 12:
                 break
 
+        # 关系源（深度扩展 a）：东财行业板块成员（真实板块归属）。失败时
+        # 回落到证据文本共现并披露 —— 关系源不接通就如实说明。
+        relations_basis: str | None = None
+        try:
+            from app.services.evidence_collector import collect_capability_evidence
+
+            rel_outcome = collect_capability_evidence(
+                instrument_id, "industry_relations",
+                repo=evidence_repo,
+                params={"keyword": industry_label},
+            )
+            if rel_outcome.manifest.final_status in ("success", "partial"):
+                relations_basis = self._relations_basis(instrument_id, industry_label)
+        except Exception:  # noqa: BLE001 — relations source is optional, disclosed
+            relations_basis = None
+
+        if relations_basis is not None:
+            related = self._board_related(instrument_id, industry_label, relations_basis)
+            disclosures = {
+                "peers": f"eastmoney_board:{relations_basis}",
+                "note": (
+                    f"相关公司来自东财同业板块「{relations_basis}」成员（交易所公认的"
+                    "板块归属）；证据文本共现结果保留为交叉参考"
+                ),
+            }
+            cross_ref = related
+        else:
+            disclosures = {
+                "peers": "pending_relationship_source",
+                "note": "同业板块关系源不可用：相关公司由证据文本共现推导（真实共现，非既有关系）",
+            }
+            cross_ref = related
+
         now = datetime.now(timezone.utc)
         row = IndustryMapSnapshotORM(
             map_id=f"imap_{_short_hex()}",
@@ -94,17 +127,68 @@ class ResearchMapService:
             as_of=as_of,
             industry_chain_json=chain,
             main_business=(profile.metadata.get("main_business") or None),
-            related_instruments_json=related,
+            related_instruments_json=(cross_ref + related)[:20],
             evidence_ids_json=evidence_ids[:200],
-            disclosures_json={
-                "peers": "pending_relationship_source",
-                "note": "上下游/同业关系源未接入：相关公司由证据文本共现推导（真实共现，非既有关系）",
-            },
+            disclosures_json=disclosures,
             created_at=now,
         )
         snapshot = self._repo.add_map(row)
         self._register_map_artifact(snapshot)
         return snapshot
+
+    def _relations_basis(self, instrument_id: str, industry_label: str) -> str | None:
+        """Board name of the newest relations evidence for this industry."""
+        from app.domain.evidence import utc_now
+
+        evidence = EvidenceRepository(self._session).list_for_instrument(
+            instrument_id, visible_at=utc_now()
+        )
+        for e in reversed(evidence):
+            if (
+                e.evidence_type is EvidenceType.INDUSTRY_DATA
+                and (e.metadata or {}).get("industry_label") == industry_label
+                and (e.metadata or {}).get("board_name")
+            ):
+                return str(e.metadata["board_name"])
+        return None
+
+    def _board_related(self, instrument_id: str, industry_label: str, board_name: str) -> list[dict]:
+        """Members of the matched board → registry instruments (real identity
+        facts from the source; members already in the registry keep their
+        resolved names)."""
+        from app.domain.evidence import utc_now
+        from app.services.instrument_service import InstrumentService
+
+        evidence = EvidenceRepository(self._session).list_for_instrument(
+            instrument_id, visible_at=utc_now()
+        )
+        members: list[dict] = []
+        for e in reversed(evidence):
+            if (
+                e.evidence_type is EvidenceType.INDUSTRY_DATA
+                and (e.metadata or {}).get("industry_label") == industry_label
+                and (e.metadata or {}).get("board_name") == board_name
+            ):
+                members = list((e.metadata or {}).get("members") or [])
+                break
+        related: list[dict] = []
+        service = InstrumentService(self._session)
+        for member in members:
+            member_id = member.get("instrument_id")
+            if not member_id or member_id == instrument_id:
+                continue
+            profile = service.ensure_profile(member_id, allow_remote=False)
+            related.append(
+                {
+                    "instrument_id": member_id,
+                    "name": (profile.name if profile else member.get("name")) or member.get("code"),
+                    "code": member.get("code"),
+                    "basis": f"东财同业板块「{board_name}」成员",
+                }
+            )
+            if len(related) >= 12:
+                break
+        return related
 
     # -- 全球宏观视图 ------------------------------------------------------------------
 
@@ -116,10 +200,33 @@ class ResearchMapService:
         macro_items = [
             e for e in evidence if e.evidence_type is EvidenceType.MACRO_INDICATOR
         ]
-        if not macro_items:
+
+        # 数值层（深度扩展 b）：真实全球宏观数值（指数/商品），采集失败时
+        # 披露而不阻塞资讯层
+        indicators: list[dict] = []
+        numeric_source = "not_connected"
+        try:
+            from app.services.evidence_collector import collect_capability_evidence
+
+            macro_outcome = collect_capability_evidence(
+                instrument_id, "global_macro", repo=evidence_repo
+            )
+            if macro_outcome.manifest.final_status in ("success", "partial"):
+                numeric_source = "tencent_global_macro"
+                indicators = self._latest_indicators(instrument_id)
+        except Exception:  # noqa: BLE001 — numeric layer failure is disclosed
+            numeric_source = "unavailable"
+
+        if not macro_items and not indicators:
             raise KeyError("macro evidence not collected for this instrument")
 
-        as_of = max(e.available_time for e in macro_items)
+        macro_times = [e.available_time for e in macro_items]
+        indicator_times = []
+        for i in indicators:
+            raw_time = i.get("available_time")
+            if raw_time:
+                indicator_times.append(datetime.fromisoformat(raw_time))
+        as_of = max(macro_times + indicator_times)
         themes: list[dict] = []
         for e in macro_items:
             themes.append(
@@ -136,25 +243,59 @@ class ResearchMapService:
                 }
             )
         now = datetime.now(timezone.utc)
+        if indicators:
+            note = (
+                "宏观坐标 = 数值层（腾讯行情：指数/商品实时值）+ 资讯层"
+                "（政策/宏观资讯，含官方机构提及标注）；官方宏观统计源仍未接入"
+            )
+        else:
+            note = (
+                "官方宏观数值源未接入：当前为政策/宏观资讯层（真实资讯，"
+                "含官方机构提及标注）；利率/汇率等数值待官方源接入后补齐"
+            )
         row = GlobalContextSnapshotORM(
             snapshot_id=f"gctx_{_short_hex()}",
             instrument_id=instrument_id,
             topic=topic or "macro_policy",
             as_of=as_of,
             themes_json=themes[:50],
+            indicators_json=indicators[:20],
             evidence_ids_json=[e.evidence_id for e in macro_items][:200],
             disclosures_json={
-                "official_macro_source": "not_connected",
-                "note": (
-                    "官方宏观数值源未接入：当前为政策/宏观资讯层（真实资讯，"
-                    "含官方机构提及标注）；利率/汇率等数值待官方源接入后补齐"
-                ),
+                "numeric_source": numeric_source,
+                "note": note,
             },
             created_at=now,
         )
         snapshot = self._repo.add_context(row)
         self._register_context_artifact(snapshot)
         return snapshot
+
+    def _latest_indicators(self, instrument_id: str) -> list[dict]:
+        """Indicators from the newest global_macro evidence."""
+        evidence = EvidenceRepository(self._session).list_for_instrument(
+            instrument_id, visible_at=datetime.now(timezone.utc)
+        )
+        macro_numeric = [
+            e for e in evidence
+            if e.evidence_type is EvidenceType.MACRO_INDICATOR
+            and isinstance((e.metadata or {}).get("indicators"), list)
+        ]
+        if not macro_numeric:
+            return []
+        newest = max(macro_numeric, key=lambda e: e.available_time)
+        out = []
+        for item in newest.metadata["indicators"]:
+            if not isinstance(item, dict) or item.get("value") is None:
+                continue
+            out.append(
+                {
+                    **item,
+                    "available_time": newest.available_time.isoformat(),
+                    "evidence_id": newest.evidence_id,
+                }
+            )
+        return out
 
     # -- reads ----------------------------------------------------------------------
 

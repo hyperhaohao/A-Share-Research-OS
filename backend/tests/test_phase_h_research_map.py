@@ -68,10 +68,35 @@ def client():
     reset_runtime()
 
 
+RELATIONS_MEMBERS = {
+    "data": {
+        "diff": [
+            {"f12": "600111", "f14": "北方稀土"},
+            {"f12": "600392", "f14": "盛和资源"},
+            {"f12": "000831", "f14": "中国稀土"},
+        ]
+    }
+}
+
+
 def _run_pipeline(client, monkeypatch) -> dict:
     def fake_get(url, timeout=10.0, **kwargs):
         if "survey" in url or "jbzl" in url or "EM2016" in url or "F10" in url:
             return httpx.Response(200, json=INDUSTRY_JSON)
+        if "suggest" in url:
+            return httpx.Response(200, json={"QuotationCodeTable": {"Data": [
+                {"Code": "BK1626", "Name": "稀土", "MktNum": "90"},
+            ]}})
+        if "clist" in url:
+            return httpx.Response(200, json=RELATIONS_MEMBERS)
+        if "qt.gtimg" in url:
+            # both tencent shapes: stock (~) + futures (,)
+            return httpx.Response(200, content=(
+                'v_sh000001="1~上证指数~000001~3952.18~3956.57~3950.24~~~~~~'
+                + "~" * 25 + '~2026-08-28 17:15:59~~~~~~0.62~";'
+                'v_hf_GC="4503.37,-3.44,4503.80,4504.30,4688.00,4495.00,04:59:58,'
+                '4664.00,4656.00,0,4,2,2026-08-29,纽约黄金";'
+            ).encode("gbk"))
         return httpx.Response(200, content=RAW_OK.encode("gbk"))
 
     monkeypatch.setattr(httpx, "get", fake_get)
@@ -91,9 +116,19 @@ def test_industry_map_from_real_evidence(client, monkeypatch):
     data = resp.json()["industry_map"]
     assert data["instrument_id"] == "SZSE:000831"
     assert data["as_of"] is not None
-    assert data["disclosures"]["peers"] == "pending_relationship_source"
     if data["industry_chain"]:
         assert "稀土" in " → ".join(data["industry_chain"])
+    # relations source (深度扩展 a): real board members resolved to ids
+    if data["disclosures"]["peers"].startswith("eastmoney_board"):
+        related = {r["instrument_id"]: r for r in data["related_instruments"]}
+        assert "SSE:600111" in related  # 北方稀土, a real board member
+        assert related["SSE:600111"]["name"] == "北方稀土"
+        assert "东财同业板块" in related["SSE:600111"]["basis"]
+        # the subject itself is never listed as its own peer
+        assert "SZSE:000831" not in related
+    else:
+        # honest fallback: co-occurrence note still disclosed
+        assert data["disclosures"]["peers"] == "pending_relationship_source"
     # artifact registered and linked generated_from the report
     artifacts = client.get(
         "/api/v1/artifacts", params={"artifact_type": "industry_map"}
@@ -123,6 +158,18 @@ def test_global_context_from_real_macro_evidence(client, monkeypatch):
     for theme in data["themes"]:
         assert theme["evidence_id"]
         assert theme["available_time"]
+
+    # numeric layer (深度扩展 b): real indicator values parsed from the feed
+    indicators = data["indicators"]
+    assert len(indicators) >= 2
+    by_code = {i["code"]: i for i in indicators}
+    assert by_code["sh000001"]["value"] == 3952.18
+    assert by_code["sh000001"]["market_time"] == "2026-08-28 17:15:59"
+    assert by_code["hf_GC"]["value"] == 4503.37
+    assert by_code["hf_GC"]["change"] == -3.44
+    # every indicator carries its evidence provenance
+    assert all(i["evidence_id"] for i in indicators)
+    assert data["disclosures"]["numeric_source"] == "tencent_global_macro"
 
     artifacts = client.get(
         "/api/v1/artifacts", params={"artifact_type": "global_context"}

@@ -17,6 +17,10 @@ from app.sources.providers.capital_industry import (
 )
 from app.sources.providers.eastmoney_financials import EastmoneyFinancialsProvider
 from app.sources.providers.eastmoney_kline import EastmoneyKlineProvider
+from app.sources.providers.eastmoney_industry_relations import (
+    EastmoneyIndustryRelationsProvider,
+)
+from app.sources.providers.tencent_global_macro import TencentGlobalMacroProvider
 from app.sources.providers.eastmoney_quote import EastmoneyQuoteProvider
 from app.sources.providers.news import (
     EastmoneyMacroPolicyProvider,
@@ -49,6 +53,8 @@ class SourceRuntime:
             self.registry.register(EastmoneyCapitalFlowProvider())
         if not self.registry.providers_for("industry"):
             self.registry.register(EastmoneyIndustryProvider())
+            self.registry.register(EastmoneyIndustryRelationsProvider())
+            self.registry.register(TencentGlobalMacroProvider())
         if not self.registry.providers_for("macro_policy"):
             self.registry.register(EastmoneyMacroPolicyProvider())
         if not self.registry.providers_for("historical_data"):

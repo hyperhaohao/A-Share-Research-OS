@@ -52,6 +52,12 @@ _SOURCE_MAPPINGS: dict[str, tuple[EvidenceType, FactStatus, AuthorityLevel]] = {
     "eastmoney_industry": (
         EvidenceType.INDUSTRY_DATA, FactStatus.CONFIRMED_FACT, AuthorityLevel.C1,
     ),
+    "eastmoney_industry_relations": (
+        EvidenceType.INDUSTRY_DATA, FactStatus.CONFIRMED_FACT, AuthorityLevel.C1,
+    ),
+    "tencent_global_macro": (
+        EvidenceType.MACRO_INDICATOR, FactStatus.CONFIRMED_FACT, AuthorityLevel.B2,
+    ),
     "eastmoney_kline": (
         EvidenceType.MARKET_QUOTE, FactStatus.CONFIRMED_FACT, AuthorityLevel.B2,
     ),

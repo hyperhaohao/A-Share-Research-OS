@@ -80,11 +80,21 @@ interface IndustryMap {
   disclosures: Record<string, string>;
 }
 
+interface MacroIndicator {
+  code: string;
+  name: string;
+  value: number | null;
+  change: number | null;
+  market_time: string;
+  available_time: string;
+}
+
 interface GlobalContext {
   snapshot_id: string;
   instrument_id: string;
   topic: string;
   as_of: string | null;
+  indicators: MacroIndicator[];
   themes: Array<{
     title: string;
     topic: string | null;
@@ -230,6 +240,31 @@ export function GlobalContextPage() {
       <p className="secondary" data-testid="global-context-disclosure">
         {data.disclosures.note}
       </p>
+      {data.indicators.length > 0 && (
+        <section className="card" data-testid="global-indicators">
+          <h2>{t("globalContext.indicatorsTitle")}</h2>
+          <div className="task-grid">
+            {data.indicators.map((ind) => (
+              <span key={ind.code}>
+                {ind.name}
+                <span className="mono">
+                  {" "}
+                  {ind.value}
+                  {ind.change != null ? (
+                    <span className={ind.change >= 0 ? "pct-up" : "pct-down"}>
+                      {" "}
+                      {ind.change >= 0 ? "+" : ""}
+                      {ind.change.toFixed(2)}%
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="card">
         <h2>{t("globalContext.themesTitle")}</h2>
         <ul className="watch-list">
