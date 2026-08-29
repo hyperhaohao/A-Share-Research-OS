@@ -112,10 +112,17 @@
 - [x] E2E-13
 - [x] 注：新公告/新闻/资金/宏观观察源按数据可用性逐项接入（v1 行情变化+公司事件）
 
-## Phase H — 产业研究地图 + 全球宏观（DOING）
-- [ ] 产业链示图 + 宏观指标视图（Research Inputs，§76）
-- [ ] open_with_context 衔接（视图 → 标的研究上下文不丢失）
-- [ ] E2E-14
+## Phase H — 产业研究地图 + 全球宏观（DONE v1）
+- [x] 产业链示图 + 宏观资讯主题视图（Research Inputs，§76）
+- [x] open_with_context 衔接（视图 → 标的研究上下文不丢失）
+- [x] E2E-14
+- [x] 注：上下游/同业关系源与官方宏观数值源未接入（视图内显式披露），
+      接入后视图自动补全
+
+## Phase I — 全库研究图谱（DOING）
+- [ ] Global Graph UI + Lineage Explorer（§78，Artifact/Edge 已持续积累）
+- [ ] 跨模块 Handoff 可视化
+- [ ] E2E-15
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

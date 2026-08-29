@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C/D/E/F/G(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室 + 策略盯盘，
-E2E 13/13 于 compose 栈）。当前执行线：Phase H（产业研究地图+全球宏观，总纲 §76）
+V2 Phase A/B/C/D/E/F/G/H(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室 + 盯盘 + 产业/宏观研究输入，
+E2E 14/14 于 compose 栈）。当前执行线：Phase I（全库研究图谱，总纲 §78）
 ```
 
 ## Completed
@@ -21,6 +21,19 @@ E2E 13/13 于 compose 栈）。当前执行线：Phase H（产业研究地图+�
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase H v1（本轮，DONE）：
+  - 后端：industry_map_snapshots/global_context_snapshots 表
+    （迁移 c7d8e9f0a1b2）；两视图由真实证据组装：产业链/主业来自
+    eastmoney_industry 证据；相关公司=证据文本与注册表名称共现（真实
+    共现，basis 显式标注，关系源未接入显式披露）；全球坐标=macro_policy
+    证据主题（含官方机构提及标注），「官方宏观数值源未接入」显式披露；
+    PIT as_of 取证据时间；artifact industry_map/global_context 注册并
+    generated_from 报告；handoff 注册两视图 → workspace:open_with_context
+  - 前端：/industry-map 与 /global-context 视图页（非孤立 Dashboard：
+    open_with_context 回工作台带信封）；工作台头部入口链接；
+    industryMap./globalContext. 全量本地化
+  - E2E-14：工作台 → 产业地图（产业链或诚实未生成）→ 带上下文回到
+    同一标的工作台 → 全球坐标披露断言
 Phase G v1（本轮，DONE）：
   - 后端：strategy_monitors/observations/signals/decisions 四表
     （迁移 b6c7d8e9f0a1）；create_monitor 门槛=EXPERIMENTAL（§47 衔接，
@@ -117,18 +130,18 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase H 产业研究地图 + 全球宏观（总纲 §76）：产业链示图 + 宏观指标
-   视图作为 Research Inputs（非孤立 Dashboard）；handoff 节点
-   open_with_context 衔接；Phase H 完成定义：从产业/宏观视图进入标的
-   研究上下文不丢失的产品 E2E（E2E-14）。
+1. Phase I 全库研究图谱（总纲 §78）：Global Graph UI + Lineage Explorer
+   （Artifact/Edge 自 Phase A 起持续积累）；跨模块 Handoff 可视化；
+   Phase I 完成定义：全库图谱页可从任一节点溯源到证据层且可跳转的
+   产品 E2E（E2E-15）。
 ```
 
 ## Tests
 
 ```text
-backend: 335 passed（+ Phase G monitor 3 测试：三分离/门槛/Scheduler 集成）
+backend: 338 passed（+ Phase H research map 3 测试：真实证据组装/宏观披露/诚实拒绝）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 13/13 passed（E2E-01…13，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 14/14 passed（E2E-01…14，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -146,6 +159,12 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase H（本轮真机，000831，E2E-14 + compose API 实测）：
+  产业地图：industry_chain/主业由真实 industry_profile 证据组装，
+  artifact generated_from 报告，二次读取复用快照 PASS（compose 实测
+  imap_25abb0fd0fa4 + by-domain 解析 + handoff 201）
+  全球坐标：政策主题含官方机构提及，数值源未接入显式披露 PASS
+  视图 → open_with_context → 同标的工作台（上下文不丢失）PASS
 Phase G（本轮真机，000831，E2E-13 + compose API 实测）：
   盯盘门槛：DRAFT 版本 422 拒绝显形 PASS
   三分离记录落库且互相引用（观察引用真实行情证据，决策引用全部观察/信号）PASS
