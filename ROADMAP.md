@@ -33,8 +33,8 @@
 | Phase | 内容 | 状态 |
 |-------|------|------|
 | A | 统一研究基础协议（Artifact/Provenance/Context/Handoff/RunEvent 持久化；Registry+本地化已由 PW0 计入） | DONE |
-| B | AI 研究中枢 + 报告 Handoff | DOING |
-| C | 研究经验卡（原炼验用） | PLANNED |
+| B | AI 研究中枢 + 报告 Handoff | DONE |
+| C | 研究经验卡（原炼验用） | DOING |
 | D | 研究验证工作流（强类型 DAG） | PLANNED |
 | E | 智能选股（Why Selected） | PLANNED |
 | F | 策略实验室 | PLANNED |

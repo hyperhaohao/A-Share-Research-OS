@@ -76,10 +76,16 @@
       ReportCard 研究脉络 lineage；Playwright E2E-07（7/7 绿）
 - [x] 代码审查修复（from-report 标题覆盖 / run-now 失败标记 / 回放排序 / 导入）
 
-## Phase B — AI 研究中枢 + 报告 Handoff（DOING）
-- [ ] ResearchCommandCenter（计划/运行中/产物三栏，§38）
-- [ ] ResearchPlan + ConversationSession（先只控制 Search/Pipeline/Report/
+## Phase B — AI 研究中枢 + 报告 Handoff（DONE）
+- [x] ResearchCommandCenter（计划/运行中/产物三栏，§38）
+- [x] ResearchPlan + ConversationSession（先只控制 Search/Pipeline/Report/
       Continuous Research/Prediction，§87）
+- [x] §42 闭环产品 E2E（E2E-08）：对话→计划→管线→产物→打开报告
+
+## Phase C — 研究经验卡（DOING）
+- [ ] ExperienceCard 模型 + Draft/Refine/Validate/Approve（§72）
+- [ ] 报告页「炼成经验卡」CTA（走 handoff 信封 report→experience，§43）
+- [ ] 卡片保留 report_version_id/claim_ids/evidence_ids；E2E-09
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

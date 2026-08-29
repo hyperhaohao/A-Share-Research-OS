@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-PW0–PW3 DONE（E2E 7/7 绿）+ V2 Phase A 全部 DONE（§84 文档 + §85 代码 + 前端收尾）
-当前执行线：Phase B（AI 研究中枢：三栏总控台 + ResearchPlan + ConversationSession）
+V2 Phase A DONE + Phase B DONE（AI 研究中枢三栏 + ResearchPlan + ConversationSession，
+E2E-08 实跑对话闭环 8/8 绿）。当前执行线：Phase C（研究经验卡，总纲 §72）
 （compose 栈重建因 Docker Desktop 引擎故障暂挂，见 Open Issues #7）
 ```
 
@@ -22,6 +22,16 @@ PW0–PW3 DONE（E2E 7/7 绿）+ V2 Phase A 全部 DONE（§84 文档 + §85 代
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase B（本轮，DONE）：
+  - 后端：command_sessions/command_turns/research_plans 表 + ConversationRepository
+    （迁移 c9d0e1f2a3b4）；ResearchCommander 确定性意图解析（代码正则+注册表名
+    匹配，识别不了显式拒绝）；按意图生成结构化 ResearchPlan（完整研究/持续研究/
+    预测三意图）；逐步执行器（步骤状态/产物引用/失败落计划）；§42 闭环：
+    对话→ResearchRun→ReportVersion→Artifact→报告链接
+  - 前端：HomePage 重构为三栏中枢（左 当前计划/正在运行/最近研究；中 直接驱动
+    +对话面板；右 当前研究产物+待验证预测）；commander.* 全量本地化
+  - E2E-08：对话「研究中国稀土…」→ 计划步骤实时可见 → 管线真实运行 →
+    右栏产物「打开报告」→ 报告页（§42 全闭环）
 Phase A 收尾（本轮，DONE）：
   - 前端 shared/context.ts + handoff.ts + instrument.ts（URL 编解码/信封/身份 hook 唯一入口）
   - 报告→生成预测 CTA 走 Handoff 信封（创建→解析 report artifact→POST /handoffs→
@@ -50,20 +60,21 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ```text
 0. compose 栈重建（外部阻塞解除后）：修复 Docker Desktop（引擎 API 500/无法启动，
    需人工查看其 GUI 报错/更新）→ docker compose up -d --build → :8000 冒烟
-   （by-domain 404/200、43 事件回放、lineage）→ :8080 产品冒烟；
-1. 进入 Phase B：ResearchCommandCenter 计划/运行中/产物三栏（§38）+
-   ResearchPlan + ConversationSession（先只控制 Search/Pipeline/Report/
-   Continuous Research/Prediction，总纲 §87）；
-2. Phase B 完成定义：000831 在三栏中完成 计划→运行→产物 全流程的产品 E2E。
+   （by-domain 404/200、command/plans、43 事件回放、lineage）→ :8080 产品冒烟；
+1. Phase C 研究经验卡（总纲 §72/§43）：ReportVersion → ExperienceCard Draft →
+   Refine → Validate → Approve；handoff 注册 report→experience:
+   create_experience_draft（复用 Phase A 信封与 shared/handoff.ts）；
+   Phase C 完成定义：报告页 → 炼成经验卡 → 卡片可版本化并保留
+   report_version_id/claim_ids/evidence_ids 的产品 E2E（E2E-09）。
 ```
 
 ## Tests
 
 ```text
-backend: 306 passed（新增 by-domain 路由测试）
+backend: 312 passed（+ Phase B command 6 测试：解析/拒绝/闭环/预测/无报告失败）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 7/7 passed（E2E-01…07，真实浏览器+真实源；
-     本轮跑在新后端 :8001（本地 uvicorn+迁移）+ 新前端 vite，见 Open Issues #7）
+e2e: Playwright 产品 E2E 8/8 passed（E2E-01…08，真实浏览器+真实源；
+     本地栈 :8001(新后端)+:5173(新前端 vite)，见 Open Issues #7）
 ```
 
 ## Live Verification（本轮实测）
@@ -71,6 +82,10 @@ e2e: Playwright 产品 E2E 7/7 passed（E2E-01…07，真实浏览器+真实源�
 ```text
 产品流（PW）：000831 搜索/名称解析/Watchlist 直加/重启持久/SSE 实时阶段/
 报告卡片/生成预测/预测卡片/总控台 —— 全 PASS（另 Playwright 6/6 回归）
+Phase B（本轮真机，000831，E2E-08 实测）：
+  对话一句话 → 结构化计划三步可见 → 管线真实完成 → 右栏产物出现报告
+  （业务标题，无 rpt_ 裸 id）→ 点击「打开报告」进入报告页 PASS
+  无法识别标的 → 显式拒绝回复（不留死计划）PASS（单测覆盖）
 Phase A 收尾（本轮真机，000831）：
   E2E-05 生成预测落库 handoff 信封，URL 携 handoff=ho_*&context=ctx_* PASS
   E2E-07 报告「研究脉络」：上游 报告版本(派生自)←研究运行(产出)；
