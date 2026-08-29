@@ -108,3 +108,28 @@ def test_instrument_overview_view_aggregates(client, monkeypatch):
 def test_overview_unknown_instrument_is_404(client):
     resp = client.get("/api/v1/views/instruments/SZSE:999999/overview")
     assert resp.status_code == 404
+
+
+def test_command_center_report_library_continuous_prediction_views(client, monkeypatch):
+    _research_flow(client, monkeypatch)
+
+    cc = client.get("/api/v1/views/command-center").json()["view"]
+    assert "running_runs" in cc and "recent_runs" in cc
+    assert "current_plan" in cc and "recent_plans" in cc
+    assert "names" in cc and cc["generated_at"]
+    # 000831 succeeded run lands in recent_runs with a business name available
+    assert any(r["instrument_id"] == "SZSE:000831" for r in cc["recent_runs"])
+    assert cc["names"]["SZSE:000831"]["name"] == "中国稀土"
+
+    lib = client.get("/api/v1/views/report-library").json()
+    assert lib["count"] >= 1
+    row = lib["results"][0]
+    assert row["name"] == "中国稀土"
+    assert row["judgment"] == "up"
+
+    tasks = client.get("/api/v1/views/continuous-research").json()
+    assert tasks["count"] == 0  # none created in this flow
+
+    preds = client.get("/api/v1/views/prediction-review").json()
+    assert preds["count"] == 0
+    assert preds["kpi"]["direction_accuracy"] is None

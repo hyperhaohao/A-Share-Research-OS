@@ -16,7 +16,16 @@
     "screening": "Screening",
     "strategy": "Strategy Lab",
     "monitoring": "Monitoring",
-    "researchGraph": "Research Graph"
+    "researchGraph": "Research graph",
+    "group.research": "Research",
+    "group.validation": "Validation",
+    "group.strategy": "Strategy",
+    "group.knowledge": "Knowledge",
+    "group.system": "System",
+    "industryMap": "Industry map",
+    "globalContext": "Global context",
+    "workflows": "Validation workflows",
+    "sourceHealth": "Source health"
   },
   "home": {
     "title": "Dashboard",
@@ -501,7 +510,8 @@
     "relatedTitle": "Related companies (evidence co-occurrence)",
     "noRelated": "No co-occurring companies yet — evidence accumulates with research",
     "openWorkspace": "Open workspace with context",
-    "disclosure": "Related companies are derived from evidence co-occurrence; no relationship source yet"
+    "disclosure": "Related companies are derived from evidence co-occurrence; no relationship source yet",
+    "noInstrument": "Watchlist is empty — follow an instrument first"
   },
   "globalContext": {
     "title": "Global context",
@@ -520,5 +530,38 @@
     "upstream": "Upstream",
     "downstream": "Downstream",
     "openArtifact": "Open artifact"
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  },
+  "workflows": {
+    "pageHint": "Validation workflow runs initiated from experience cards.",
+    "emptyTitle": "No validation workflows yet.",
+    "emptyHint": "Create one from an experience card.",
+    "emptyAction": "Open experience cards",
+    "statusLabel": "Status"
+  },
+  "sourceHealth": {
+    "provider": "Provider",
+    "capability": "Capability",
+    "status": "Status",
+    "failures": "Consecutive failures",
+    "lastAttempt": "Last attempt",
+    "statusSuccess": "OK",
+    "statusFailure": "Failed",
+    "statusParse": "Parse error",
+    "statusTimeout": "Timeout",
+    "statusNetwork": "Network error",
+    "statusUnavailable": "Unavailable",
+    "statusAuth": "Auth error",
+    "statusNoData": "No data",
+    "statusPartial": "Partial",
+    "statusUnknown": "Unknown"
+  },
+  "reports": {
+    "emptyTitle": "No research reports yet.",
+    "emptyHint": "Run a full research first.",
+    "emptyAction": "Research now"
   }
 }

@@ -9,7 +9,8 @@ import type { LanguagePreference } from "../i18n";
  * <select> each, not three side-by-side buttons. ThemeProvider /
  * LanguageProvider / localStorage / prefers-color-scheme logic is unchanged.
  */
-export function AppearanceControls() {
+export function AppearanceControls({ stacked = false }: { stacked?: boolean }) {
+  void stacked; // sidebar footer renders vertically via CSS container
   const { t } = useTranslation();
   const { preference, setPreference } = useTheme();
 
@@ -38,7 +39,8 @@ export function AppearanceControls() {
   );
 }
 
-export function LanguageControls() {
+export function LanguageControls({ stacked = false }: { stacked?: boolean }) {
+  void stacked; // sidebar footer renders vertically via CSS container
   const { t } = useTranslation();
   const { preference, setPreference } = useLanguage();
 

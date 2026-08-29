@@ -67,6 +67,11 @@ test.describe.serial("000831 product flow", () => {
   });
 
   test("E2E-04 task create, run now, delete keeps history", async ({ page }) => {
+    // self-clean: leftover tasks from earlier failed runs would break count=0
+    const existing = await page.request.get("/api/v1/tasks");
+    for (const t of ((await existing.json()) as Array<{ task_id: string; status: string }>).results) {
+      if (t.status !== "running") await page.request.delete(`/api/v1/tasks/${t.task_id}`);
+    }
     await page.goto("/tasks?instrument=SZSE%3A000831");
     const form = page.locator("form.search-form");
     await form.getByLabel("任务类型").selectOption("prediction_validation");

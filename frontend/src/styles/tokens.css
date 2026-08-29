@@ -17,9 +17,13 @@
   --color-bg: #f7f6f2;
   --color-bg-elevated: #ffffff;
   --color-surface: #f1efe9;
+  --color-surface-subtle: #edeae1;
   --color-border: #d9d5cb;
+  --color-border-strong: #b8b2a4;
   --color-text: #1d1c18;
   --color-text-secondary: #6d685c;
+  --color-text-tertiary: #98917f;
+  --color-text-inverted: #ffffff;
 
   --color-positive: #c23a2f; /* CN: 上涨=红 */
   --color-negative: #2e7d54; /* CN: 下跌=绿 */
@@ -29,6 +33,8 @@
   --color-accent: #8a6f3f;
 
   --shadow: 0 1px 3px rgba(29, 28, 24, 0.12);
+  --shadow-sm: 0 1px 2px rgba(29, 28, 24, 0.1);
+  --shadow-md: 0 2px 8px rgba(29, 28, 24, 0.14);
 }
 
 :root[data-theme="dark"] {
@@ -37,9 +43,13 @@
   --color-bg: #14130f;
   --color-bg-elevated: #201e18;
   --color-surface: #2a2820;
+  --color-surface-subtle: #232119;
   --color-border: #3d3a30;
+  --color-border-strong: #55503f;
   --color-text: #ece7d9;
   --color-text-secondary: #a09a8a;
+  --color-text-tertiary: #7a745f;
+  --color-text-inverted: #ffffff;
 
   --color-positive: #e0705f; /* CN: 上涨=红（暗色调提亮） */
   --color-negative: #5ba47e; /* CN: 下跌=绿（暗色调提亮） */
@@ -49,6 +59,28 @@
   --color-accent: #d4ad6f;
 
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Spacing / Radius / Typography（任务书 §7 正式 token） ===== */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-xs: 12px;
+  --font-sm: 13px;
+  --font-md: 14px;
+  --font-lg: 16px;
+  --font-xl: 22px;
 }
 
 /* International convention: flip up/down semantics only. */

@@ -12,6 +12,14 @@ import {
 } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
 
+interface TaskInstrument {
+  instrument_id: string;
+  name: string | null;
+  code: string;
+  exchange: string | null;
+  board: string | null;
+}
+
 interface TaskItem {
   task_id: string;
   instrument_id: string;
@@ -23,17 +31,13 @@ interface TaskItem {
   attempts: number;
   last_run_at: string | null;
   next_run_at: string | null;
-}
-
-interface Profile {
-  code: string;
-  name: string;
-  exchange: string;
-  board: string;
+  instrument?: TaskInstrument | null;
+  latest_report?: { report_id: string; created_at: string | null } | null;
 }
 
 async function fetchTasks(): Promise<TaskItem[]> {
-  const resp = await fetch("/api/v1/tasks");
+  // UX Foundation: single aggregated request (identity + latest report)
+  const resp = await fetch("/api/v1/views/continuous-research");
   if (!resp.ok) throw new Error("network.unreachable");
   const body = await resp.json();
   return body.results;
@@ -77,43 +81,17 @@ async function runNow(taskId: string): Promise<void> {
 }
 
 /** Identity lookup reused by every task card (registry-backed, cheap). */
-function useProfile(instrumentId: string | null): Profile | null {
-  const { data } = useQuery({
-    queryKey: ["instrument", instrumentId],
-    enabled: instrumentId != null,
-    staleTime: 60000,
-    queryFn: async () => {
-      const resp = await fetch(`/api/v1/instruments/${encodeURIComponent(instrumentId ?? "")}`);
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return body.instrument as Profile;
-    },
-  });
-  return data ?? null;
-}
-
 function TaskCard({ task }: { task: TaskItem }) {
   const { t, i18n } = useTranslation();
   const lang = uiLang(i18n.language);
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const profile = useProfile(task.instrument_id);
+  // UX Foundation: identity + latest report come from /views/continuous-research
+  const profile = task.instrument;
+  const latestReport = task.latest_report;
 
-  const reportQuery = useQuery({
-    queryKey: ["reports", task.instrument_id],
-    queryFn: async (): Promise<{ report_id: string; created_at: string | null } | null> => {
-      const resp = await fetch(
-        `/api/v1/reports?instrument_id=${encodeURIComponent(task.instrument_id)}`,
-      );
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return (body.results?.[0] as { report_id: string; created_at: string | null }) ?? null;
-    },
-  });
-  const latestReport = reportQuery.data;
-
-  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ["continuous-research-view"] });
 
   const runMutation = useMutation({
     mutationFn: () => runNow(task.task_id),
@@ -236,7 +214,7 @@ export function TasksPage() {
   }, [searchParams]);
 
   const tasksQuery = useQuery({
-    queryKey: ["tasks"],
+    queryKey: ["continuous-research-view"],
     queryFn: fetchTasks,
     refetchInterval: 5000,
   });
@@ -252,7 +230,8 @@ export function TasksPage() {
       createTask({ instrument: instrument.trim(), task_type: taskType, schedule }),
     onSuccess: () => {
       setInstrument("");
-      void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["continuous-research-view"] });
+      queryClient.invalidateQueries({ queryKey: ["continuous-research-view"] });
     },
   });
 
@@ -261,7 +240,7 @@ export function TasksPage() {
       const resp = await fetch("/api/v1/tasks/scheduler/tick", { method: "POST" });
       return resp.json();
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["continuous-research-view"] }),
   });
 
   const onSubmit = (e: React.FormEvent) => {

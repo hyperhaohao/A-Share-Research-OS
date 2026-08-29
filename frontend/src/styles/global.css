@@ -349,10 +349,10 @@
 
 .control-select {
   padding: 4px 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: var(--bg-card, transparent);
-  color: var(--text);
+  background: var(--color-bg-elevated, transparent);
+  color: var(--color-text);
   font-family: inherit;
   font-size: 0.875rem;
   cursor: pointer;
@@ -392,11 +392,11 @@
 }
 
 .stage-warn {
-  color: #b8860b;
+  color: var(--color-warning);
 }
 
 .stage-missing {
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary);
 }
 
 .stage-fail {
@@ -404,7 +404,7 @@
 }
 
 .stage-wait {
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary);
 }
 
 /* --- PW2: research cards ---------------------------------------------------- */
@@ -433,7 +433,7 @@
 .watch-card-name {
   font-weight: 600;
   font-size: 1.05rem;
-  color: var(--text);
+  color: var(--color-text);
   text-decoration: none;
 }
 
@@ -463,7 +463,7 @@
 }
 
 .task-grid > span:nth-child(odd) {
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary);
 }
 
 .prediction-create {
@@ -497,13 +497,13 @@
 
 /* Report lineage disclosure (V2 Phase A / E2E-07) */
 .report-lineage {
-  margin-top: var(--space-2, 8px);
+  margin-top: var(--space-2);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .lineage-body {
-  border-top: 1px solid var(--color-border, #ddd);
+  border-top: 1px solid var(--color-border);
   padding-top: 8px;
   display: flex;
   flex-direction: column;
@@ -555,11 +555,11 @@
   font-size: 12px;
   padding: 1px 6px;
   border-radius: 8px;
-  background: var(--color-border, #ddd);
+  background: var(--color-border);
 }
-.plan-step.stage-done .plan-step-status { background: var(--color-info, #3b82f6); color: #fff; }
-.plan-step.stage-running .plan-step-status { background: var(--color-warning, #f59e0b); color: #fff; }
-.plan-step.stage-failed .plan-step-status { background: var(--color-danger, #ef4444); color: #fff; }
+.plan-step.stage-done .plan-step-status { background: var(--color-info); color: var(--color-text-inverted); }
+.plan-step.stage-running .plan-step-status { background: var(--color-warning); color: var(--color-text-inverted); }
+.plan-step.stage-failed .plan-step-status { background: var(--color-danger); color: var(--color-text-inverted); }
 
 .conversation-turns {
   display: flex;
@@ -573,18 +573,18 @@
   max-width: 88%;
   padding: 8px 12px;
   border-radius: 12px;
-  border: 1px solid var(--color-border, #ddd);
+  border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 .turn-bubble.user {
   align-self: flex-end;
-  background: var(--color-accent-soft, #eef2ff);
+  background: var(--color-surface-subtle);
 }
 .turn-bubble.commander {
   align-self: flex-start;
-  background: var(--color-surface-2, #f8fafc);
+  background: var(--color-surface);
 }
 .turn-time { font-size: 11px; }
 .conversation-input {
@@ -597,7 +597,181 @@
 }
 .plan-result {
   margin-top: 8px;
-  border-top: 1px solid var(--color-border, #ddd);
+  border-top: 1px solid var(--color-border);
   padding-top: 8px;
 }
 .artifacts-hint { font-size: 12px; }
+
+/* ===== UI1 App Shell / Sidebar / Layout System（任务书 §5/§6） ===== */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.app-shell.shell-collapsed .sidebar {
+  width: 64px;
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.brand-link {
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: var(--font-lg);
+}
+.sidebar-collapse {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-md);
+  padding: 2px 6px;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-2);
+}
+.sidebar-group-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  text-align: left;
+}
+.sidebar-link {
+  display: block;
+  padding: var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-link.sub {
+  padding-left: var(--space-4);
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary);
+}
+.sidebar-link.active {
+  background: var(--color-surface-subtle);
+  color: var(--color-text);
+  font-weight: 600;
+}
+.sidebar-link:hover {
+  background: var(--color-surface-subtle);
+}
+.app-shell.shell-collapsed .sidebar-label,
+.app-shell.shell-collapsed .group-caret {
+  display: none;
+}
+.sidebar-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.shell-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== Layout System（§6：Reading / Workspace / CommandCenter / Canvas） ===== */
+.layout-reading {
+  max-width: 1040px;
+}
+.layout-workspace {
+  max-width: 1480px;
+}
+.layout-command {
+  max-width: 1680px;
+}
+.layout-canvas {
+  max-width: none;
+  width: 100%;
+}
+@media (max-width: 1200px) {
+  .app-shell:not(.shell-collapsed) .sidebar {
+    width: 180px;
+  }
+}
+
+/* ===== UI3 Semantic components（任务书 §8/§44） ===== */
+.status-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  border: 1px solid var(--color-border);
+}
+.status-badge.tone-ok { background: transparent; color: var(--color-positive); border-color: var(--color-positive); }
+.status-badge.tone-error { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
+.status-badge.tone-warning { background: transparent; color: var(--color-warning); border-color: var(--color-warning); }
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.section-header h2 { margin: 0; font-size: var(--font-lg); }
+.empty-state, .error-state {
+  padding: var(--space-5);
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  margin: var(--space-4) 0;
+}
+.technical-details summary {
+  cursor: pointer;
+  font-size: var(--font-xs);
+}
+.technical-details {
+  margin-top: var(--space-2);
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+.data-table th, .data-table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.data-table th {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}

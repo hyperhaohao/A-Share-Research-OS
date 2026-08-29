@@ -8,104 +8,82 @@ import { useInstrumentName } from "../shared/instrument";
 import { formatGate, uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
 
-interface ReportSummary {
+/**
+ * 报告库（UX Foundation / 任务书 §19）：单请求消费 /views/report-library，
+ * 名称与研究判断由后端 Read Model 装配（N+1 与前端自算 Stance 已消除）。
+ */
+
+interface ReportRowView {
   report_id: string;
   instrument_id: string;
-  snapshot_id: string;
-  language: string;
-  gate_status: string;
+  name: string | null;
+  code: string | null;
+  judgment: string | null;
+  confidence: number | null;
   created_at: string | null;
-  latest_version_no: number;
+  gate_status: string;
 }
 
-interface ThesisSummary {
-  thesis_id: string;
-  supporting_claims: string[];
-  opposing_claims: string[];
-}
-
-async function fetchReports(): Promise<ReportSummary[]> {
-  const resp = await fetch("/api/v1/reports");
+async function fetchReportLibrary(): Promise<ReportRowView[]> {
+  const resp = await fetch("/api/v1/views/report-library");
   if (!resp.ok) throw new Error("network.unreachable");
-  const body = await resp.json();
+  const body = (await resp.json()) as { results: ReportRowView[] };
   return body.results;
 }
 
-/** 研究判断 derived from the snapshot's own thesis claim counts. */
-function useJudgment(instrumentId: string | null, snapshotId: string | null) {
-  const { data } = useQuery({
-    queryKey: ["judgment", instrumentId, snapshotId],
-    enabled: instrumentId != null && snapshotId != null,
-    staleTime: 60000,
-    queryFn: async (): Promise<ThesisSummary | null> => {
-      const params = new URLSearchParams({ instrument_id: instrumentId ?? "" });
-      if (snapshotId) params.set("snapshot_id", snapshotId);
-      const resp = await fetch(`/api/v1/theses?${params.toString()}`);
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return (body.results?.[0] as ThesisSummary) ?? null;
-    },
-  });
-  if (!data) return null;
-  const s = data.supporting_claims?.length ?? 0;
-  const o = data.opposing_claims?.length ?? 0;
-  if (s === 0 && o === 0) return null;
-  return s > o ? "up" : o > s ? "down" : "neutral";
-}
-
-function ReportCard({ report }: { report: ReportSummary }) {
+function ReportCard({ row }: { row: ReportRowView }) {
   const { t, i18n } = useTranslation();
   const lang = uiLang(i18n.language);
-  const judgment = useJudgment(report.instrument_id, report.snapshot_id);
-
-  const profile = useInstrumentName(report.instrument_id);
+  const nameFallback = useInstrumentName(row.instrument_id);
 
   return (
     <li className="card watch-card" data-testid="report-card">
       <div className="watch-card-head">
-        <Link to={`/reports/${report.report_id}`} className="watch-card-name">
-          {profile?.name ?? report.instrument_id}
-          {profile ? ` · ${profile.code}` : ""}
+        <Link to={`/reports/${row.report_id}`} className="watch-card-name">
+          {row.name ?? nameFallback?.name ?? row.instrument_id}
+          {row.code ? ` · ${row.code}` : ""}
         </Link>
         <span className="secondary">{t("report.fullTitle")}</span>
       </div>
 
       <div className="task-grid">
         <span>{t("report.dateLabel")}</span>
-        <span>{formatWhen(report.created_at, lang)}</span>
+        <span>{formatWhen(row.created_at, lang)}</span>
         <span>{t("report.judgmentLabel")}</span>
-        <span>{judgment ? t(`workspace.direction.${judgment}`) : "—"}</span>
-        <span>{t("report.versionLabel")}</span>
-        <span className="mono">v{report.latest_version_no}</span>
+        <span>
+          {row.judgment
+            ? `${t(`workspace.direction.${row.judgment}`)}${row.confidence != null ? ` · ${Math.round(row.confidence * 100)}%` : ""}`
+            : "—"}
+        </span>
         <span>{t("report.qualityLabel")}</span>
-        <span>{formatGate(report.gate_status, lang)}</span>
+        <span>{formatGate(row.gate_status, lang)}</span>
       </div>
 
-      <ReportLineage reportId={report.report_id} />
+      <ReportLineage reportId={row.report_id} />
 
       <div className="header-controls">
-        <Link className="control-btn" to={`/reports/${report.report_id}`}>
+        <Link className="control-btn" to={`/reports/${row.report_id}`}>
           {t("report.open")}
         </Link>
         <PredictionCreateButton
-          reportId={report.report_id}
-          instrumentId={report.instrument_id}
+          reportId={row.report_id}
+          instrumentId={row.instrument_id}
         />
         <ExperienceCardCreateButton
-          reportId={report.report_id}
-          instrumentId={report.instrument_id}
+          reportId={row.report_id}
+          instrumentId={row.instrument_id}
         />
       </div>
     </li>
   );
 }
 
-/** Reports list — business cards over the real report library (PW2 §18). */
+/** 报告库列表（PW2 §18 / UX Foundation §19）。 */
 export function ReportsPage() {
   const { t } = useTranslation();
   const { data, isPending, isError } = useQuery({
-    queryKey: ["reports"],
-    queryFn: fetchReports,
+    queryKey: ["report-library"],
+    queryFn: fetchReportLibrary,
   });
 
   return (
@@ -113,11 +91,19 @@ export function ReportsPage() {
       <h1>{t("nav.reports")}</h1>
       {isPending && <p className="secondary">{t("common.loading")}</p>}
       {isError && <p className="status-error">{t("common.error")}</p>}
-      {data && data.length === 0 && <p className="secondary">{t("label.no_data")}</p>}
+      {data && data.length === 0 && (
+        <div className="empty-state">
+          <p>{t("reports.emptyTitle")}</p>
+          <p className="secondary">{t("reports.emptyHint")}</p>
+          <Link to="/" className="control-btn">
+            {t("reports.emptyAction")}
+          </Link>
+        </div>
+      )}
       {data && data.length > 0 && (
         <ul className="watch-list watch-cards">
-          {data.map((r) => (
-            <ReportCard key={r.report_id} report={r} />
+          {data.map((row) => (
+            <ReportCard key={row.report_id} row={row} />
           ))}
         </ul>
       )}
