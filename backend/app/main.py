@@ -51,6 +51,24 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
+    from fastapi import Request as FastAPIRequest
+
+    from app.db import get_session as _get_session_dep
+
+    @app.middleware("http")
+    async def commit_db_session(request: FastAPIRequest, call_next):
+        """Commit the request's DB session BEFORE the response is sent.
+
+        FastAPI runs dependency teardown (get_session's commit) after the
+        response is delivered, so without this a client that follows a write
+        with an immediate read can observe pre-commit state.
+        """
+        response = await call_next(request)
+        session = getattr(request.state, "db_session", None)
+        if session is not None:
+            session.commit()
+        return response
+
     if settings.cors_origins:
         app.add_middleware(
             CORSMiddleware,

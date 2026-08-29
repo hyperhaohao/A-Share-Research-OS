@@ -114,6 +114,13 @@ class StrategyService:
 
         if backtest is None:
             backtest = self.start_backtest(version_id)
+        from app.application.run_events import record_run_event
+
+        record_run_event(
+            self._session, backtest["backtest_id"], "backtest_started",
+            {"version_id": version_id, "horizon_days": horizon,
+             "threshold_pct": threshold, "universe": len(version["universe"])},
+        )
         results: list[dict] = []
         errors: list[str] = []
         for member in version["universe"]:
@@ -164,6 +171,10 @@ class StrategyService:
                 p["error"] = "; ".join(errors)[:300] or "no instrument produced usable bars"
                 return p
             backtest = self._repo.update_backtest(backtest["backtest_id"], fail)
+            record_run_event(
+                self._session, backtest["backtest_id"], "backtest_failed",
+                {"error": backtest["error"]},
+            )
             return backtest
 
         aggregate = {
@@ -199,6 +210,11 @@ class StrategyService:
             p["status"] = BacktestStatus.COMPLETED
             return p
         backtest = self._repo.update_backtest(backtest["backtest_id"], complete)
+        record_run_event(
+            self._session, backtest["backtest_id"], "backtest_completed",
+            {"portfolio_avg_return_pct": aggregate.get("portfolio_avg_return_pct"),
+             "failure_cases": len(failure_cases)},
+        )
         self._register_backtest_artifact(version, backtest)
         return backtest
 

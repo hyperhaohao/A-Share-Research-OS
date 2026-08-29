@@ -93,6 +93,16 @@ def get_backtest(backtest_id: str, session: Session = Depends(get_session)) -> d
     return {"backtest": backtest}
 
 
+@router.get("/backtests/{backtest_id}/events")
+def backtest_events(backtest_id: str, session: Session = Depends(get_session)) -> dict:
+    from app.application.run_events import list_run_events
+
+    results = list_run_events(session, backtest_id)
+    if not results:
+        raise AppError("strategy.events_not_found", status_code=404)
+    return {"backtest_id": backtest_id, "count": len(results), "results": results}
+
+
 @router.post("/{version_id}/validate")
 def validate_strategy(version_id: str, session: Session = Depends(get_session)) -> dict:
     try:

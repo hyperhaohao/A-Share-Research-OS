@@ -221,3 +221,58 @@ def test_scheduler_tick_runs_due_monitors(client, monkeypatch):
     detail = client.get(f"/api/v1/strategy-monitors/{monitor['monitor_id']}").json()
     assert detail["monitor"]["last_run_at"] is not None
     assert len(detail["decisions"]) == 1
+
+
+def test_backtest_and_monitor_events_are_replayable(client, monkeypatch):
+    """红线 6: every async process persists its events (§37)."""
+    strategy = _experimental_strategy(client, monkeypatch)
+    # the backtest ran during the chain → its events must replay
+    detail = client.get(f"/api/v1/strategies/{strategy['version_id']}").json()["strategy"]
+    backtest = detail["backtests"][0]
+    replay = client.get(f"/api/v1/strategies/backtests/{backtest['backtest_id']}/events")
+    assert replay.status_code == 200
+    types = [e["event_type"] for e in replay.json()["results"]]
+    assert types[0] == "backtest_started"
+    assert types[-1] == "backtest_completed"
+
+    # the monitor run also persisted events (started + completed)
+    monitor = client.post(
+        "/api/v1/strategy-monitors", json={"version_id": strategy["version_id"]}
+    ).json()["monitor"]
+    monitor_id = monitor["monitor_id"]
+    run_resp = client.post(f"/api/v1/strategy-monitors/{monitor_id}/run")
+    assert run_resp.status_code == 202
+    for _ in range(200):
+        detail = client.get(f"/api/v1/strategy-monitors/{monitor_id}").json()
+        runs = [d for d in detail["decisions"]]
+        if len(runs) >= 2:
+            break
+        import time
+
+        time.sleep(0.05)
+    replay = client.get(f"/api/v1/research-runs/{monitor_id}/events")
+    assert replay.status_code == 200
+    types = [e["event_type"] for e in replay.json()["results"]]
+    assert "monitor_started" in types
+    assert "monitor_completed" in types
+
+
+def test_monitor_creation_handoff_is_registered(client, monkeypatch):
+    """红线 5: strategy → monitor carries a registered handoff action."""
+    strategy = _experimental_strategy(client, monkeypatch)
+    strategy_artifact = client.get(
+        f"/api/v1/artifacts/by-domain/StrategyVersion/{strategy['version_id']}"
+    ).json()["artifact"]
+    ok = client.post(
+        "/api/v1/handoffs",
+        json={
+            "source_module": "strategy",
+            "target_module": "monitor",
+            "action": "create_monitor",
+            "artifact_ids": [strategy_artifact["artifact_id"]],
+            "context": {"primary_instrument_id": "SZSE:000831"},
+            "message": "strategy → create_monitor",
+        },
+    )
+    assert ok.status_code == 201
+    assert ok.json()["handoff"]["action"] == "create_monitor"

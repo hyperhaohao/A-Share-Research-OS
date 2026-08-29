@@ -246,3 +246,15 @@ def test_replay_full_loop_backfills_card_and_strategy(client, monkeypatch):
 def test_replay_missing_decision_is_404(client):
     resp = client.post("/api/v1/reviews/feedback", json={"decision_id": "dec_missing000"})
     assert resp.status_code == 404
+
+
+def test_backtest_review_events_stages_follow_taxonomy(client, monkeypatch):
+    """§37 stage taxonomy: backtest events land in BACKTESTING."""
+    chain = _chain_with_monitor(client, monkeypatch)
+    detail = client.get(f"/api/v1/strategies/{chain['strategy']['version_id']}").json()["strategy"]
+    backtest = detail["backtests"][0]
+    replay = client.get(
+        f"/api/v1/strategies/backtests/{backtest['backtest_id']}/events"
+    ).json()
+    stages = {e["stage"] for e in replay["results"]}
+    assert stages == {"BACKTESTING"}

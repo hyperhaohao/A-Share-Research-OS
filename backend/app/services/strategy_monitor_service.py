@@ -109,6 +109,8 @@ class StrategyMonitorService:
     # -- run（观察 → 信号 → 决策） -------------------------------------------------------
 
     def run_monitor(self, monitor_id: str) -> dict:
+        from app.application.run_events import record_run_event
+
         monitor = self._repo.get_monitor(monitor_id)
         if monitor is None:
             raise KeyError(monitor_id)
@@ -116,6 +118,10 @@ class StrategyMonitorService:
             raise StrategyMonitorRefusal("monitor is paused")
 
         now = datetime.now(timezone.utc)
+        record_run_event(
+            self._session, monitor_id, "monitor_started",
+            {"version_id": monitor["version_id"], "universe": len(monitor["universe"])},
+        )
         all_observations: list[dict] = []
         all_signals: list[dict] = []
         all_evidence_ids: list[str] = []
@@ -142,6 +148,11 @@ class StrategyMonitorService:
         row.next_run_at = now + timedelta(seconds=interval)
         row.updated_at = now
         self._repo.save_monitor(row)
+        record_run_event(
+            self._session, monitor_id, "monitor_completed",
+            {"observations": len(all_observations), "signals": len(all_signals),
+             "decision": decision["decision"]},
+        )
         return {
             "monitor": self._repo.get_monitor(monitor_id),
             "observations": len(all_observations),

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { uiLang } from "../presentation/enumLabels";
+import { artifactByDomain, handoffPath, recordHandoff } from "../shared/handoff";
+import { newResearchContext } from "../shared/context";
 import { formatWhen } from "../presentation/format";
 
 interface BacktestResult {
@@ -210,7 +212,20 @@ export function StrategyDetailPage() {
         throw new Error(err?.error_code ?? "network.unreachable");
       }
       const body = (await resp.json()) as { monitor: { monitor_id: string } };
-      return body.monitor.monitor_id;
+      // §2/红线 5: the cross-module action carries a handoff envelope
+      const strategyArtifact = await artifactByDomain("StrategyVersion", versionId);
+      if (strategyArtifact != null) {
+        const envelope = await recordHandoff({
+          source_module: "strategy",
+          target_module: "monitor",
+          action: "create_monitor",
+          artifact_ids: [strategyArtifact.artifact_id],
+          context: newResearchContext({}),
+          message: "strategy → create_monitor",
+        });
+        return handoffPath(`/monitoring/${body.monitor.monitor_id}`, envelope);
+      }
+      return `/monitoring/${body.monitor.monitor_id}`;
     },
     onSuccess: (monitorId: string) => {
       window.location.assign(`/monitoring/${monitorId}`);

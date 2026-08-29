@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from starlette.requests import Request
 
 from app.config import get_settings
 
@@ -34,9 +35,17 @@ def get_session_factory() -> sessionmaker[Session]:
     return _session_factory
 
 
-def get_session() -> Iterator[Session]:
-    """FastAPI dependency: one session per request."""
+def get_session(request: Request) -> Iterator[Session]:
+    """FastAPI dependency: one session per request.
+
+    The session is ALSO stored on ``request.state`` so the commit middleware
+    can commit BEFORE the response reaches the client — otherwise a client
+    that follows a write with an immediate read races the dependency
+    teardown commit (writes must be visible the moment the response is sent).
+    """
     with session_scope(get_session_factory()) as session:
+        if request is not None:
+            request.state.db_session = session
         yield session
 
 

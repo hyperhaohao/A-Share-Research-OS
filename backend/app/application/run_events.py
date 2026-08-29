@@ -40,6 +40,11 @@ EVENT_STAGE = {
     "screening_started": "SCREENING",
     "screening_completed": "SCREENING",
     "screening_failed": "SCREENING",
+    "backtest_started": "BACKTESTING",
+    "backtest_completed": "BACKTESTING",
+    "backtest_failed": "BACKTESTING",
+    "monitor_started": "MONITORING",
+    "monitor_completed": "MONITORING",
 }
 
 # 业务可读标题（中文为用户语言基线；前端本地化层可再映射）
@@ -66,6 +71,11 @@ EVENT_TITLE = {
     "screening_started": "智能筛选启动",
     "screening_completed": "智能筛选完成",
     "screening_failed": "智能筛选失败",
+    "backtest_started": "跨标的回测启动",
+    "backtest_completed": "跨标的回测完成",
+    "backtest_failed": "跨标的回测失败",
+    "monitor_started": "策略盯盘启动",
+    "monitor_completed": "策略盯盘完成",
 }
 
 
