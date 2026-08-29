@@ -29,6 +29,24 @@ def list_artifacts(
     return {"count": len(results), "results": results}
 
 
+@router.get("/artifacts/graph")
+def global_graph(
+    limit: int = Query(default=150, ge=1, le=500),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Full-library graph view (V2 Phase I, 总纲 §78): the newest artifacts
+    with every provenance edge among them. Bounded by design."""
+    service = ArtifactService(session)
+    nodes = service.search(limit=limit)
+    node_ids = {n["artifact_id"] for n in nodes}
+    edges = service.edges_among(node_ids)
+    return {
+        "count": len(nodes),
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
 @router.get("/artifacts/by-domain/{domain_type}/{domain_id}")
 def artifact_by_domain(domain_type: str, domain_id: str, session: Session = Depends(get_session)) -> dict:
     """Resolve a domain object (e.g. Report rpt_xxx) to its registry artifact."""

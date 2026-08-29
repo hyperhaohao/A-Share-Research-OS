@@ -256,6 +256,33 @@ class ArtifactService:
             ][:limit]
         return [self._row_to_dict(r) for r in self._session.scalars(stmt.limit(limit)).all()]
 
+    def edges_among(self, node_ids: set[str]) -> list[dict]:
+        """Every provenance edge whose BOTH endpoints are in the node set."""
+        from sqlalchemy import or_
+
+        if not node_ids:
+            return []
+        rows = self._session.scalars(
+            select(ProvenanceEdgeORM).where(
+                or_(
+                    ProvenanceEdgeORM.from_artifact_id.in_(node_ids),
+                    ProvenanceEdgeORM.to_artifact_id.in_(node_ids),
+                )
+            )
+        ).all()
+        out = []
+        for e in rows:
+            if e.from_artifact_id in node_ids and e.to_artifact_id in node_ids:
+                out.append(
+                    {
+                        "edge_id": e.edge_id,
+                        "from": e.from_artifact_id,
+                        "to": e.to_artifact_id,
+                        "relation": e.relation_type,
+                    }
+                )
+        return out
+
     def _adjacent(self, node: str, direction: str) -> list[tuple[str, str]]:
         """Neighbors of ``node`` in the given direction, honoring each
         relation's upstream side (RELATION_DIRECTION)."""
