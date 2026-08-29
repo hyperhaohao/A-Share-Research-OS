@@ -29,6 +29,7 @@ class ArtifactType(str, Enum):
     EVIDENCE = "evidence"
     CLAIM = "claim"
     THESIS = "thesis"
+    EXPERIENCE_CARD = "experience_card"
 
 
 class RelationType(str, Enum):

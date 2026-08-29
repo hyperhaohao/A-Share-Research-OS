@@ -39,6 +39,7 @@ class ResearchContext(BaseModel):
 # not silently stored (红线 8).
 HANDOFF_ACTIONS: set[tuple[str, str, str]] = {
     ("report", "prediction", "create_prediction"),
+    ("report", "experience", "create_experience_draft"),
     ("report", "workspace", "open_workspace"),
     ("prediction", "workspace", "open_with_context"),
 }
