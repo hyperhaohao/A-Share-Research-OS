@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C/D/E/F/G/H(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室 + 盯盘 + 产业/宏观研究输入，
-E2E 14/14 于 compose 栈）。当前执行线：Phase I（全库研究图谱，总纲 §78）
+V2 Phase A/B/C/D/E/F/G/H/I(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室 + 盯盘 + 产业/宏观 + 全库图谱，
+E2E 15/15 于 compose 栈）。当前执行线：Phase J（完整复盘回灌，总纲 §79 —— 总纲最后阶段）
 ```
 
 ## Completed
@@ -21,6 +21,14 @@ E2E 14/14 于 compose 栈）。当前执行线：Phase I（全库研究图谱，
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase I v1（本轮，DONE）：
+  - 后端：GET /artifacts/graph（有界节点集 + 其间全部溯源边）；
+    ArtifactService.edges_among —— Phase A 起积累的 Edge 账本成为可查询
+    全库视图
+  - 前端：/research-graph 页（类型分组节点 + Lineage Explorer：上游/下游
+    关系行带跳数，业务语言；跨模块跳转走 artifact 自身 route）；
+    nav 全库图谱；researchGraph.* 本地化
+  - E2E-15：选报告节点 → lineage 上溯到 研究运行(产出) → 跨模块跳转
 Phase H v1（本轮，DONE）：
   - 后端：industry_map_snapshots/global_context_snapshots 表
     （迁移 c7d8e9f0a1b2）；两视图由真实证据组装：产业链/主业来自
@@ -130,18 +138,18 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase I 全库研究图谱（总纲 §78）：Global Graph UI + Lineage Explorer
-   （Artifact/Edge 自 Phase A 起持续积累）；跨模块 Handoff 可视化；
-   Phase I 完成定义：全库图谱页可从任一节点溯源到证据层且可跳转的
-   产品 E2E（E2E-15）。
+1. Phase J 完整复盘回灌（总纲 §79，最后阶段）：Decision → Prediction →
+   Validation → RegressionReview → ExperienceCard v2 → StrategyVersion v2
+   闭环打通；Phase J 完成定义：复盘链路任一环可从产品面触发并全链溯源的
+   产品 E2E（E2E-16）+ 总纲验收全链复查。
 ```
 
 ## Tests
 
 ```text
-backend: 338 passed（+ Phase H research map 3 测试：真实证据组装/宏观披露/诚实拒绝）
+backend: 338 passed
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 14/14 passed（E2E-01…14，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 15/15 passed（E2E-01…15，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -159,6 +167,10 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase I（本轮真机，000831，E2E-15 + compose API 实测）：
+  /artifacts/graph 返回 5 节点 4 边（run/version/report/prediction 链）PASS
+  Lineage Explorer：报告节点上溯 研究运行(产出) PASS
+  跨模块跳转离开图谱页 PASS
 Phase H（本轮真机，000831，E2E-14 + compose API 实测）：
   产业地图：industry_chain/主业由真实 industry_profile 证据组装，
   artifact generated_from 报告，二次读取复用快照 PASS（compose 实测
