@@ -82,10 +82,16 @@
       Continuous Research/Prediction，§87）
 - [x] §42 闭环产品 E2E（E2E-08）：对话→计划→管线→产物→打开报告
 
-## Phase C — 研究经验卡（DOING）
-- [ ] ExperienceCard 模型 + Draft/Refine/Validate/Approve（§72）
-- [ ] 报告页「炼成经验卡」CTA（走 handoff 信封 report→experience，§43）
-- [ ] 卡片保留 report_version_id/claim_ids/evidence_ids；E2E-09
+## Phase C — 研究经验卡（DONE）
+- [x] ExperienceCard 模型 + Draft/Refine/Validate/Approve（§72）
+- [x] 报告页「炼成经验卡」CTA（走 handoff 信封 report→experience，§43）
+- [x] 卡片保留 report_version_id/claim_ids/evidence_ids；E2E-09
+- [x] 注：简单 Quant validation 由 Phase D 工作流节点承接（quant_expression 已保留）
+
+## Phase D — 研究验证工作流（DOING）
+- [ ] 最小强类型 DAG：Data → Factor/Rule → Validation → Output（§73）
+- [ ] 经验卡发起验证工作流（handoff experience→workflow:run_validation，§44）
+- [ ] 工作流运行落 Artifact + RunEvent；E2E-10
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

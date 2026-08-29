@@ -9,9 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A DONE + Phase B DONE（AI 研究中枢三栏 + ResearchPlan + ConversationSession）。
-compose 栈已重建并在生产路径完成全链真机验证（E2E 8/8 于 compose 栈）。
-当前执行线：Phase C（研究经验卡，总纲 §72）
+V2 Phase A/B/C DONE（基础协议 + AI 研究中枢 + 研究经验卡，§72 原→炼→验→用闭环，
+E2E 9/9 于 compose 栈）。当前执行线：Phase D（研究验证工作流，总纲 §73）
 ```
 
 ## Completed
@@ -22,6 +21,16 @@ compose 栈已重建并在生产路径完成全链真机验证（E2E 8/8 于 com
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase C（本轮，DONE）：
+  - 后端：experience_cards/versions/validations 表（迁移 d1e2f3a4b5c6）；
+    ExperienceService 原→炼（确定性提炼，保留 report_id/version_id/claim_ids/
+    evidence_ids，§43）→ 验（v1 Case validation：PIT 入场价→最新可见价，信息
+    记录）→ 用（批准需 ≥1 验证，§13 门槛）；LLM 润色可选（无 provider 显式 422）；
+    artifact experience_card 注册 + generated_from 报告；handoff 注册
+    report→experience:create_experience_draft
+  - 前端：/experience 列表 + /experience/:cardId 详情（来源显形/验证记录/
+    验证/批准/否决动作）；报告页「炼成经验卡」CTA 走信封；经验卡状态全量本地化
+  - E2E-09：报告 → 卡片（信封溯源）→ 拦截未验证批准 → 案例验证 → 批准通过
 Phase B（本轮，DONE）：
   - 后端：command_sessions/command_turns/research_plans 表 + ConversationRepository
     （迁移 c9d0e1f2a3b4）；ResearchCommander 确定性意图解析（代码正则+注册表名
@@ -58,11 +67,11 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase C 研究经验卡（总纲 §72/§43）：ReportVersion → ExperienceCard Draft →
-   Refine → Validate → Approve；handoff 注册 report→experience:
-   create_experience_draft（复用 Phase A 信封与 shared/handoff.ts）；
-   Phase C 完成定义：报告页 → 炼成经验卡 → 卡片可版本化并保留
-   report_version_id/claim_ids/evidence_ids 的产品 E2E（E2E-09）。
+1. Phase D 研究验证工作流（总纲 §73）：最小强类型 DAG Data → Factor/Rule →
+   Validation → Output；经验卡 quant_expression 的简单 Quant validation
+   由工作流节点承接（字段已在卡上保留）；handoff 注册 experience→workflow:
+   run_validation（§44）；Phase D 完成定义：经验卡页发起验证工作流 →
+   DAG 运行落 Artifact → 卡片状态流转的产品 E2E（E2E-10）。
 ```
 
 ## Tests
@@ -70,7 +79,7 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ```text
 backend: 312 passed（+ Phase B command 6 测试：解析/拒绝/闭环/预测/无报告失败）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 8/8 passed（E2E-01…08，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 9/9 passed（E2E-01…09，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -88,6 +97,10 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase C（本轮真机，000831，E2E-09 + compose API 实测）：
+  报告 → 炼成经验卡（信封溯源 URL）→ 来源显形（11 主张/17 证据）
+  → 未验证批准被拦截 → 案例验证（PIT 24.83 → 最新价）→ 批准 APPROVED PASS
+  compose 卡片 exp_f840958ef18b：APPROVED v1，artifact generated_from 报告 PASS
 Phase B（本轮真机，000831，E2E-08 实测）：
   对话一句话 → 结构化计划三步可见 → 管线真实完成 → 右栏产物出现报告
   （业务标题，无 rpt_ 裸 id）→ 点击「打开报告」进入报告页 PASS
@@ -114,6 +127,8 @@ Phase A（真机 000831 全新 run，43 事件）：
 4. 法定节假日历未接入 → 预测到期日 ±1-3 天
 5. 公网部署需认证/TLS；SQLite 单机规模；生产多用户需 PostgreSQL
 6. Macro 官方原始源未接入；Cost Ledger 待真实化；scheduler claim 待原子化
+8. 简单 Quant validation 暂由 Phase D 工作流承接（§72→§73 衔接）：
+   quant_expression 字段已在经验卡上保留，等 DAG 节点落地后接通
 7. [已解决 2026-08-29] Docker Desktop 引擎故障 —— 用户修复后 compose 重建完成，
    全链真机验证通过（见 Live Verification）。经验：多后端并存时先确认
    :5173 代理目标（vite ASRO_API_PROXY），E2E 断言须锁定自身创建的对象
