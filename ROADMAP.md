@@ -41,7 +41,8 @@
 | G | 策略盯盘（Observation/Signal/Decision 分离） | DONE |
 | H | 产业研究地图 + 全球宏观视图 | DONE |
 | I | 全库研究图谱 | DONE |
-| J | 完整复盘回灌 | DOING |
+| J | 完整复盘回灌 | DONE |
+| 验收 | 总纲验收全链复查（Reviewer Pass） | DOING |
 
 ---
 

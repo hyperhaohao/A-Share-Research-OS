@@ -124,10 +124,14 @@
 - [x] 跨模块 Handoff 可视化（节点 route 跳转）
 - [x] E2E-15
 
-## Phase J — 完整复盘回灌（DOING，总纲最后阶段）
-- [ ] Decision → Prediction → Validation → RegressionReview →
+## Phase J — 完整复盘回灌（DONE v1，总纲最后阶段）
+- [x] Decision → Prediction → Validation → RegressionReview →
       ExperienceCard v2 → StrategyVersion v2 闭环（§79）
-- [ ] E2E-16 + 总纲验收全链复查
+- [x] E2E-16
+
+## 总纲验收全链复查（DOING）
+- [ ] 按 §80-§86 验收清单逐项复核 A–J（Reviewer Pass，发现问题直接修复）
+- [ ] 深度扩展项排期（关系源/官方宏观/quant_expression/§47 全套验证）
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

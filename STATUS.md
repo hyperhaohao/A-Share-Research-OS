@@ -9,8 +9,9 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C/D/E/F/G/H/I(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室 + 盯盘 + 产业/宏观 + 全库图谱，
-E2E 15/15 于 compose 栈）。当前执行线：Phase J（完整复盘回灌，总纲 §79 —— 总纲最后阶段）
+V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
+E2E 16/16 于 compose 栈）。总纲 Phase A–J 十阶段 v1 全部落地。
+当前执行线：总纲验收全链复查（CLAUDE.md §12 Reviewer Pass）→ 修复后进入深度扩展
 ```
 
 ## Completed
@@ -21,6 +22,16 @@ E2E 15/15 于 compose 栈）。当前执行线：Phase J（完整复盘回灌，
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase J v1（本轮，DONE）：
+  - 后端：ReplayFeedbackService（§79 编排）：Decision → 链上最新已验证
+    Prediction（无则 422 replay.chain_incomplete 显式拒绝，§50 不伪造预测）→
+    RegressionReview（确定性归因）→ ExperienceCard v(n+1)（教训 append-only，
+    method=review）→ StrategyVersion v(n+1)（同筛选运行重组，拾取新卡片）→
+    ResearchExperience（§53 append-only）；review artifact registered
+    generated_from 预测（直建预测补登记），策略 v2 generated_from 复盘
+  - 前端：盯盘决策区「复盘回灌」动作（结果/拒绝显形）；monitor.replay* 本地化
+  - E2E-16：诚实双路径（DRAFT→盯盘门槛拒绝；EXPERIMENTAL→决策→回灌拒绝
+    显形——链上无成熟验证是事实）；完整回填由后端成熟预测测试覆盖
 Phase I v1（本轮，DONE）：
   - 后端：GET /artifacts/graph（有界节点集 + 其间全部溯源边）；
     ArtifactService.edges_among —— Phase A 起积累的 Edge 账本成为可查询
@@ -138,18 +149,18 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase J 完整复盘回灌（总纲 §79，最后阶段）：Decision → Prediction →
-   Validation → RegressionReview → ExperienceCard v2 → StrategyVersion v2
-   闭环打通；Phase J 完成定义：复盘链路任一环可从产品面触发并全链溯源的
-   产品 E2E（E2E-16）+ 总纲验收全链复查。
+1. 总纲验收全链复查（CLAUDE.md §12 Reviewer Pass）：按 §80-§86 验收清单
+   逐项复核 A–J 十阶段产物，发现问题直接修复并重测（不生成仅报告）；
+2. 深度扩展（复查后按优先级）：关系源/官方宏观数值源接入、quant_expression
+   自定义节点、Regime Split/Sensitivity 全套 §47 验证、盯盘观察源扩展。
 ```
 
 ## Tests
 
 ```text
-backend: 338 passed
+backend: 341 passed（+ Phase J replay 3 测试：完整回填/缺环拒绝/404）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 15/15 passed（E2E-01…15，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 16/16 passed（E2E-01…16，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -167,6 +178,10 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase J（本轮真机，000831，E2E-16 + compose API 实测）：
+  盯盘决策 → 复盘回灌：链上无成熟验证 → 422 显式拒绝（不假装闭环）PASS
+  完整回填（成熟预测→归因→卡片 v2→策略 v2→教训记录）后端 3/3 覆盖 PASS
+  review artifact generated_from 预测；策略 v2 generated_from 复盘 PASS
 Phase I（本轮真机，000831，E2E-15 + compose API 实测）：
   /artifacts/graph 返回 5 节点 4 边（run/version/report/prediction 链）PASS
   Lineage Explorer：报告节点上溯 研究运行(产出) PASS
