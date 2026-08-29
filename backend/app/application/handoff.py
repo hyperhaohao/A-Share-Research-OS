@@ -40,6 +40,7 @@ class ResearchContext(BaseModel):
 HANDOFF_ACTIONS: set[tuple[str, str, str]] = {
     ("report", "prediction", "create_prediction"),
     ("report", "experience", "create_experience_draft"),
+    ("experience", "workflow", "run_validation"),
     ("report", "workspace", "open_workspace"),
     ("prediction", "workspace", "open_with_context"),
 }

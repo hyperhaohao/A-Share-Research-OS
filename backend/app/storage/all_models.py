@@ -18,6 +18,7 @@ from app.services.monitor import MaterialityDecisionORM  # noqa: F401
 from app.application.artifacts import ArtifactORM, ProvenanceEdgeORM  # noqa: F401
 from app.application.run_events import RunEventORM  # noqa: F401
 from app.application.handoff import HandoffORM  # noqa: F401
+from app.application.workflow import WorkflowRunORM  # noqa: F401
 from app.application.experience import (  # noqa: F401
     ExperienceCardORM,
     ExperienceCardVersionORM,

@@ -33,6 +33,10 @@ EVENT_STAGE = {
     "report_ready": "REPORTING",
     "run_completed": "COMPLETED",
     "run_failed": "FAILED",
+    "workflow_started": "VALIDATING",
+    "node_updated": "VALIDATING",
+    "workflow_completed": "COMPLETED",
+    "workflow_failed": "FAILED",
 }
 
 # 业务可读标题（中文为用户语言基线；前端本地化层可再映射）
@@ -52,6 +56,10 @@ EVENT_TITLE = {
     "report_ready": "报告生成",
     "run_completed": "研究完成",
     "run_failed": "研究失败",
+    "workflow_started": "验证工作流启动",
+    "node_updated": "工作流节点更新",
+    "workflow_completed": "验证工作流完成",
+    "workflow_failed": "验证工作流失败",
 }
 
 
