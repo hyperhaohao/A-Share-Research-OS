@@ -100,10 +100,16 @@
 - [x] E2E-11（候选解释 + 排除聚合披露）
 - [x] 注：因子/模型打分规则留待 Phase F 策略线扩展（v1 规则集为研究状态规则）
 
-## Phase F — 策略实验室（DOING）
-- [ ] StrategyDefinition/StrategyVersion（Screening+Cards+Workflow 组装，§21/§75）
-- [ ] Cross-Instrument Backtest + 失败案例显形（§47）
-- [ ] handoff screening→strategy:create_strategy；E2E-12
+## Phase F — 策略实验室（DONE v1）
+- [x] StrategyDefinition/StrategyVersion（Screening+Cards+Workflow 组装，§21/§75）
+- [x] Cross-Instrument Backtest + 失败案例显形（§47）
+- [x] handoff screening→strategy:create_strategy；E2E-12
+- [x] 注：Regime Split/Sensitivity 等全套 §47 验证留待后续版本（v1 一律 EXPERIMENTAL）
+
+## Phase G — 策略盯盘（DOING）
+- [ ] MonitorDefinition + Scheduler Worker 后台运行（§48）
+- [ ] Observation/Signal/DecisionRecord 三分离（§24，仅 Paper/Research Decision §25）
+- [ ] E2E-13
 
 ## Phase C–J（按 §72–§79 纵向闭环，依次）
 - [ ] C 研究经验卡（原炼验用 + 版本 + Evidence）

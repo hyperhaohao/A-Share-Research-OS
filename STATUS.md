@@ -9,8 +9,8 @@
 ## Current Phase
 
 ```text
-V2 Phase A/B/C/D/E(v1) DONE（基础协议 + AI 研究中枢 + 经验卡 + 验证工作流 DAG + 智能选股，
-E2E 11/11 于 compose 栈）。当前执行线：Phase F（策略实验室，总纲 §75）
+V2 Phase A/B/C/D/E/F(v1) DONE（基础协议 + 中枢 + 经验卡 + 工作流 + 选股 + 策略实验室，
+E2E 12/12 于 compose 栈）。当前执行线：Phase G（策略盯盘，总纲 §23/§48）
 ```
 
 ## Completed
@@ -21,6 +21,20 @@ E2E 11/11 于 compose 栈）。当前执行线：Phase F（策略实验室，总
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+Phase F v1（本轮，DONE）：
+  - 后端：strategy_versions/strategy_backtest_runs 表（迁移 a5b6c7d8e9f0）；
+    §46 组装（筛选候选=typed universe，理念=卡片机制，前向收益入场规则，
+    同名版本号自增）；§47 跨标的回测（与工作流共用同一条真实日线 Data
+    路径，逐标的指标+组合聚合，失败案例显形 §22，逐标的数据失败记录
+    no_data）；验证门槛（无完成回测 → 422；验证后一律 EXPERIMENTAL，
+    verdict 显式注明禁止进入正式盯盘）；strategy_version/backtest
+    artifact generated_from 筛选运行与经验卡；handoff 注册
+    screening→strategy:create_strategy；工作流服务抽取共享日线助手
+  - 前端：/strategy 列表 + 详情（回测块：组合指标/逐标的/失败案例显形）；
+    筛选页「做成策略」CTA 走信封；strategy.* 全量本地化；补
+    workflow.status.* 词条（状态芯片此前裸显 key）
+  - E2E-12：筛选 → 策略（信封溯源）→ 门槛拒绝显形 → 回测诚实终态 →
+    完成路径验证标 EXPERIMENTAL
 Phase E v1（本轮，DONE）：
   - 后端：screening_runs 表（迁移 f4a5b6c7d8e9）；§45 流程 ExperienceCard →
     强类型规则（has_report/thesis_direction/has_quote，全部由真实研究状态
@@ -90,19 +104,20 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. Phase F 策略实验室（总纲 §75）：Screening + ExperienceCards + Workflow →
-   StrategyDefinition → StrategyVersion → Cross-Instrument Backtest →
-   Validation（真实失败不隐藏，§21/§47）；handoff 注册 screening→strategy:
-   create_strategy（§46）；Phase F 完成定义：筛选候选 → 建策略 → 回测运行
-   落 Artifact + 失败案例显形的产品 E2E（E2E-12）。
+1. Phase G 策略盯盘（总纲 §23/§24/§48/§49）：StrategyVersion →
+   MonitorDefinition → Scheduler Worker 后台运行 → Observation / Signal /
+   DecisionRecord 三分离（技术指标不得冒充 AI Decision）；§25 决策支持
+   仅 Paper/Research Decision，不接真实下单；Phase G 完成定义：
+   EXPERIMENTAL 策略产生 Observation→Signal→Decision 记录且可在产品面
+   回放的产品 E2E（E2E-13）。
 ```
 
 ## Tests
 
 ```text
-backend: 326 passed（+ Phase E screening 4 测试：解释/排除聚合/方向规则/回放）
+backend: 332 passed（+ Phase F strategy 6 测试：组装/失败案例披露/门槛/EXPERIMENTAL/诚实失败/404）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 11/11 passed（E2E-01…11，真实浏览器+真实源，
+e2e: Playwright 产品 E2E 12/12 passed（E2E-01…12，真实浏览器+真实源，
      全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
@@ -120,6 +135,11 @@ compose 栈重建后真机验证（Docker 修复后，000831）：
   各带自身 run_id + 报告 artifact PASS
   :8080 生产 bundle 含 Phase B 中枢代码 PASS
   E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
+Phase F（本轮真机，000831，E2E-12 + compose API 实测）：
+  筛选 → 组装策略（信封溯源 URL，universe=筛选候选）PASS
+  §47 门槛：无回测时验证 422 拒绝显形 PASS
+  回测诚实终态（kline 源仍断连 → 失败显形于回测块）PASS
+  完成路径（下跌序列失败案例披露/EXPERIMENTAL 标记）后端 6/6 覆盖 PASS
 Phase E（本轮真机，000831，E2E-11 + compose API 实测）：
   卡片 → 筛选运行（信封溯源 URL）→ 候选含 中国稀土（命中全部 3 规则，
   解释含完整研究报告/论点方向/可见行情证据）PASS
