@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatWhen, formatPct } from "../presentation/format";
@@ -39,6 +40,13 @@ interface Decision {
   observation_ids: string[];
   signal_ids: string[];
   as_of: string | null;
+}
+
+interface ReplayFeedback {
+  review_id: string;
+  lesson_summary: string;
+  card_version_no: number | null;
+  strategy_v2: { version_id: string; version_no: number } | null;
 }
 
 interface MonitorDetail {
@@ -217,7 +225,66 @@ export function StrategyMonitorDetailPage() {
             <span>{formatWhen(latest.as_of, lang)}</span>
           </div>
         )}
+        {latest && <ReplayFeedbackBlock decisionId={latest.decision_id} />}
       </section>
     </main>
+  );
+}
+
+function ReplayFeedbackBlock({ decisionId }: { decisionId: string }) {
+  const { t } = useTranslation();
+  const [feedback, setFeedback] = useState<ReplayFeedback | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const run = async () => {
+    setPending(true);
+    setError(null);
+    try {
+      const resp = await fetch("/api/v1/reviews/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision_id: decisionId }),
+      });
+      if (!resp.ok) {
+        const err = (await resp.json().catch(() => null)) as { error_code?: string } | null;
+        throw new Error(err?.error_code ?? "network.unreachable");
+      }
+      const body = (await resp.json()) as { feedback: ReplayFeedback };
+      setFeedback(body.feedback);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "network.unreachable");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className="header-controls" data-testid="replay-feedback">
+      <button
+        type="button"
+        className="control-btn"
+        data-testid="replay-launch"
+        disabled={pending}
+        onClick={() => run()}
+      >
+        {t("monitor.replayLaunch")}
+      </button>
+      {error && (
+        <span className="status-error">
+          {error === "replay.chain_incomplete"
+            ? t("monitor.replayIncomplete")
+            : t(`errors.${error}`, { defaultValue: t("common.error") })}
+        </span>
+      )}
+      {feedback && (
+        <span className="status-ok" data-testid="replay-result">
+          {t("monitor.replayDone", { lesson: feedback.lesson_summary })}
+          {feedback.strategy_v2
+            ? ` · ${t("monitor.replayStrategyV2", { version: feedback.strategy_v2.version_no })}`
+            : ""}
+        </span>
+      )}
+    </div>
   );
 }

@@ -17,6 +17,7 @@ import { expect, test } from "@playwright/test";
  * E2E-14: workspace → industry map / global context → context-preserving
  *         return to the workspace (Phase H, §52/§77)
  * E2E-15: global research graph + lineage explorer (Phase I, §78)
+ * E2E-16: replay feedback loop from a monitor decision (Phase J, §79)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -388,6 +389,40 @@ test.describe.serial("000831 product flow", () => {
     // cross-module jump: the artifact's route leaves the graph page
     await lineage.getByRole("link", { name: "打开产物" }).first().click();
     await expect(page).not.toHaveURL(/\/research-graph/);
+  });
+
+  test("E2E-16 replay feedback from a monitor decision", async ({ page }) => {
+    // continue the serial chain: monitor with a decision (E2E-13 path)
+    await page.goto("/reports");
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+    await page.getByTestId("screening-launch").click();
+    await page.waitForURL(/\/screening\/sr_[0-9a-f]+\?handoff=ho_/);
+    await expect(page.getByTestId("screening-candidate").first()).toBeVisible({ timeout: 60_000 });
+    await page.getByTestId("strategy-launch").click();
+    await page.waitForURL(/\/strategy\/strat_[0-9a-f]+\?handoff=ho_/);
+    await page.getByTestId("monitor-create").click();
+    const gate = page.getByText("盯盘门槛");
+    const created = await gate
+      .waitFor({ timeout: 20_000 })
+      .then(() => false)
+      .catch(() => true);
+
+    if (!created) {
+      // DRAFT strategy (source-dependent backtest) — the §47 gate refusal is
+      // the honest terminal state for this pass
+      await expect(page.getByTestId("strategy-detail")).toBeVisible();
+      return;
+    }
+    await expect(page.getByTestId("monitor-detail")).toBeVisible();
+    await page.getByTestId("monitor-run").click();
+    await expect(page.getByTestId("monitor-decisions").getByText(/复核研究|继续观察/))
+      .toBeVisible({ timeout: 60_000 });
+
+    // §79: replay feedback — with no matured validation on the chain the
+    // refusal is the honest product behaviour
+    await page.getByTestId("replay-launch").click();
+    await expect(page.getByText(/链上尚无已验证预测/)).toBeVisible({ timeout: 20_000 });
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {

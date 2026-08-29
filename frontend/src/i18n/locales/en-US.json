@@ -89,7 +89,8 @@
     "monitor.not_found": "Monitor not found",
     "monitor.gate_blocked": "Monitor gate: only EXPERIMENTAL (validated) strategies",
     "industry_map.not_collected": "Industry profile not collected — run full research first",
-    "global_context.not_collected": "Macro evidence not collected — run full research first"
+    "global_context.not_collected": "Macro evidence not collected — run full research first",
+    "replay.chain_incomplete": "No validated prediction on the chain yet — feedback waits for maturity"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -474,7 +475,11 @@
     "decision": {
       "research_review": "Review research",
       "research_continue": "Keep observing"
-    }
+    },
+    "replayLaunch": "Replay feedback",
+    "replayIncomplete": "No validated prediction on the chain yet — feedback waits for maturity",
+    "replayDone": "Replay done: {{lesson}}",
+    "replayStrategyV2": "strategy v{{version}} re-assembled"
   },
   "industryMap": {
     "title": "Industry research map",
