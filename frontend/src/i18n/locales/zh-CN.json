@@ -102,7 +102,10 @@
     "noResearch": "尚未进行研究",
     "researchNow": "立即研究",
     "viewReport": "查看报告",
-    "continuous": "持续跟踪"
+    "continuous": "持续跟踪",
+    "researchState": "研究状态",
+    "predictionShort": "预测 {{horizon}} {{direction}}",
+    "monitorOn": "持续盯盘中"
   },
   "workspace": {
     "tabs": "工作区视图",

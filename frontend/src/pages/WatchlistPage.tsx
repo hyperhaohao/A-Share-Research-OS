@@ -6,28 +6,140 @@ import { formatBoard, formatExchange, uiLang } from "../presentation/enumLabels"
 import { formatPct, formatWhen } from "../presentation/format";
 import { contextPath, newResearchContext } from "../shared/context";
 
-interface WatchlistItem {
+/**
+ * 关注池（UX Foundation）：页面只消费 /views/watchlist 聚合视图 ——
+ * 身份/行情/研究状态/报告/预测/盯盘由后端 Read Model 一次装配，
+ * 前端不再逐卡串多个 API 自行拼装（评审 §四）。
+ */
+
+interface WatchCardView {
   instrument_id: string;
-  note: string;
-  added_at: string;
+  instrument: {
+    instrument_id: string;
+    name: string | null;
+    code: string;
+    exchange: string;
+    board: string;
+  } | null;
+  quote: { price: number; change_pct: number | null; quote_time: string | null } | null;
+  research: { judgment: string | null; confidence: number | null; thesis_title: string | null };
+  report: { report_id: string; created_at: string | null } | null;
+  prediction: {
+    prediction_id: string;
+    horizon: string;
+    expected_direction: string;
+    expected_return_range: [number, number];
+    validated: boolean;
+    due_at: string | null;
+  } | null;
+  monitor: { monitor_id: string; enabled: boolean; next_run_at: string | null } | null;
+  added_at: string | null;
 }
 
-interface Quote {
-  quote?: { price?: number | null; change_pct?: number | null; name?: string | null };
-}
+const JUDGMENT_KEY: Record<string, string> = {
+  up: "workspace.direction.up",
+  down: "workspace.direction.down",
+  neutral: "workspace.direction.neutral",
+};
 
-interface ReportSummary {
-  report_id: string;
-  created_at: string | null;
-  latest_version_no: number;
-  gate_status: string;
-}
+function WatchCard({
+  view,
+  onRemove,
+}: {
+  view: WatchCardView;
+  onRemove: (id: string) => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const lang = uiLang(i18n.language);
+  const instrumentId = view.instrument_id;
+  const ctx = newResearchContext({
+    primary_instrument_id: instrumentId,
+    instrument_ids: [instrumentId],
+  });
+  const inst = view.instrument;
 
-async function fetchWatchlist(): Promise<WatchlistItem[]> {
-  const resp = await fetch("/api/v1/watchlist");
-  if (!resp.ok) throw new Error("network.unreachable");
-  const body = await resp.json();
-  return body.results;
+  return (
+    <li className="card watch-card" data-testid="watch-card">
+      <div className="watch-card-head">
+        <Link to={`/instrument/${instrumentId}`} className="watch-card-name">
+          {inst?.name ?? inst?.code ?? instrumentId}
+        </Link>
+        {inst && (
+          <span className="secondary">
+            {inst.code} · {formatExchange(inst.exchange, lang)}
+            {inst.board ? ` · ${formatBoard(inst.board, lang)}` : ""}
+          </span>
+        )}
+      </div>
+
+      <div className="watch-card-quote mono">
+        {view.quote ? (
+          <>
+            <span>{view.quote.price}</span>
+            <span className={(view.quote.change_pct ?? 0) >= 0 ? "pct-up" : "pct-down"}>
+              {formatPct(view.quote.change_pct ?? undefined)}
+            </span>
+          </>
+        ) : (
+          <span className="secondary">{t("label.no_data")}</span>
+        )}
+      </div>
+
+      <div className="watch-card-state">
+        <span>
+          {view.research.judgment
+            ? `${t("watchlist.researchState")}: ${t(JUDGMENT_KEY[view.research.judgment])}`
+            : t("watchlist.noResearch")}
+        </span>
+        {view.report && (
+          <span className="secondary">
+            {t("watchlist.lastResearch")}: {formatWhen(view.report.created_at, lang)}
+          </span>
+        )}
+        {view.prediction && (
+          <span className="secondary">
+            {t("watchlist.predictionShort", {
+              horizon: view.prediction.horizon,
+              direction: t(JUDGMENT_KEY[view.prediction.expected_direction] ?? ""),
+            })}
+            {" · "}
+            {view.prediction.validated ? t("predictions.validated") : t("predictions.pending")}
+          </span>
+        )}
+        {view.monitor && (
+          <span className="secondary">
+            {t("watchlist.monitorOn")}
+            {view.monitor.next_run_at ? ` · ${formatWhen(view.monitor.next_run_at, lang)}` : ""}
+          </span>
+        )}
+      </div>
+
+      <div className="header-controls">
+        <Link className="control-btn" to={contextPath(`/instrument/${instrumentId}`, ctx)}>
+          {t("workspace.open")}
+        </Link>
+        <Link className="control-btn" to={contextPath("/", ctx, { run: true })}>
+          {t("watchlist.researchNow")}
+        </Link>
+        {view.report && (
+          <Link className="control-btn" to={contextPath(`/reports/${view.report.report_id}`, ctx)}>
+            {t("watchlist.viewReport")}
+          </Link>
+        )}
+        <Link className="control-btn" to={contextPath("/tasks", ctx)}>
+          {t("watchlist.continuous")}
+        </Link>
+        <button
+          type="button"
+          className="control-btn"
+          aria-label={t("watchlist.remove")}
+          onClick={() => onRemove(instrumentId)}
+        >
+          ×
+        </button>
+      </div>
+    </li>
+  );
 }
 
 async function addWatchItem(instrument: string): Promise<void> {
@@ -49,149 +161,40 @@ async function removeWatchItem(instrumentId: string): Promise<void> {
   if (!resp.ok && resp.status !== 204) throw new Error("network.unreachable");
 }
 
-/** One watchlist entry: identity + quote + research state + actions (PW2). */
-function WatchCard({ instrumentId, onRemove }: { instrumentId: string; onRemove: (id: string) => void }) {
-  const { t, i18n } = useTranslation();
-  // V2 Phase A: every cross-page CTA carries a fresh ResearchContext
-  const ctx = newResearchContext({
-    primary_instrument_id: instrumentId,
-    instrument_ids: [instrumentId],
-  });
-  const lang = uiLang(i18n.language);
-
-  const profileQuery = useQuery({
-    queryKey: ["instrument", instrumentId],
-    queryFn: async () => {
-      const resp = await fetch(`/api/v1/instruments/${encodeURIComponent(instrumentId)}`);
-      if (!resp.ok) throw new Error("instrument.not_found");
-      const body = await resp.json();
-      return body.instrument as {
-        code: string;
-        name: string;
-        exchange: string;
-        board: string;
-        industry: string | null;
-      };
-    },
-  });
-
-  const quoteQuery = useQuery({
-    queryKey: ["quote", instrumentId],
-    queryFn: async (): Promise<Quote> => {
-      const resp = await fetch(`/api/v1/market-data/quote?instrument=${encodeURIComponent(instrumentId)}`);
-      if (!resp.ok) return {};
-      return resp.json();
-    },
-    staleTime: 5000,
-  });
-
-  const reportQuery = useQuery({
-    queryKey: ["reports", instrumentId],
-    queryFn: async (): Promise<ReportSummary | null> => {
-      const resp = await fetch(`/api/v1/reports?instrument_id=${encodeURIComponent(instrumentId)}`);
-      if (!resp.ok) return null;
-      const body = await resp.json();
-      return (body.results?.[0] as ReportSummary) ?? null;
-    },
-  });
-
-  const profile = profileQuery.data;
-  const quote = quoteQuery.data?.quote;
-  const report = reportQuery.data;
-
-  return (
-    <li className="card watch-card" data-testid="watch-card">
-      <div className="watch-card-head">
-        <Link to={`/instrument/${instrumentId}`} className="watch-card-name">
-          {profile?.name ?? instrumentId.split(":").pop() ?? instrumentId}
-        </Link>
-        {profile && (
-          <span className="secondary">
-            {profile.code} · {formatExchange(profile.exchange, lang)}
-            {profile.board ? ` · ${formatBoard(profile.board, lang)}` : ""}
-          </span>
-        )}
-      </div>
-
-      <div className="watch-card-quote mono">
-        {quote?.price != null ? (
-          <>
-            <span>{quote.price}</span>
-            <span className={(quote.change_pct ?? 0) >= 0 ? "pct-up" : "pct-down"}>
-              {formatPct(quote.change_pct ?? undefined)}
-            </span>
-          </>
-        ) : (
-          <span className="secondary">{t("label.no_data")}</span>
-        )}
-      </div>
-
-      <div className="watch-card-state">
-        {report ? (
-          <>
-            <span>
-              {t("watchlist.lastResearch")}: {formatWhen(report.created_at, lang)}
-            </span>
-            <span className="secondary">
-              {t("watchlist.hasReport", { version: report.latest_version_no })}
-            </span>
-          </>
-        ) : (
-          <span className="secondary">{t("watchlist.noResearch")}</span>
-        )}
-      </div>
-
-      <div className="header-controls">
-        <Link className="control-btn" to={contextPath(`/instrument/${instrumentId}`, ctx)}>
-          {t("workspace.open")}
-        </Link>
-        <Link className="control-btn" to={contextPath("/", ctx, { run: true })}>
-          {t("watchlist.researchNow")}
-        </Link>
-        {report && (
-          <Link className="control-btn" to={contextPath(`/reports/${report.report_id}`, ctx)}>
-            {t("watchlist.viewReport")}
-          </Link>
-        )}
-        <Link className="control-btn" to={contextPath("/tasks", ctx)}>
-          {t("watchlist.continuous")}
-        </Link>
-        <button
-          type="button"
-          className="control-btn"
-          aria-label={t("watchlist.remove")}
-          onClick={() => onRemove(instrumentId)}
-        >
-          ×
-        </button>
-      </div>
-    </li>
-  );
-}
-
 export function WatchlistPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [instrument, setInstrument] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
 
-  const { data, isPending } = useQuery({
-    queryKey: ["watchlist"],
-    queryFn: fetchWatchlist,
+  // 单请求消费 Read Model（评审 §十二：页面不再串多个 API 自行拼装）
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["watchlist-view"],
+    queryFn: async (): Promise<WatchCardView[]> => {
+      const resp = await fetch("/api/v1/views/watchlist");
+      if (!resp.ok) throw new Error("network.unreachable");
+      const body = (await resp.json()) as { results: WatchCardView[] };
+      return body.results;
+    },
   });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["watchlist-view"] });
+    queryClient.invalidateQueries({ queryKey: ["watchlist"] });
+  };
 
   const addMutation = useMutation({
     mutationFn: addWatchItem,
     onSuccess: () => {
       setInstrument("");
       setAddError(null);
-      void queryClient.invalidateQueries({ queryKey: ["watchlist"] });
+      invalidate();
     },
     onError: (err: Error) => setAddError(err.message),
   });
   const removeMutation = useMutation({
     mutationFn: removeWatchItem,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["watchlist"] }),
+    onSuccess: invalidate,
   });
 
   const onSubmit = (e: React.FormEvent) => {
@@ -220,13 +223,14 @@ export function WatchlistPage() {
         </p>
       )}
       {isPending && <p className="secondary">{t("common.loading")}</p>}
+      {isError && <p className="status-error">{t("common.error")}</p>}
       {data && data.length === 0 && <p className="secondary">{t("watchlist.empty")}</p>}
       {data && data.length > 0 && (
         <ul className="watch-list watch-cards">
-          {data.map((item) => (
+          {data.map((view) => (
             <WatchCard
-              key={item.instrument_id}
-              instrumentId={item.instrument_id}
+              key={view.instrument_id}
+              view={view}
               onRemove={(id) => removeMutation.mutate(id)}
             />
           ))}
