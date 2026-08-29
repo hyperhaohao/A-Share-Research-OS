@@ -13,7 +13,8 @@
     "evidence": "Evidence",
     "settings": "Settings",
     "experience": "Experience",
-    "screening": "Screening"
+    "screening": "Screening",
+    "strategy": "Strategy Lab"
   },
   "home": {
     "title": "Dashboard",
@@ -79,7 +80,10 @@
     "experience.validation_no_data": "No comparable prices for a case validation",
     "artifact.not_found": "Artifact record missing",
     "workflow.not_found": "Workflow not found",
-    "screening.not_found": "Screening run not found"
+    "screening.not_found": "Screening run not found",
+    "strategy.not_found": "Strategy not found",
+    "strategy.unassemblable": "Cannot assemble yet",
+    "strategy.validation_blocked": "§47 gate: complete a backtest first"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -391,7 +395,12 @@
     "stepPending": "pending",
     "stepRunning": "running",
     "stepOk": "done",
-    "stepFailed": "failed"
+    "stepFailed": "failed",
+    "status": {
+      "running": "running",
+      "completed": "completed",
+      "failed": "failed"
+    }
   },
   "screening": {
     "pageHint": "Screening is not a bare filter: every candidate explains why it was selected; exclusions are disclosed per rule.",
@@ -407,6 +416,32 @@
       "has_report": "missing full report",
       "thesis_direction": "thesis direction mismatch",
       "has_quote": "no visible quote"
+    }
+  },
+  "strategy": {
+    "pageHint": "Assemble cards, screens and workflows into versioned strategies; backtests show failures as they are.",
+    "empty": "No strategies yet — use 做成策略 on a screening run",
+    "launch": "Assemble strategy",
+    "unassemblable": "This screening run cannot be assembled yet (incomplete or no candidates)",
+    "philosophy": "Philosophy",
+    "universeSize": "Universe",
+    "entryPolicy": "Entry policy",
+    "forwardReturn": "Forward return {{horizon}} trading days",
+    "runBacktest": "Run cross-instrument backtest",
+    "validate": "Validate (§47 gate)",
+    "backtestTitle": "Cross-instrument backtest",
+    "portfolioAvg": "Portfolio avg return",
+    "portfolioHit": "Portfolio avg hit rate",
+    "instrumentsBacktested": "Instruments backtested",
+    "failureCases": "Failure cases (disclosed)",
+    "updated": "Updated {{when}}",
+    "status": {
+      "DRAFT": "Draft",
+      "EXPERIMENTAL": "Experimental (no live monitoring)"
+    },
+    "resultStatus": {
+      "no_data": "no data (source failure shown)",
+      "insufficient_samples": "insufficient samples"
     }
   }
 }

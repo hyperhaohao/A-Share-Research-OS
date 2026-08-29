@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
 import { useInstrumentName } from "../shared/instrument";
+import { StrategyLaunchButton } from "../components/StrategyLaunchButton";
 
 interface Candidate {
   instrument_id: string;
@@ -136,6 +137,11 @@ export function ScreeningRunDetailPage() {
         <Link to="/screening" className="secondary">← {t("nav.screening")}</Link>
       </p>
       <h1>{t("screening.detailTitle")}</h1>
+      {data.status === "completed" && data.candidates.length > 0 && (
+        <div className="header-controls">
+          <StrategyLaunchButton screeningRunId={data.run_id} />
+        </div>
+      )}
       <p className="secondary">
         {t("screening.universeSize", { universe: data.universe_size })} ·{" "}
         {t("screening.candidateCount", { count: data.candidates.length })} ·{" "}

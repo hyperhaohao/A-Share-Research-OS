@@ -227,6 +227,9 @@ class StrategyService:
 
     # -- reads ----------------------------------------------------------------------
 
+    def list_versions(self, *, limit: int = 50) -> list[dict]:
+        return self._repo.list_versions(limit=limit)
+
     def get_version_detail(self, version_id: str) -> dict | None:
         version = self._repo.get_version(version_id)
         if version is None:

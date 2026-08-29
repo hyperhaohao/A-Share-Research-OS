@@ -13,6 +13,7 @@ import { PredictionsPage } from "./pages/PredictionsPage";
 import { ExperienceCardsPage } from "./pages/ExperienceCardsPage";
 import { ExperienceCardPage } from "./pages/ExperienceCardPage";
 import { ScreeningRunsPage, ScreeningRunDetailPage } from "./pages/ScreeningPage";
+import { StrategyLabPage, StrategyDetailPage } from "./pages/StrategyLabPage";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 
@@ -27,6 +28,7 @@ const NAV_ITEMS: Array<{ to: string; key: string }> = [
   { to: "/predictions", key: "nav.predictions" },
   { to: "/experience", key: "nav.experience" },
   { to: "/screening", key: "nav.screening" },
+  { to: "/strategy", key: "nav.strategy" },
   { to: "/reports", key: "nav.reports" },
 ];
 
@@ -56,6 +58,8 @@ function Shell() {
         <Route path="/experience/:cardId" element={<ExperienceCardPage />} />
         <Route path="/screening" element={<ScreeningRunsPage />} />
         <Route path="/screening/:runId" element={<ScreeningRunDetailPage />} />
+        <Route path="/strategy" element={<StrategyLabPage />} />
+        <Route path="/strategy/:versionId" element={<StrategyDetailPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
         <Route path="/instrument/:instrumentId" element={<InstrumentWorkspacePage />} />

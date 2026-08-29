@@ -12,6 +12,7 @@ import { expect, test } from "@playwright/test";
  * E2E-09: report → experience card → case validation → approve (Phase C)
  * E2E-10: card → validation workflow DAG → quant record (Phase D)
  * E2E-11: card → screening run → candidates with why-selected (Phase E)
+ * E2E-12: screening → strategy → backtest → §47 gate (Phase F)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -246,6 +247,46 @@ test.describe.serial("000831 product flow", () => {
     await expect(page.getByTestId("candidate-explanation").first()).toContainText("经验依据");
     // the exclusion summary is disclosed (为什么没选中)
     await expect(page.getByTestId("screening-excluded")).toBeVisible();
+  });
+
+  test("E2E-12 screening assembles a strategy with the §47 gate", async ({ page }) => {
+    await page.goto("/reports");
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+    await page.getByTestId("screening-launch").click();
+    await page.waitForURL(/\/screening\/sr_[0-9a-f]+\?handoff=ho_/);
+    await expect(page.getByTestId("screening-candidate").first()).toBeVisible({ timeout: 60_000 });
+
+    // §46: screening → strategy via the handoff envelope
+    await page.getByTestId("strategy-launch").click();
+    await page.waitForURL(/\/strategy\/strat_[0-9a-f]+\?handoff=ho_/);
+    await expect(page.getByTestId("strategy-detail")).toBeVisible();
+    await expect(page.getByTestId("strategy-detail").getByText("策略理念")).toBeVisible();
+
+    // §47 gate: validate before any backtest must be refused with the reason
+    await page.getByTestId("strategy-validate").click();
+    await expect(page.getByText("验证门槛")).toBeVisible({ timeout: 20_000 });
+
+    // cross-instrument backtest (real bars or honest source-failure disclosure)
+    await page.getByTestId("strategy-backtest").click();
+    const block = page.getByTestId("backtest-block");
+    await expect(block.getByText(/跨标的回测/)).toBeVisible({ timeout: 20_000 });
+    const chip = block.locator(".watch-card-head span").filter({ hasText: /已完成|失败/ });
+    await expect(chip).toBeVisible({ timeout: 120_000 });
+    const outcome = (await chip.innerText()).trim();
+
+    if (outcome.includes("已完成")) {
+      // metrics visible; falling instruments appear as failure cases (§22)
+      await expect(page.getByTestId("failure-cases").or(page.getByText("组合平均收益"))).toBeVisible();
+      // validate now passes the gate and marks the version EXPERIMENTAL
+      await page.getByTestId("strategy-validate").click();
+      await expect(page.getByTestId("strategy-verdict")).toContainText("EXPERIMENTAL", {
+        timeout: 20_000,
+      });
+    } else {
+      // honest path: the source failure is disclosed on the block
+      await expect(block.locator(".status-error").first()).toBeVisible();
+    }
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {

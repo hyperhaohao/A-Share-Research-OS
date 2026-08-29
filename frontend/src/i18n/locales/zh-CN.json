@@ -13,7 +13,8 @@
     "evidence": "证据",
     "settings": "设置",
     "experience": "经验卡",
-    "screening": "智能选股"
+    "screening": "智能选股",
+    "strategy": "策略实验室"
   },
   "home": {
     "title": "研究总览",
@@ -79,7 +80,10 @@
     "experience.validation_no_data": "暂无可比价数据，无法案例验证",
     "artifact.not_found": "产物档案缺失",
     "workflow.not_found": "工作流不存在",
-    "screening.not_found": "筛选运行不存在"
+    "screening.not_found": "筛选运行不存在",
+    "strategy.not_found": "策略不存在",
+    "strategy.unassemblable": "尚不能组装策略",
+    "strategy.validation_blocked": "验证门槛：需先完成一次跨标的回测"
   },
   "watchlist": {
     "add": "添加关注",
@@ -390,7 +394,12 @@
     "stepPending": "等待",
     "stepRunning": "执行中",
     "stepOk": "完成",
-    "stepFailed": "失败"
+    "stepFailed": "失败",
+    "status": {
+      "running": "执行中",
+      "completed": "已完成",
+      "failed": "失败"
+    }
   },
   "screening": {
     "pageHint": "选股不是单纯条件过滤器：每个候选都带「为什么入选」，被排除原因按规则披露。",
@@ -406,6 +415,32 @@
       "has_report": "缺完整研究报告",
       "thesis_direction": "论点方向不符",
       "has_quote": "无可比价行情"
+    }
+  },
+  "strategy": {
+    "pageHint": "把经验卡、筛选与工作流组装成可版本化策略；回测真实显示失败。",
+    "empty": "暂无策略 —— 在筛选运行页点击「做成策略」开始",
+    "launch": "做成策略",
+    "unassemblable": "该筛选运行尚不能组装策略（未完成或无候选）",
+    "philosophy": "策略理念",
+    "universeSize": "标的池",
+    "entryPolicy": "入场规则",
+    "forwardReturn": "前向收益 {{horizon}} 交易日",
+    "runBacktest": "发起跨标的回测",
+    "validate": "验证（§47 门槛）",
+    "backtestTitle": "跨标的回测",
+    "portfolioAvg": "组合平均收益",
+    "portfolioHit": "组合平均命中率",
+    "instrumentsBacktested": "回测标的数",
+    "failureCases": "失败案例（真实披露）",
+    "updated": "更新于 {{when}}",
+    "status": {
+      "DRAFT": "草稿",
+      "EXPERIMENTAL": "实验性（禁止正式盯盘）"
+    },
+    "resultStatus": {
+      "no_data": "无数据（源失败显形）",
+      "insufficient_samples": "样本不足"
     }
   }
 }
