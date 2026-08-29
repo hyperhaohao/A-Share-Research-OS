@@ -502,3 +502,29 @@ test.describe.serial("000831 product flow", () => {
     await expect(page.getByRole("heading", { name: "关注列表" })).toBeVisible();
   });
 });
+
+test("E2E-UI-08 zh-CN business areas render no raw enums or technical ids", async ({ page }) => {
+  // 报告库
+  await page.goto("/reports");
+  const reports = await page.getByTestId("reports-page").innerText();
+  expect(reports).not.toMatch(/\b(pass|blocked|failed)\b/);
+  // 经验卡
+  await page.goto("/experience");
+  const cards = await page.getByTestId("experience-page").innerText();
+  expect(cards).not.toMatch(/\b(DRAFT|REFINED|APPROVED|REJECTED)\b/);
+  // 策略实验室
+  await page.goto("/strategy");
+  const strategy = await page.getByTestId("strategy-page").innerText();
+  expect(strategy).not.toMatch(/\b(DRAFT|EXPERIMENTAL)\b/);
+  expect(strategy).not.toContain("strat_");
+  // 研究图谱
+  await page.goto("/research-graph");
+  const graph = await page.getByTestId("research-graph-page").innerText();
+  expect(graph).not.toMatch(/art_[0-9a-f]/);
+  expect(graph).not.toMatch(/rpt_[0-9a-f]/);
+  // 数据源状态（技术页豁免，但 provider 能力行应为业务词）
+  await page.goto("/source-health");
+  await expect(page.getByTestId("source-health-table")).toBeVisible();
+  const health = await page.getByTestId("source-health-page").innerText();
+  expect(health).not.toContain("parse_error");
+});
