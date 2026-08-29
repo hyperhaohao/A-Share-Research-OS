@@ -9,9 +9,9 @@
 ## Current Phase
 
 ```text
-V2 Phase A DONE + Phase B DONE（AI 研究中枢三栏 + ResearchPlan + ConversationSession，
-E2E-08 实跑对话闭环 8/8 绿）。当前执行线：Phase C（研究经验卡，总纲 §72）
-（compose 栈重建因 Docker Desktop 引擎故障暂挂，见 Open Issues #7）
+V2 Phase A DONE + Phase B DONE（AI 研究中枢三栏 + ResearchPlan + ConversationSession）。
+compose 栈已重建并在生产路径完成全链真机验证（E2E 8/8 于 compose 栈）。
+当前执行线：Phase C（研究经验卡，总纲 §72）
 ```
 
 ## Completed
@@ -58,9 +58,6 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-0. compose 栈重建（外部阻塞解除后）：修复 Docker Desktop（引擎 API 500/无法启动，
-   需人工查看其 GUI 报错/更新）→ docker compose up -d --build → :8000 冒烟
-   （by-domain 404/200、command/plans、43 事件回放、lineage）→ :8080 产品冒烟；
 1. Phase C 研究经验卡（总纲 §72/§43）：ReportVersion → ExperienceCard Draft →
    Refine → Validate → Approve；handoff 注册 report→experience:
    create_experience_draft（复用 Phase A 信封与 shared/handoff.ts）；
@@ -73,8 +70,8 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ```text
 backend: 312 passed（+ Phase B command 6 测试：解析/拒绝/闭环/预测/无报告失败）
 frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 8/8 passed（E2E-01…08，真实浏览器+真实源；
-     本地栈 :8001(新后端)+:5173(新前端 vite)，见 Open Issues #7）
+e2e: Playwright 产品 E2E 8/8 passed（E2E-01…08，真实浏览器+真实源，
+     全量打在 compose 栈：vite :5173 → compose backend :8000）
 ```
 
 ## Live Verification（本轮实测）
@@ -82,6 +79,15 @@ e2e: Playwright 产品 E2E 8/8 passed（E2E-01…08，真实浏览器+真实源�
 ```text
 产品流（PW）：000831 搜索/名称解析/Watchlist 直加/重启持久/SSE 实时阶段/
 报告卡片/生成预测/预测卡片/总控台 —— 全 PASS（另 Playwright 6/6 回归）
+compose 栈重建后真机验证（Docker 修复后，000831）：
+  迁移 c9d0e1f2a3b4 应用（alembic current = head）PASS
+  真实 000831 run（run_90458a76aee4）43/43 事件回放 PASS
+  by-domain 解析报告（业务标题字节级断言）PASS
+  lineage：version ← produced ← run；version --derived_from--> report PASS
+  §42 指挥官闭环（POST /command）3 个计划全部 completed，
+  各带自身 run_id + 报告 artifact PASS
+  :8080 生产 bundle 含 Phase B 中枢代码 PASS
+  E2E 8/8 于 compose 栈（E2E-08 锁定自身计划完成 + 回放 + 产物）PASS
 Phase B（本轮真机，000831，E2E-08 实测）：
   对话一句话 → 结构化计划三步可见 → 管线真实完成 → 右栏产物出现报告
   （业务标题，无 rpt_ 裸 id）→ 点击「打开报告」进入报告页 PASS
@@ -108,10 +114,9 @@ Phase A（真机 000831 全新 run，43 事件）：
 4. 法定节假日历未接入 → 预测到期日 ±1-3 天
 5. 公网部署需认证/TLS；SQLite 单机规模；生产多用户需 PostgreSQL
 6. Macro 官方原始源未接入；Cost Ledger 待真实化；scheduler claim 待原子化
-7. Docker Desktop 引擎故障（本轮开始前 API 已 500，重启+WSL reset 后仍无法启动
-   docker-desktop 发行版，需人工查看 GUI 报错/更新）。解除后执行 Next Action #0
-   （compose 重建 + 冒烟）。挂起期间本地 uvicorn :8001 + vite :5173 可跑全产品
-   （vite 代理支持 ASRO_API_PROXY 覆盖）
+7. [已解决 2026-08-29] Docker Desktop 引擎故障 —— 用户修复后 compose 重建完成，
+   全链真机验证通过（见 Live Verification）。经验：多后端并存时先确认
+   :5173 代理目标（vite ASRO_API_PROXY），E2E 断言须锁定自身创建的对象
 ```
 
 ## Branch / Commit
