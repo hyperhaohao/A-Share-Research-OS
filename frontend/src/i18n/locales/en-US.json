@@ -15,7 +15,8 @@
     "experience": "Experience",
     "screening": "Screening",
     "strategy": "Strategy Lab",
-    "monitoring": "Monitoring"
+    "monitoring": "Monitoring",
+    "researchGraph": "Research Graph"
   },
   "home": {
     "title": "Dashboard",
@@ -491,5 +492,14 @@
     "notReady": "Global context not generated yet — run full research first",
     "themesTitle": "Macro/policy themes (official-body mentions flagged)",
     "openWorkspace": "Open workspace with context"
+  },
+  "researchGraph": {
+    "pageHint": "Artifacts and provenance edges accumulated since Phase A: trace any node up to runs and down to validations.",
+    "empty": "Graph is empty — run a research first",
+    "lineageTitle": "Lineage explorer",
+    "selectHint": "Select a node on the left to see its upstream/downstream",
+    "upstream": "Upstream",
+    "downstream": "Downstream",
+    "openArtifact": "Open artifact"
   }
 }

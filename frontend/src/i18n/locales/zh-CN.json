@@ -15,7 +15,8 @@
     "experience": "经验卡",
     "screening": "智能选股",
     "strategy": "策略实验室",
-    "monitoring": "策略盯盘"
+    "monitoring": "策略盯盘",
+    "researchGraph": "全库图谱"
   },
   "home": {
     "title": "研究总览",
@@ -490,5 +491,14 @@
     "notReady": "全球坐标尚未生成 —— 先运行完整研究采集宏观资讯",
     "themesTitle": "宏观/政策主题（含官方机构提及标注）",
     "openWorkspace": "带上下文打开工作台"
+  },
+  "researchGraph": {
+    "pageHint": "Phase A 起积累的产物与溯源关系：任一节点可上溯到研究运行、下探到验证。",
+    "empty": "图谱为空 —— 先运行一次研究",
+    "lineageTitle": "溯源（Lineage Explorer）",
+    "selectHint": "选择左侧任一产物节点查看其上下游",
+    "upstream": "上游",
+    "downstream": "下游",
+    "openArtifact": "打开产物"
   }
 }

@@ -16,6 +16,7 @@ import { expect, test } from "@playwright/test";
  * E2E-13: strategy monitor with Observation/Signal/Decision separation (G)
  * E2E-14: workspace → industry map / global context → context-preserving
  *         return to the workspace (Phase H, §52/§77)
+ * E2E-15: global research graph + lineage explorer (Phase I, §78)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -365,6 +366,28 @@ test.describe.serial("000831 product flow", () => {
     } else {
       await expect(page.getByText("宏观资讯未采集")).toBeVisible();
     }
+  });
+
+  test("E2E-15 global graph lineage explorer traces to the research run", async ({ page }) => {
+    await page.goto("/research-graph");
+    await expect(page.getByTestId("graph-nodes")).toBeVisible();
+
+    // select a report node — its lineage must reach the research run
+    const reportButtons = page
+      .getByTestId("graph-nodes")
+      .getByRole("button")
+      .filter({ hasText: "完整研究报告" });
+    await expect(reportButtons.first()).toBeVisible({ timeout: 20_000 });
+    await reportButtons.first().click();
+
+    const lineage = page.getByTestId("graph-lineage");
+    await expect(lineage.getByTestId("lineage-selected")).toBeVisible();
+    await expect(lineage.getByText("研究运行").first()).toBeVisible({ timeout: 20_000 });
+    await expect(lineage.getByText("产出")).toBeVisible();
+
+    // cross-module jump: the artifact's route leaves the graph page
+    await lineage.getByRole("link", { name: "打开产物" }).first().click();
+    await expect(page).not.toHaveURL(/\/research-graph/);
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {

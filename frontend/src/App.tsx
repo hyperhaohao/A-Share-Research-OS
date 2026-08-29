@@ -16,6 +16,7 @@ import { ScreeningRunsPage, ScreeningRunDetailPage } from "./pages/ScreeningPage
 import { StrategyLabPage, StrategyDetailPage } from "./pages/StrategyLabPage";
 import { StrategyMonitorsPage, StrategyMonitorDetailPage } from "./pages/StrategyMonitorPage";
 import { IndustryMapPage, GlobalContextPage } from "./pages/ResearchMapPages";
+import { ResearchGraphPage } from "./pages/ResearchGraphPage";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 
@@ -32,6 +33,7 @@ const NAV_ITEMS: Array<{ to: string; key: string }> = [
   { to: "/screening", key: "nav.screening" },
   { to: "/strategy", key: "nav.strategy" },
   { to: "/monitoring", key: "nav.monitoring" },
+  { to: "/research-graph", key: "nav.researchGraph" },
   { to: "/reports", key: "nav.reports" },
 ];
 
@@ -67,6 +69,7 @@ function Shell() {
         <Route path="/monitoring/:monitorId" element={<StrategyMonitorDetailPage />} />
         <Route path="/industry-map/:instrumentId" element={<IndustryMapPage />} />
         <Route path="/global-context/:instrumentId" element={<GlobalContextPage />} />
+        <Route path="/research-graph" element={<ResearchGraphPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
         <Route path="/instrument/:instrumentId" element={<InstrumentWorkspacePage />} />
