@@ -218,9 +218,24 @@ def test_validate_marks_experimental(client, monkeypatch, strategy_chain):
     assert "盯盘" in body["verdict"]
 
 
-def test_backtest_fails_honestly_without_bars(client, monkeypatch, strategy_chain):
-    strategy = strategy_chain["strategy"]
+def test_backtest_fails_honestly_without_bars(client, monkeypatch):
+    # source down for the WHOLE flow — no kline evidence can ever reach the
+    # ledger (a successful earlier fetch would legitimately serve dedup)
     _mock_sources(monkeypatch, kline_ok=False)
+    body = client.post("/api/v1/pipeline/run?instrument=000831&run_id=run_stratnoBars")
+    assert body.status_code == 202
+    card = client.post(
+        "/api/v1/experience-cards/from-report",
+        json={"report_id": body.json()["report_id"]},
+    ).json()["card"]
+    screening = client.post(
+        "/api/v1/screening-runs/from-card", json={"card_id": card["card_id"]}
+    )
+    run = _await(client, f"/api/v1/screening-runs/{screening.json()['run']['run_id']}", "run")
+    strategy = client.post(
+        "/api/v1/strategies/from-screening",
+        json={"screening_run_id": run["run_id"]},
+    ).json()["strategy"]
     launched = client.post(f"/api/v1/strategies/{strategy['version_id']}/backtest")
     assert launched.status_code == 202
     backtest = _await(

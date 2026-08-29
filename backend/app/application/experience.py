@@ -63,6 +63,7 @@ class ExperienceCardORM(Base):
     source_evidence_ids_json: Mapped[list] = mapped_column(JSON, default=list)
 
     status: Mapped[str] = mapped_column(String(16), default=ExperienceStatus.DRAFT, index=True)
+    quant_expression: Mapped[str | None] = mapped_column(String(200), nullable=True)
     confidence: Mapped[float] = mapped_column(Float, default=0.5)
     verdict: Mapped[str | None] = mapped_column(String(500), nullable=True)
     current_version: Mapped[int] = mapped_column(default=1)
@@ -119,6 +120,7 @@ def _card_to_dict(row: ExperienceCardORM, *, versions: int | None = None) -> dic
         "source_claim_ids": list(row.source_claim_ids_json or []),
         "source_evidence_ids": list(row.source_evidence_ids_json or []),
         "status": row.status,
+        "quant_expression": row.quant_expression,
         "confidence": row.confidence,
         "verdict": row.verdict,
         "current_version": row.current_version,

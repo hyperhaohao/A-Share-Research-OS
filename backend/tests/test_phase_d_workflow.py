@@ -86,8 +86,8 @@ def _mock_sources(monkeypatch, *, kline_ok: bool = True) -> None:
     monkeypatch.setattr(httpx, "get", fake_get)
 
 
-def _make_card(client, monkeypatch) -> dict:
-    _mock_sources(monkeypatch)
+def _make_card(client, monkeypatch, *, kline_ok: bool = True) -> dict:
+    _mock_sources(monkeypatch, kline_ok=kline_ok)
     body = client.post("/api/v1/pipeline/run?instrument=000831&run_id=run_wfcard0001")
     assert body.status_code == 202
     report_id = body.json()["report_id"]
@@ -179,8 +179,9 @@ def test_workflow_threshold_above_all_returns_gives_zero_hits(client, monkeypatc
 
 
 def test_workflow_fails_honestly_when_bars_unavailable(client, monkeypatch):
-    card = _make_card(client, monkeypatch)
-    _mock_sources(monkeypatch, kline_ok=False)
+    # the source is down for the WHOLE test — no kline evidence can exist in
+    # the ledger (a successful earlier fetch would legitimately serve dedup)
+    card = _make_card(client, monkeypatch, kline_ok=False)
     created = client.post(
         "/api/v1/workflow-runs/from-card",
         json={"card_id": card["card_id"], "horizon_days": 20},
@@ -208,3 +209,38 @@ def test_workflow_from_missing_card_is_404(client):
 def test_workflow_events_404_for_unknown_run(client):
     resp = client.get("/api/v1/workflow-runs/wr_missing00000/events")
     assert resp.status_code == 404
+
+
+def test_quant_expression_node_evaluates_card_rule(client, monkeypatch):
+    """深度扩展 c: the expression node evaluates the card's quant rule as a
+    typed DAG step; a passing rule on the rising series and a failing one
+    both record an honest verdict."""
+    card = _make_card(client, monkeypatch)
+    run = _await_workflow_on_card(
+        client, card["card_id"], monkeypatch,
+        horizon_days=HORIZON, expression="avg_return > 0 AND hit_rate >= 99",
+    )
+    assert run["status"] == "completed", run
+    by_kind = {n["kind"]: n for n in run["nodes"]}
+    assert "expression" in by_kind
+    assert run["metrics"]["expression_verdict"] is True
+    assert "成立" in by_kind["expression"]["detail"]
+
+    # a rule the series cannot satisfy → verdict False, still an honest run
+    run2 = _await_workflow_on_card(
+        client, card["card_id"], monkeypatch,
+        horizon_days=HORIZON, expression="hit_rate >= 100 AND best_return < 1",
+    )
+    assert run2["status"] == "completed"
+    assert run2["metrics"]["expression_verdict"] is False
+    assert "不成立" in {n["kind"]: n for n in run2["nodes"]}["expression"]["detail"]
+
+
+def test_quant_expression_parse_failure_refuses_up_front(client, monkeypatch):
+    card = _make_card(client, monkeypatch)
+    resp = client.post(
+        "/api/v1/workflow-runs/from-card",
+        json={"card_id": card["card_id"], "expression": "import os"},
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error_code"] == "workflow.expression_invalid"

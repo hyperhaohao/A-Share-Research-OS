@@ -44,12 +44,14 @@ def collect_daily_bars(session: Session, instrument_id: str, *, limit: int = 120
         repo=EvidenceRepository(session),
         params={"bars": limit},
     )
-    if outcome.manifest.final_status not in ("success", "partial") or not outcome.created_ids:
-        raise ValueError(f"historical bars unavailable ({outcome.manifest.final_status})")
+    # deduped re-collections report created_ids=[] while the bars already
+    # exist in the ledger — judge by what the ledger actually holds
     bars = load_daily_bars(session, instrument_id)
-    if len(bars) < 2:
-        raise ValueError("fewer than 2 usable bars")
-    return bars
+    if len(bars) >= 2:
+        return bars
+    if outcome.manifest.final_status not in ("success", "partial"):
+        raise ValueError(f"historical bars unavailable ({outcome.manifest.final_status})")
+    raise ValueError("fewer than 2 usable bars")
 
 
 def load_daily_bars(session: Session, instrument_id: str) -> list[dict]:
@@ -81,18 +83,31 @@ def forward_returns(bars: list[dict], horizon: int, threshold: float) -> list[fl
     return returns
 
 
-def build_nodes() -> list[dict]:
-    """The fixed first-batch DAG shape (§73): typed node descriptors."""
-    return [
+def build_nodes(*, with_expression: bool = False) -> list[dict]:
+    """The typed DAG shape (§73). With a quant expression, a dedicated
+    expression node evaluates the card's rule between rule and validation."""
+    nodes = [
         {"node_id": "n_data", "kind": "data", "title": "采集历史日线", "status": NodeStatus.PENDING,
          "detail": None, "error": None},
         {"node_id": "n_rule", "kind": "rule", "title": "前向收益规则", "status": NodeStatus.PENDING,
          "detail": None, "error": None},
-        {"node_id": "n_validation", "kind": "validation", "title": "指标评估", "status": NodeStatus.PENDING,
-         "detail": None, "error": None},
-        {"node_id": "n_output", "kind": "output", "title": "落库与注册", "status": NodeStatus.PENDING,
-         "detail": None, "error": None},
     ]
+    nodes.extend(
+        [
+            {"node_id": "n_validation", "kind": "validation", "title": "指标评估",
+             "status": NodeStatus.PENDING, "detail": None, "error": None},
+        ]
+    )
+    if with_expression:
+        nodes.append(
+            {"node_id": "n_expression", "kind": "expression", "title": "量化规则表达式",
+             "status": NodeStatus.PENDING, "detail": None, "error": None}
+        )
+    nodes.append(
+        {"node_id": "n_output", "kind": "output", "title": "落库与注册",
+         "status": NodeStatus.PENDING, "detail": None, "error": None}
+    )
+    return nodes
 
 
 class WorkflowService:
@@ -103,25 +118,34 @@ class WorkflowService:
     # -- draft ---------------------------------------------------------------------
 
     def create_from_card(
-        self, card_id: str, *, horizon_days: int = 20, threshold_pct: float = 0.0
+        self, card_id: str, *, horizon_days: int = 20, threshold_pct: float = 0.0,
+        expression: str | None = None,
     ) -> dict:
-        """§44: ExperienceCard → workflow draft（立即后台执行，202）。"""
+        """§44: ExperienceCard → workflow draft（立即后台执行，202）。
+
+        With ``expression`` (深度扩展 c) the card's quant rule is evaluated
+        as its own typed DAG node; parse failures are refused up front."""
         from app.application.experience import ExperienceRepository
-        from app.services.commander import INTENT_TITLES  # noqa: F401 — scope note only
 
         card = ExperienceRepository(self._session).get_card(card_id)
         if card is None:
             raise KeyError(card_id)
+        expression = (expression or card.get("quant_expression") or "").strip() or None
+        if expression is not None:
+            from app.quant.expression import parse_quant_expression
+
+            parse_quant_expression(expression)  # raises ExpressionError on bad input
         params = {
             "rule": "forward_return",
             "horizon_days": max(1, min(int(horizon_days), 250)),
             "threshold_pct": float(threshold_pct),
+            "expression": expression,
         }
         return self._repo.create_run(
             instrument_id=card["instrument_id"],
             kind="card_quant_validation",
             params=params,
-            nodes=build_nodes(),
+            nodes=build_nodes(with_expression=expression is not None),
             card_id=card_id,
         )
 
@@ -191,6 +215,8 @@ class WorkflowService:
             return self._node_data(run)
         if kind == "rule":
             return self._node_rule(run)
+        if kind == "expression":
+            return self._node_expression(run)
         if kind == "validation":
             return self._node_validation(run)
         if kind == "output":
@@ -221,6 +247,26 @@ class WorkflowService:
             return p
         self._repo.update_run(run["run_id"], merge)
         return f"horizon={horizon} 交易日，样本 {len(returns)}"
+
+    def _node_expression(self, run: dict) -> str:
+        """Evaluate the card's quant expression against the computed metrics.
+        The node always succeeds when the DAG ran — the VERDICT is the output
+        (a failed rule is information, not a workflow failure)."""
+        from app.quant.expression import parse_quant_expression
+
+        expression = (run["params"].get("expression") or "").strip()
+        if not expression:
+            raise ValueError("expression node without an expression")
+        parsed = parse_quant_expression(expression)
+        metrics = dict(run.get("metrics") or {})
+        verdict, reason = parsed.evaluate(metrics)
+
+        def merge(p: dict) -> dict:
+            p["metrics"] = {**p.get("metrics", {}), "expression_verdict": verdict,
+                            "expression": expression}
+            return p
+        self._repo.update_run(run["run_id"], merge)
+        return f"{expression} → {'成立' if verdict else '不成立'}（{reason}）"
 
     def _node_validation(self, run: dict) -> str:
         metrics = dict(run.get("metrics") or {})

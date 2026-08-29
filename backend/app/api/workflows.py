@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.application.workflow import WorkflowRepository
 from app.core.errors import AppError
 from app.db import get_session, session_scope
+from app.quant.expression import ExpressionError
 from app.services.workflow_service import WorkflowService
 
 router = APIRouter(prefix="/workflow-runs", tags=["workflow"])
@@ -24,6 +25,7 @@ class WorkflowFromCardIn(BaseModel):
     card_id: str = Field(min_length=6, max_length=32)
     horizon_days: int = Field(default=20, ge=1, le=250)
     threshold_pct: float = Field(default=0.0, ge=-100.0, le=100.0)
+    expression: str | None = Field(default=None, max_length=200)
 
 
 def _execute_in_background(engine, run_id: str) -> None:
@@ -50,7 +52,10 @@ def create_from_card(payload: WorkflowFromCardIn, session: Session = Depends(get
             payload.card_id,
             horizon_days=payload.horizon_days,
             threshold_pct=payload.threshold_pct,
+            expression=payload.expression,
         )
+    except ExpressionError as exc:
+        raise AppError("workflow.expression_invalid", status_code=422, detail=str(exc)) from None
     except KeyError:
         raise AppError("experience.not_found", status_code=404) from None
     session.commit()

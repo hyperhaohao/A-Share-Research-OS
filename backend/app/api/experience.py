@@ -21,13 +21,17 @@ class VerdictIn(BaseModel):
     verdict: str | None = Field(default=None, max_length=500)
 
 
+class FromReportIn(BaseModel):
+    report_id: str = Field(min_length=6, max_length=32)
+    quant_expression: str | None = Field(default=None, max_length=200)
+
+
 @router.post("/from-report", status_code=201)
-def create_from_report(payload: dict, session: Session = Depends(get_session)) -> dict:
-    report_id = (payload or {}).get("report_id", "")
-    if not isinstance(report_id, str) or len(report_id) < 6:
-        raise AppError("experience.invalid", status_code=422, detail="report_id required")
+def create_from_report(payload: FromReportIn, session: Session = Depends(get_session)) -> dict:
     try:
-        card = ExperienceService(session).create_from_report(report_id)
+        card = ExperienceService(session).create_from_report(
+            payload.report_id, quant_expression=payload.quant_expression
+        )
     except KeyError:
         raise AppError("report.not_found", status_code=404) from None
     except ExperienceRefusal as exc:

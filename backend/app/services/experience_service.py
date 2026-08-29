@@ -48,7 +48,7 @@ class ExperienceService:
 
     # -- 原 + 炼 ------------------------------------------------------------------
 
-    def create_from_report(self, report_id: str) -> dict:
+    def create_from_report(self, report_id: str, *, quant_expression: str | None = None) -> dict:
         """Deterministically distill one report's research state into a card.
 
         Every field comes from persisted research objects; the source links
@@ -118,6 +118,7 @@ class ExperienceService:
             source_claim_ids_json=list(claim_ids),
             source_evidence_ids_json=evidence_ids[:200],
             status=ExperienceStatus.REFINED,  # 炼 completed deterministically
+            quant_expression=(quant_expression or None),
             confidence=thesis.confidence,
             refine_method="deterministic",
             created_at=now,
