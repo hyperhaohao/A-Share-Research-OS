@@ -90,7 +90,8 @@
     "monitor.gate_blocked": "盯盘门槛：仅 EXPERIMENTAL（已验证）策略可建立盯盘",
     "industry_map.not_collected": "产业资料未采集，先运行完整研究",
     "global_context.not_collected": "宏观资讯未采集，先运行完整研究",
-    "replay.chain_incomplete": "链上尚无已验证预测 —— 待预测到期验证后再回灌"
+    "replay.chain_incomplete": "链上尚无已验证预测 —— 待预测到期验证后再回灌",
+    "workflow.expression_invalid": "表达式无法解析（格式：指标 比较符 数值，AND 连接）"
   },
   "watchlist": {
     "add": "添加关注",
@@ -406,7 +407,9 @@
       "running": "执行中",
       "completed": "已完成",
       "failed": "失败"
-    }
+    },
+    "expressionLabel": "量化规则表达式",
+    "expressionPlaceholder": "可选：avg_return > 0 AND hit_rate >= 55"
   },
   "screening": {
     "pageHint": "选股不是单纯条件过滤器：每个候选都带「为什么入选」，被排除原因按规则披露。",
@@ -500,7 +503,9 @@
     "notReady": "全球坐标尚未生成 —— 先运行完整研究采集宏观资讯",
     "themesTitle": "宏观/政策主题（含官方机构提及标注）",
     "openWorkspace": "带上下文打开工作台",
-    "indicatorsTitle": "全球宏观数值（指数/商品）"
+    "indicatorsTitle": "全球宏观数值（指数/商品）",
+    "themeTopic": "主题：{{topic}}",
+    "officialMention": "提及官方机构：{{bodies}}"
   },
   "researchGraph": {
     "pageHint": "Phase A 起积累的产物与溯源关系：任一节点可上溯到研究运行、下探到验证。",

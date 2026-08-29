@@ -7,13 +7,14 @@
 
 from __future__ import annotations
 
+import httpx
+
 from app.sources.base import (
     SourceRecord,
     SourceRequest,
     SourceResult,
     utc_now,
 )
-from app.sources.http import http_json
 from app.sources.provider import BaseProvider
 
 _QUOTE_URL = "https://qt.gtimg.cn/q"
@@ -35,19 +36,24 @@ class TencentGlobalMacroProvider(BaseProvider):
     provider_id = "tencent_global_macro"
     capabilities = frozenset({"global_macro"})
 
+    def __init__(self, *, timeout: float = 12.0) -> None:
+        self._timeout = timeout
+
     def fetch(self, request: SourceRequest) -> SourceResult:
         attempted_at = utc_now()
         codes = ",".join(code for code, _name in INDICATORS)
-        data, failure = http_json(
-            _QUOTE_URL,
-            params={"q": codes},
-            timeout=self._timeout_s,
-            encoding="gbk",
-        )
-        if failure is not None:
-            return self._failure(request, failure[0], failure[1], attempted_at=attempted_at)
-
-        raw = data if isinstance(data, str) else ""
+        try:
+            resp = httpx.get(_QUOTE_URL, params={"q": codes}, timeout=self._timeout)
+        except (httpx.TimeoutException, httpx.TransportError) as exc:
+            return self._failure(
+                request, "network_error", type(exc).__name__, attempted_at=attempted_at
+            )
+        if resp.status_code != 200:
+            return self._failure(
+                request, "source_unavailable", f"http_{resp.status_code}",
+                attempted_at=attempted_at,
+            )
+        raw = resp.content.decode("gbk", errors="replace")
         indicators = self._parse(raw)
         if not indicators:
             return self._no_data(

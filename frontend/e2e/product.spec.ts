@@ -18,6 +18,8 @@ import { expect, test } from "@playwright/test";
  *         return to the workspace (Phase H, §52/§77)
  * E2E-15: global research graph + lineage explorer (Phase I, §78)
  * E2E-16: replay feedback loop from a monitor decision (Phase J, §79)
+ * E2E-17: deep extensions — numeric macro layer + board relations +
+ *         quant expression node
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -363,7 +365,9 @@ test.describe.serial("000831 product flow", () => {
       .then(() => true)
       .catch(() => false);
     if (ctxReady) {
-      await expect(page.getByText(/官方宏观数值源未接入/)).toBeVisible();
+      // the disclosure states the numeric layer honestly (either connected
+      // via the quote feed or explicitly not connected)
+      await expect(page.getByTestId("global-context-disclosure")).toBeVisible();
     } else {
       await expect(page.getByText("宏观资讯未采集")).toBeVisible();
     }
@@ -423,6 +427,53 @@ test.describe.serial("000831 product flow", () => {
     // refusal is the honest product behaviour
     await page.getByTestId("replay-launch").click();
     await expect(page.getByText(/链上尚无已验证预测/)).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("E2E-17 deep extensions: numeric macro layer, board relations, quant expression", async ({ page }) => {
+    // (b) 全球坐标数值层：real index/commodity values from the quote feed
+    await page.goto("/global-context/SZSE%3A000831");
+    const indicators = page.getByTestId("global-indicators");
+    const indicatorsReady = await indicators
+      .waitFor({ timeout: 20_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (indicatorsReady) {
+      await expect(indicators.getByText("上证指数")).toBeVisible();
+      await expect(indicators.locator(".pct-up, .pct-down").first()).toBeVisible();
+    } else {
+      // numeric layer not built yet (quote feed unreachable) — the page must
+      // still render its persisted state honestly
+      await expect(page.getByTestId("global-context-disclosure")).toBeVisible();
+      await expect(page.getByTestId("global-context-page").getByText(/主题/).first()).toBeVisible();
+    }
+
+    // (a) 产业地图关系源: board members or the honest co-occurrence fallback
+    await page.goto("/industry-map/SZSE%3A000831");
+    const chain = page.getByTestId("industry-chain");
+    await expect(chain.or(page.getByText("产业资料未采集")).first()).toBeVisible({
+      timeout: 20_000,
+    });
+
+    // (c) quant expression node: an unsatisfiable rule still records an
+    // honest verdict on the card's workflow
+    await page.goto("/reports");
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+    await page.getByTestId("workflow-expression").fill("hit_rate >= 100 AND best_return < 1");
+    await page.getByTestId("workflow-launch").click();
+    const runPanel = page.getByTestId("workflow-run");
+    await expect(
+      runPanel.getByText(/工作流完成|工作流失败/),
+    ).toBeVisible({ timeout: 120_000 });
+    const outcome = (await runPanel.getByText(/工作流完成|工作流失败/).innerText()).trim();
+    // the expression node is part of the DAG either way
+    await expect(runPanel.getByText(/量化规则表达式/)).toBeVisible();
+    if (outcome.includes("工作流完成")) {
+      await expect(runPanel.getByText(/成立|不成立/).first()).toBeVisible();
+    } else {
+      // kline source down → honest failure disclosed on the data node
+      await expect(runPanel.locator(".status-error").first()).toBeVisible();
+    }
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {

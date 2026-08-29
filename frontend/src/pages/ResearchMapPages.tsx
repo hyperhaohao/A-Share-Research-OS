@@ -270,10 +270,13 @@ export function GlobalContextPage() {
         <ul className="watch-list">
           {data.themes.map((theme) => (
             <li className="result-row" key={theme.evidence_id}>
-              <span>{theme.title}</span>
-              <span className="secondary">
-                {theme.mentions_official_body ? theme.official_bodies.join("、") : ""}
+              <span>
+                {theme.topic ? t("globalContext.themeTopic", { topic: theme.topic }) : ""}
+                {theme.mentions_official_body
+                  ? ` · ${t("globalContext.officialMention", { bodies: theme.official_bodies.join("、") })}`
+                  : ""}
               </span>
+              <span className="secondary">{theme.summary}</span>
               <span className="secondary">{formatWhen(theme.available_time, "zh")}</span>
             </li>
           ))}

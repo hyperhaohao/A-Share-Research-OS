@@ -389,6 +389,24 @@ export function ResearchPipelineCard({
         }
         const data = (await resp.json()) as PipelineResult;
         setResult(data);
+        // §37: a sub-second run can finish before the SSE handshake lands its
+        // early events — backfill the panel from the persisted replay
+        try {
+          const replayResp = await fetch(`/api/v1/research-runs/${runId}/events`);
+          if (replayResp.ok) {
+            const body = (await replayResp.json()) as {
+              results: Array<{ event_type: string; at: string; payload: Record<string, unknown> }>;
+            };
+            const backfill = body.results.map((r) => ({
+              event: r.event_type,
+              at: r.at,
+              ...(r.payload ?? {}),
+            })) as PipelineEvent[];
+            setEvents((prev) => (prev.length >= backfill.length ? prev : backfill));
+          }
+        } catch {
+          /* replay backfill is best-effort; live events remain authoritative */
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "common.error");
       } finally {

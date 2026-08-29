@@ -36,6 +36,7 @@ export function CardWorkflowPanel({ cardId }: { cardId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [horizon, setHorizon] = useState("20");
+  const [expression, setExpression] = useState("");
   const [runId, setRunId] = useState<string | null>(null);
 
   const lastRunQuery = useQuery({
@@ -65,7 +66,11 @@ export function CardWorkflowPanel({ cardId }: { cardId: string }) {
       const resp = await fetch("/api/v1/workflow-runs/from-card", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ card_id: cardId, horizon_days: Number(horizon) }),
+        body: JSON.stringify({
+          card_id: cardId,
+          horizon_days: Number(horizon),
+          expression: expression.trim() || null,
+        }),
       });
       if (!resp.ok) {
         const body = (await resp.json().catch(() => null)) as { error_code?: string } | null;
@@ -96,6 +101,14 @@ export function CardWorkflowPanel({ cardId }: { cardId: string }) {
           <option value="20">{t("workflow.h20")}</option>
           <option value="60">{t("workflow.h60")}</option>
         </select>
+        <input
+          className="control-input"
+          data-testid="workflow-expression"
+          value={expression}
+          placeholder={t("workflow.expressionPlaceholder")}
+          aria-label={t("workflow.expressionLabel")}
+          onChange={(e) => setExpression(e.target.value)}
+        />
         <button
           type="button"
           className="control-btn"

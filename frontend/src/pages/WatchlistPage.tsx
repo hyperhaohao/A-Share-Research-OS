@@ -103,7 +103,7 @@ function WatchCard({ instrumentId, onRemove }: { instrumentId: string; onRemove:
     <li className="card watch-card" data-testid="watch-card">
       <div className="watch-card-head">
         <Link to={`/instrument/${instrumentId}`} className="watch-card-name">
-          {profile?.name ?? instrumentId}
+          {profile?.name ?? instrumentId.split(":").pop() ?? instrumentId}
         </Link>
         {profile && (
           <span className="secondary">

@@ -90,7 +90,8 @@
     "monitor.gate_blocked": "Monitor gate: only EXPERIMENTAL (validated) strategies",
     "industry_map.not_collected": "Industry profile not collected — run full research first",
     "global_context.not_collected": "Macro evidence not collected — run full research first",
-    "replay.chain_incomplete": "No validated prediction on the chain yet — feedback waits for maturity"
+    "replay.chain_incomplete": "No validated prediction on the chain yet — feedback waits for maturity",
+    "workflow.expression_invalid": "Cannot parse the expression (metric op value, AND-combined)"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -407,7 +408,9 @@
       "running": "running",
       "completed": "completed",
       "failed": "failed"
-    }
+    },
+    "expressionLabel": "Quant rule expression",
+    "expressionPlaceholder": "optional: avg_return > 0 AND hit_rate >= 55"
   },
   "screening": {
     "pageHint": "Screening is not a bare filter: every candidate explains why it was selected; exclusions are disclosed per rule.",
@@ -501,7 +504,9 @@
     "notReady": "Global context not generated yet — run full research first",
     "themesTitle": "Macro/policy themes (official-body mentions flagged)",
     "openWorkspace": "Open workspace with context",
-    "indicatorsTitle": "Global macro indicators (indices/commodities)"
+    "indicatorsTitle": "Global macro indicators (indices/commodities)",
+    "themeTopic": "Topic: {{topic}}",
+    "officialMention": "mentions official bodies: {{bodies}}"
   },
   "researchGraph": {
     "pageHint": "Artifacts and provenance edges accumulated since Phase A: trace any node up to runs and down to validations.",
