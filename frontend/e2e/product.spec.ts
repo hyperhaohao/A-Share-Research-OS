@@ -122,23 +122,51 @@ test.describe.serial("000831 product flow", () => {
 
   test("E2E-08 conversation plans and completes a research run", async ({ page }) => {
     await page.goto("/");
+    // remember the newest plan before the command so we can lock onto OUR plan
+    const before = await page.request.get("/api/v1/command/plans?limit=1").then((r) => r.json());
+    const previousPlanId: string | null = before.results[0]?.plan_id ?? null;
+
     await page.getByTestId("commander-input").fill("研究中国稀土最近的资产重组迹象");
     await page.getByTestId("commander-send").click();
 
-    // commander refuses nothing here — the plan appears with structured steps
-    const progress = page.getByTestId("commander-plan-progress");
-    await expect(progress.getByText("解析研究标的")).toBeVisible({ timeout: 20_000 });
-    await expect(progress.getByText("运行完整研究管线")).toBeVisible();
+    // the commander replies with a structured plan (never a guess)
+    await expect(page.getByTestId("commander-reply").last()).toContainText("已创建研究计划", {
+      timeout: 20_000,
+    });
 
-    // §42 closed loop: 对话 → ResearchRun → ReportVersion → Artifact → 右栏报告
+    // wait for THIS plan (newest id changed) to complete — API is the clock,
+    // the UI is the product surface (§42: 对话 → ResearchRun → Artifact → 报告)
+    let planId: string | null = null;
+    await expect(async () => {
+      const body = await page.request.get("/api/v1/command/plans?limit=1").then((r) => r.json());
+      const newest = body.results[0];
+      expect(newest.plan_id).not.toBe(previousPlanId);
+      planId = newest.plan_id;
+      expect(newest.status).toBe("completed");
+    }).toPass({ timeout: 180_000 });
+
+    // the plan produced a real research run with replayable persisted events
+    const planBody = await page.request
+      .get(`/api/v1/command/plans/${planId}`)
+      .then((r) => r.json());
+    expect(planBody.plan.run_id).toBeTruthy();
+    const replay = await page.request
+      .get(`/api/v1/research-runs/${planBody.plan.run_id}/events`)
+      .then((r) => r.json());
+    expect(replay.count).toBeGreaterThan(0);
+
+    // right column shows THIS plan's report artifact with a business title
+    await expect(page.getByTestId("commander-plan-progress").getByText("计划完成")).toBeVisible({
+      timeout: 60_000,
+    });
     await expect(
       page.getByTestId("commander-artifacts").getByTestId("artifact-open").first(),
-    ).toBeVisible({ timeout: 180_000 });
+    ).toBeVisible({ timeout: 60_000 });
     const artifactsText = await page.getByTestId("commander-artifacts").innerText();
     expect(artifactsText).toContain("研究报告");
     expect(artifactsText).not.toContain("rpt_");
 
-    // the right column opens the produced report
+    // opening the artifact lands on the produced report
     await page.getByTestId("artifact-open").first().click();
     await expect(page).toHaveURL(/\/reports\//);
   });
