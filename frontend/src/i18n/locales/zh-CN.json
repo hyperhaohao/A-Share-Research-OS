@@ -11,7 +11,8 @@
     "reports": "报告",
     "predictions": "预测",
     "evidence": "证据",
-    "settings": "设置"
+    "settings": "设置",
+    "experience": "经验卡"
   },
   "home": {
     "title": "研究总览",
@@ -70,7 +71,12 @@
     "task.disabled": "任务已暂停，请先启用再运行",
     "task.busy": "该标的已有任务在运行",
     "task.schedule_invalid": "计划格式无效",
-    "instrument.not_found": "未找到对应标的"
+    "instrument.not_found": "未找到对应标的",
+    "experience.approve_blocked": "验证后才可批准：请先发起案例验证",
+    "experience.underivable": "该报告缺少可提炼的研究论点",
+    "experience.llm_unavailable": "未配置 LLM：卡片已带确定性提炼结果",
+    "experience.validation_no_data": "暂无可比价数据，无法案例验证",
+    "artifact.not_found": "产物档案缺失"
   },
   "watchlist": {
     "add": "添加关注",
@@ -331,6 +337,34 @@
       "running": "执行中",
       "completed": "已完成",
       "failed": "失败"
+    }
+  },
+  "experience": {
+    "create": "炼成经验卡",
+    "underivable": "该报告缺少可提炼的研究论点，无法炼成经验卡",
+    "empty": "暂无经验卡 —— 在报告页点击「炼成经验卡」开始沉淀",
+    "statementLabel": "经验陈述",
+    "mechanismLabel": "作用机制",
+    "conditionsTitle": "适用与失效条件",
+    "applicableLabel": "适用条件",
+    "invalidLabel": "失效条件",
+    "sourcesTitle": "来源（可溯源）",
+    "sourceReport": "来源报告",
+    "openSourceReport": "打开来源报告",
+    "claimsCount": "来源主张数",
+    "evidenceCount": "来源证据数",
+    "validationsTitle": "验证记录",
+    "noValidations": "尚无验证记录 —— 发起案例验证后可批准",
+    "validate": "发起案例验证",
+    "approve": "批准",
+    "reject": "否决",
+    "confidenceLabel": "置信度",
+    "versionLabel": "版本",
+    "createdLabel": "创建时间",
+    "open": "打开卡片",
+    "method": {
+      "deterministic": "确定性提炼",
+      "llm": "LLM 润色"
     }
   }
 }

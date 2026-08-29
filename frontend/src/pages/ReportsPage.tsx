@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PredictionCreateButton } from "../components/PredictionCreateButton";
+import { ExperienceCardCreateButton } from "../components/ExperienceCardCreateButton";
 import { ReportLineage } from "../components/ReportLineage";
 import { useInstrumentName } from "../shared/instrument";
 import { formatGate, uiLang } from "../presentation/enumLabels";
@@ -87,6 +88,10 @@ function ReportCard({ report }: { report: ReportSummary }) {
           {t("report.open")}
         </Link>
         <PredictionCreateButton
+          reportId={report.report_id}
+          instrumentId={report.instrument_id}
+        />
+        <ExperienceCardCreateButton
           reportId={report.report_id}
           instrumentId={report.instrument_id}
         />

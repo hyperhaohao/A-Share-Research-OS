@@ -218,3 +218,23 @@ const RELATION_LABELS: Record<string, Record<UiLanguage, string>> = {
 export function formatRelation(value: string | null | undefined, lang: UiLanguage): string {
   return lookup(RELATION_LABELS, value ?? "", lang);
 }
+
+// -- Experience Card（V2 Phase C） ---------------------------------------------
+
+const EXPERIENCE_STATUS_LABELS: Record<string, LabelTriple> = {
+  DRAFT: { zh: "草稿", en: "Draft" },
+  REFINED: { zh: "已提炼", en: "Refined" },
+  VALIDATING: { zh: "验证中", en: "Validating" },
+  APPROVED: { zh: "已批准", en: "Approved" },
+  REJECTED: { zh: "已否决", en: "Rejected" },
+  DOUBTFUL: { zh: "存疑", en: "Doubtful" },
+  SUPERSEDED: { zh: "已取代", en: "Superseded" },
+};
+
+/** 经验卡状态 → 业务名（后端存枚举，界面显业务词）。 */
+export function formatExperienceStatus(
+  value: string | null | undefined,
+  lang: UiLanguage,
+): string {
+  return lookup(EXPERIENCE_STATUS_LABELS, value ?? "", lang);
+}

@@ -11,7 +11,8 @@
     "reports": "Reports",
     "predictions": "Predictions",
     "evidence": "Evidence",
-    "settings": "Settings"
+    "settings": "Settings",
+    "experience": "Experience"
   },
   "home": {
     "title": "Dashboard",
@@ -70,7 +71,12 @@
     "task.disabled": "Task is paused; enable it before running",
     "task.busy": "Another task for this instrument is running",
     "task.schedule_invalid": "Invalid schedule format",
-    "instrument.not_found": "Instrument not found"
+    "instrument.not_found": "Instrument not found",
+    "experience.approve_blocked": "Approval requires a validation first",
+    "experience.underivable": "This report has no thesis to distill",
+    "experience.llm_unavailable": "LLM not configured; card already carries the deterministic refine",
+    "experience.validation_no_data": "No comparable prices for a case validation",
+    "artifact.not_found": "Artifact record missing"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -332,6 +338,34 @@
       "running": "running",
       "completed": "completed",
       "failed": "failed"
+    }
+  },
+  "experience": {
+    "create": "Distill experience card",
+    "underivable": "This report has no thesis to distill into a card",
+    "empty": "No experience cards yet — use 炼成经验卡 on a report page",
+    "statementLabel": "Statement",
+    "mechanismLabel": "Mechanism",
+    "conditionsTitle": "Applicable & invalidation conditions",
+    "applicableLabel": "Applicable when",
+    "invalidLabel": "Invalidated when",
+    "sourcesTitle": "Sources (traceable)",
+    "sourceReport": "Source report",
+    "openSourceReport": "Open source report",
+    "claimsCount": "Source claims",
+    "evidenceCount": "Source evidence",
+    "validationsTitle": "Validations",
+    "noValidations": "No validations yet — run a case validation before approval",
+    "validate": "Run case validation",
+    "approve": "Approve",
+    "reject": "Reject",
+    "confidenceLabel": "Confidence",
+    "versionLabel": "Version",
+    "createdLabel": "Created",
+    "open": "Open card",
+    "method": {
+      "deterministic": "deterministic distillation",
+      "llm": "LLM polished"
     }
   }
 }

@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { RevisionPanel } from "../components/RevisionPanel";
 import { PredictionCreateButton } from "../components/PredictionCreateButton";
+import { ExperienceCardCreateButton } from "../components/ExperienceCardCreateButton";
 
 interface ReportData {
   report_id: string;
@@ -157,6 +158,7 @@ export function InteractiveReportPage() {
       {/* Text actions (任务书 §61) + prediction handoff (PW2 §17) */}
       <div className="report-actions" role="group" aria-label={t("report.actions")}>
         <PredictionCreateButton reportId={reportId} instrumentId={reportQuery.data?.instrument_id ?? null} />
+        <ExperienceCardCreateButton reportId={reportId} instrumentId={reportQuery.data?.instrument_id ?? null} />
         <button type="button" className="control-btn" onClick={() => explainMutation.mutate()} disabled={explainMutation.isPending}>
           {t("report.explain")}
         </button>

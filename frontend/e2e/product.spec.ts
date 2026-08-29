@@ -9,6 +9,7 @@ import { expect, test } from "@playwright/test";
  * E2E-06: single-select appearance/language + no raw enums in zh-CN
  * E2E-07: report lineage backtracks to its research run (V2 Phase A)
  * E2E-08: conversation → plan → research run → report (V2 Phase B 中枢)
+ * E2E-09: report → experience card → case validation → approve (Phase C)
  */
 
 test.describe.serial("000831 product flow", () => {
@@ -169,6 +170,33 @@ test.describe.serial("000831 product flow", () => {
     // opening the artifact lands on the produced report
     await page.getByTestId("artifact-open").first().click();
     await expect(page).toHaveURL(/\/reports\//);
+  });
+
+  test("E2E-09 report distills an experience card through validation to approval", async ({ page }) => {
+    await page.goto("/reports");
+    const card = page.getByTestId("report-card").filter({ hasText: "中国稀土" }).first();
+    await expect(card).toBeVisible();
+
+    // §43: report → experience card via the handoff envelope
+    await page.getByTestId("experience-create").first().click();
+    await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
+    await expect(page.getByTestId("experience-detail")).toBeVisible();
+
+    // sources preserved on the card (§43)
+    await expect(page.getByText("来源主张数")).toBeVisible();
+    const claimsText = await page.getByTestId("experience-detail").innerText();
+    expect(claimsText).not.toContain("undefined");
+
+    // 验 → 用 gate: approve before validation must stay blocked
+    await page.getByTestId("experience-approve").click();
+    await expect(page.getByText("验证后才可批准")).toBeVisible();
+
+    // run the case validation, then approve
+    await page.getByTestId("experience-validate").click();
+    await expect(page.getByText("案例验证：").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("验证中")).toBeVisible();
+    await page.getByTestId("experience-approve").click();
+    await expect(page.getByText("已批准")).toBeVisible({ timeout: 20_000 });
   });
 
   test("E2E-06 zh-CN hides raw enums; language select switches to English", async ({ page }) => {
