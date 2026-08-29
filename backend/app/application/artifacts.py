@@ -34,6 +34,8 @@ class ArtifactType(str, Enum):
     SCREENING_RUN = "screening_run"
     STRATEGY_VERSION = "strategy_version"
     STRATEGY_BACKTEST = "strategy_backtest"
+    INDUSTRY_MAP = "industry_map"
+    GLOBAL_CONTEXT = "global_context"
 
 
 class RelationType(str, Enum):

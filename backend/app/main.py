@@ -36,6 +36,7 @@ from app.api.workflows import router as workflows_router
 from app.api.screening import router as screening_router
 from app.api.strategies import router as strategies_router
 from app.api.strategy_monitors import router as strategy_monitors_router
+from app.api.research_map import router as research_map_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -91,6 +92,7 @@ def create_app() -> FastAPI:
     app.include_router(screening_router, prefix="/api/v1")
     app.include_router(strategies_router, prefix="/api/v1")
     app.include_router(strategy_monitors_router, prefix="/api/v1")
+    app.include_router(research_map_router, prefix="/api/v1")
     return app
 
 

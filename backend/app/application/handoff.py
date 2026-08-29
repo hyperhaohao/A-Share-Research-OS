@@ -43,6 +43,8 @@ HANDOFF_ACTIONS: set[tuple[str, str, str]] = {
     ("experience", "workflow", "run_validation"),
     ("experience", "screening", "run_screening"),
     ("screening", "strategy", "create_strategy"),
+    ("industry_map", "workspace", "open_with_context"),
+    ("global_context", "workspace", "open_with_context"),
     ("report", "workspace", "open_workspace"),
     ("prediction", "workspace", "open_with_context"),
 }
