@@ -67,6 +67,53 @@ def refine_card(card_id: str, session: Session = Depends(get_session)) -> dict:
     return {"card": card}
 
 
+@router.post("/{card_id}/refine-structured", status_code=200)
+def refine_structured(card_id: str, session: Session = Depends(get_session)) -> dict:
+    """R6 方案 §12.2：LLM 九字段结构化精炼（无 KEY → 422 显形）。"""
+    try:
+        card = ExperienceService(session).refine_structured(card_id)
+    except KeyError:
+        raise AppError("experience.not_found", status_code=404) from None
+    except ExperienceRefusal as exc:
+        raise AppError("experience.refine_unavailable", status_code=422, detail=str(exc)) from None
+    session.commit()
+    return {"card": card}
+
+
+class NonQuantIn(BaseModel):
+    method: str = Field(min_length=4, max_length=40)
+    note: str | None = Field(default=None, max_length=300)
+
+
+@router.post("/{card_id}/validate-non-quant", status_code=201)
+def validate_non_quant(card_id: str, payload: NonQuantIn, session: Session = Depends(get_session)) -> dict:
+    """R6 方案 §12.3：非量化验证（反例搜索/历史证据/跨公司/人工复核）。"""
+    try:
+        validation = ExperienceService(session).validate_non_quant(
+            card_id, payload.method, note=payload.note
+        )
+    except KeyError:
+        raise AppError("experience.not_found", status_code=404) from None
+    except ExperienceRefusal as exc:
+        raise AppError("experience.validation_refused", status_code=422, detail=str(exc)) from None
+    session.commit()
+    return {"validation": validation}
+
+
+@router.get("/playbook/search")
+def playbook_search(
+    q: str = Query(default="", max_length=100),
+    limit: int = Query(default=10, ge=1, le=50),
+    session: Session = Depends(get_session),
+) -> dict:
+    """R6 方案 §12.4：研究 Playbook（已批准经验检索）。
+
+    Playbook 条目是研究启发/方法，不是 Evidence —— 检索结果不携带
+    authority/fact_status（那是 Evidence 字段），防止当事实引用。"""
+    results = ExperienceService(session).playbook_search(q, limit=limit)
+    return {"count": len(results), "results": results}
+
+
 @router.post("/{card_id}/validate", status_code=201)
 def validate_card(card_id: str, session: Session = Depends(get_session)) -> dict:
     try:

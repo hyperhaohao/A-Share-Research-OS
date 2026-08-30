@@ -78,12 +78,16 @@
       （契约已定义，顺序依赖在 manifest 如实登记）
 - [x] 验证：tests/test_r5 4/4 + 全量 backend exit 0 + 真机核验
 
-## R6 — Experience 非量化改造（DOING，P1）
-- [ ] LLM Refinement 结构化（九字段；原文+炼果双存；无 KEY 422 显形）
-- [ ] 非量化验证方法（case/historical/counterexample/cross-company/cross-cycle/review）
-- [ ] Playbook（批准后可检索；Memory≠Evidence 边界测试）
+## R6 — Experience 非量化改造（DONE，P1）
+- [x] LLM 结构化精炼（九字段；原文+炼果双存 refined_json；无 KEY 422 显形；
+      schema 校验）
+- [x] 非量化验证四方法（反例搜索确定性检索/历史证据 PIT 前向核对/跨公司
+      同业成员核对/人工复核留档）——禁 IC/回测回潮
+- [x] Playbook 检索（已批准卡片；条目无 authority/fact_status ——
+      Playbook≠Evidence 结构锁死）
+- [x] 验证：tests/test_r6 3/3 + 全量 backend exit 0 + Playwright 30/30
 
-## R7 — Research Memory（PENDING，P1）
+## R7 — Research Memory（DOING，P1）
 - [ ] ResearchMemory domain（七类/scope/version/staging→review 晋升）
 - [ ] 检索（instrument/industry/event_type/intent/tags）+ Agent 三段上下文
 

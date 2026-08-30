@@ -20,6 +20,8 @@ from sqlalchemy.orm import Session
 from uuid import uuid4
 
 from app.ai.llm_provider import get_llm_provider
+
+from app.application.conversation import _ensure_utc
 from app.application.experience import (
     ExperienceCardORM,
     ExperienceCardVersionORM,
@@ -185,6 +187,83 @@ class ExperienceService:
         self._register_artifact(card)
         return card
 
+    # -- 炼（LLM 结构化精炼，R6 方案 §12.2） ---------------------------------------
+
+    _REFINE_SCHEMA = (
+        '{"observation": str, "mechanism": str, "preconditions": [str], '
+        '"expected_outcome": str, "counter_example": str, "failure_conditions": [str], '
+        '"applicable_scope": str, "invalidators": [str], "research_checklist": [str]}'
+    )
+
+    def refine_structured(self, card_id: str) -> dict:
+        """R6 LLM 结构化精炼（方案 §12.2 九字段）。
+
+        输入 = 卡自身的 research state（statement/mechanism/conditions）；
+        输出 = 九字段结构（LLM 重述与组织，禁止新事实 —— prompt 约束 +
+        提交者字段 extractor=llm_refine_v1 可审计）。无 KEY → 显式 422。
+        原文（statement/mechanism）与炼果（refined_json）双存。
+        """
+        row = self._repo.get_card_row(card_id)
+        if row is None:
+            raise KeyError(card_id)
+        provider = get_llm_provider()
+        if provider is None:
+            raise ExperienceRefusal(
+                "LLM provider not configured; structured refinement requires "
+                "ASRO_LLM_API_KEY (the deterministic refine remains the baseline)"
+            )
+        parts = [
+            "你是 A 股研究方法提炼器。把下面的研究经验整理为九字段 JSON（",
+            self._REFINE_SCHEMA,
+            "）。硬性约束：不得添加任何新事实/新数据/新数字/新事件；"
+            "只能重述、归纳、拆分输入内容；原文中的数字必须原样保留。",
+            "标题：" + row.title,
+            "陈述：" + row.statement,
+            "机制：" + row.mechanism,
+            "适用条件：" + repr(row.applicable_conditions_json),
+            "失效条件：" + repr(row.invalid_conditions_json),
+        ]
+        prompt = chr(10).join(parts)
+        raw = provider.generate_structured(prompt, schema_hint=self._REFINE_SCHEMA)
+        import json as _json
+
+        try:
+            parsed = _json.loads(raw)
+        except ValueError as exc:
+            raise ExperienceRefusal(f"refine output not valid JSON: {exc}") from None
+        required = ("observation", "mechanism", "preconditions", "expected_outcome",
+                    "counter_example", "failure_conditions", "applicable_scope",
+                    "invalidators", "research_checklist")
+        missing = [k for k in required if k not in parsed]
+        if missing:
+            raise ExperienceRefusal(f"refine output missing fields: {missing}")
+
+        now = datetime.now(timezone.utc)
+        new_no = row.current_version + 1
+        refined = {k: parsed[k] for k in required}
+        refined["extractor"] = "llm_refine_v1"
+
+        self._repo.add_version(
+            ExperienceCardVersionORM(
+                card_id=card_id,
+                version_no=new_no,
+                statement=row.statement,
+                mechanism=row.mechanism,
+                applicable_conditions_json=list(row.applicable_conditions_json or []),
+                invalid_conditions_json=list(row.invalid_conditions_json or []),
+                confidence=row.confidence,
+                method="llm_structured",
+                created_at=now,
+            )
+        )
+        row.refined_json = refined  # type: ignore[attr-defined] — column added in R6
+        row.current_version = new_no
+        row.refine_method = "llm_structured"
+        row.updated_at = now
+        card = self._repo.save_card(row)
+        self._register_artifact(card)
+        return card
+
     # -- 验 ------------------------------------------------------------------------
 
     def validate_case(self, card_id: str) -> dict:
@@ -249,6 +328,179 @@ class ExperienceService:
         return validation
 
     # -- 用 ------------------------------------------------------------------------
+
+    # -- 验（R6 非量化验证方法，方案 §12.3） ----------------------------------------
+
+    _NONQUANT_METHODS = (
+        "counterexample_search",
+        "historical_evidence_validation",
+        "cross_company_validation",
+        "expert_review",
+    )
+
+    def validate_non_quant(self, card_id: str, method: str, *, note: str | None = None) -> dict:
+        """非量化验证路由（方案 §12.3）：每个方法都有确定性真实行为或显式
+        记录；禁止 IC/回测回潮，禁止伪造结果。"""
+        if method not in self._NONQUANT_METHODS:
+            raise ExperienceRefusal(f"unknown non-quant validation method: {method}")
+        row = self._repo.get_card_row(card_id)
+        if row is None:
+            raise KeyError(card_id)
+        now = datetime.now(timezone.utc)
+
+        if method == "counterexample_search":
+            return self._validate_counterexample_search(row, now)
+        if method == "historical_evidence_validation":
+            return self._validate_historical(row, now)
+        if method == "cross_company_validation":
+            return self._validate_cross_company(row, now)
+        validation = self._repo.add_validation(
+            ExperienceValidationORM(
+                validation_id=f"expv_{uuid4().hex[:12]}",
+                card_id=card_id,
+                method="expert_review",
+                cases_json=[{"note": (note or "专家/用户复核记录").strip()[:300]}],
+                summary="人工复核记录（专家/用户 review）",
+                created_at=now,
+            )
+        )
+        return validation
+
+    def _validate_counterexample_search(self, row, now) -> dict:
+        """反例搜索（方案 §12.3）：在本标的当前可见证据语料中做确定性检索，
+        命中负面共现句即引用落档；搜不到 = 「语料中未见反例」（≠没有反例）。"""
+        from app.domain.evidence import EvidenceType
+
+        corpus = EvidenceRepository(self._session).list_for_instrument(
+            row.instrument_id, visible_at=datetime.now(timezone.utc)
+        )
+        counter_hits = []
+        for e in corpus:
+            neg_words = ("低于", "下滑", "失效", "未能", "否认", "不适用", "回落")
+            if e.evidence_type in (EvidenceType.NEWS, EvidenceType.INDUSTRY_DATA) and any(
+                neg in (e.summary or "") for neg in neg_words
+            ):
+                counter_hits.append(
+                    {
+                        "evidence_id": e.evidence_id,
+                        "summary": (e.summary or "")[:160],
+                        "basis": "同标的语料负面证据共现（确定性检索）",
+                    }
+                )
+            if len(counter_hits) >= 5:
+                break
+        validation = self._repo.add_validation(
+            ExperienceValidationORM(
+                validation_id=f"expv_{uuid4().hex[:12]}",
+                card_id=row.card_id,
+                method="counterexample_search",
+                cases_json=counter_hits,
+                summary=(
+                    f"语料反例检索：命中 {len(counter_hits)} 条（语料范围=本标的"
+                    f"当前可见证据；未见反例≠不存在反例）"
+                ),
+                created_at=now,
+            )
+        )
+        return validation
+
+    def _validate_historical(self, row, now) -> dict:
+        """历史证据验证（方案 §12.3）：按既有历史快照逐个做 PIT 入场→其后
+        报价的前向核对（复用 case validation 的 PIT 纪律）。"""
+        from sqlalchemy import select
+
+        from app.storage.orm import SnapshotORM
+
+        snaps = self._session.scalars(
+            select(SnapshotORM)
+            .where(SnapshotORM.instrument_id == row.instrument_id)
+            .order_by(SnapshotORM.as_of)
+            .limit(12)
+        ).all()
+        cases = []
+        for snap in snaps:
+            pinned = {item["evidence_id"] for item in (snap.items_json or [])}
+            entry = self._pinned_price(row.instrument_id, pinned, snap.as_of)
+            if entry is None:
+                continue
+            exits = [
+                e for e in EvidenceRepository(self._session).list_for_instrument(
+                    row.instrument_id, visible_at=datetime.now(timezone.utc)
+                )
+                if e.evidence_type is EvidenceType.MARKET_QUOTE
+                and (e.metadata or {}).get("price") is not None
+                and e.available_time > _ensure_utc(snap.as_of)
+            ]
+            if not exits:
+                continue
+            exit_ev = min(exits, key=lambda e: e.available_time)
+            forward_pct = round((float(exit_ev.metadata["price"]) / entry - 1) * 100, 2)
+            cases.append(
+                {
+                    "snapshot_id": snap.snapshot_id,
+                    "entry_price": entry,
+                    "exit_price": float(exit_ev.metadata["price"]),
+                    "forward_pct": forward_pct,
+                    "as_of": snap.as_of.isoformat(),
+                }
+            )
+        if not cases:
+            raise ExperienceRefusal(
+                "no historical snapshot/quote pairs to validate (PIT)"
+            )
+        avg = round(sum(c["forward_pct"] for c in cases) / len(cases), 3)
+        return self._repo.add_validation(
+            ExperienceValidationORM(
+                validation_id=f"expv_{uuid4().hex[:12]}",
+                card_id=row.card_id,
+                method="historical_evidence_validation",
+                cases_json=cases,
+                summary=f"历史证据验证 {len(cases)} 个快照：平均前向 {avg:+.2f}%",
+                created_at=now,
+            )
+        )
+
+    def _validate_cross_company(self, row, now) -> dict:
+        """跨公司验证（方案 §12.3）：对同业板块成员（真实关系源）逐个核对
+        行情可得性（诚实标注，不做收益推断）。"""
+        from app.services.research_map_service import ResearchMapService
+
+        related = ResearchMapService(self._session).latest_map(row.instrument_id) or {}
+        members = list(related.get("related_instruments") or [])[:6]
+        if not members:
+            raise ExperienceRefusal(
+                "no related instruments (board relations) for cross-company validation"
+            )
+        cases = []
+        for m in members:
+            member_id = m.get("instrument_id")
+            if not member_id:
+                continue
+            quotes = [
+                e for e in EvidenceRepository(self._session).list_for_instrument(
+                    member_id, visible_at=datetime.now(timezone.utc)
+                )
+                if e.evidence_type is EvidenceType.MARKET_QUOTE
+                and (e.metadata or {}).get("price") is not None
+            ]
+            cases.append(
+                {
+                    "instrument_id": member_id,
+                    "name": m.get("name"),
+                    "has_quote": bool(quotes),
+                    "price": quotes[0].metadata.get("price") if quotes else None,
+                }
+            )
+        return self._repo.add_validation(
+            ExperienceValidationORM(
+                validation_id=f"expv_{uuid4().hex[:12]}",
+                card_id=row.card_id,
+                method="cross_company_validation",
+                cases_json=cases,
+                summary=f"跨公司核对（同业板块成员 {len(cases)} 家，行情可得性如实标注）",
+                created_at=now,
+            )
+        )
 
     def approve(self, card_id: str, verdict: str | None) -> dict:
         row = self._repo.get_card_row(card_id)
@@ -327,3 +579,38 @@ class ExperienceService:
                 relation=RelationType.GENERATED_FROM,
             )
         return artifact_id
+
+    # -- 用（R6 Playbook：已批准经验检索，§12.4） -----------------------------------
+
+    def playbook_search(self, query: str, *, limit: int = 10) -> list[dict]:
+        """Playbook = 已批准经验的检索面。条目是研究方法/启发（question
+        generator / checklist），不是事实依据 —— 故意不带 authority/
+        fact_status（那些是 Evidence 字段），Memory/Evidence 边界由结构锁死。"""
+        rows = [
+            c for c in self._repo.list_cards(limit=200)
+            if c.get("status") == "APPROVED"
+        ]
+        q = (query or "").strip()
+        results = []
+        for r in rows:
+            hay = " ".join(
+                p for p in [
+                    r.get("title") or "", r.get("statement") or "",
+                    r.get("mechanism") or "",
+                ] if p
+            )
+            if q and q not in hay:
+                continue
+            results.append(
+                {
+                    "card_id": r.get("card_id"),
+                    "title": r.get("title"),
+                    "statement": (r.get("statement") or "")[:200],
+                    "mechanism": (r.get("mechanism") or "")[:200],
+                    "applicable_conditions": list(r.get("applicable_conditions") or [])[:4],
+                    "confidence": r.get("confidence"),
+                }
+            )
+            if len(results) >= limit:
+                break
+        return results
