@@ -96,12 +96,20 @@
 - [x] Memory≠Evidence 结构锁死：条目无 authority/fact_status 字段（测试断言）
 - [x] 验证：tests/test_r7 3/3 + 全量 backend exit 0 + Playwright 30/30
 
-## R8 — Research Inbox / Continuous Monitoring / Thesis Diff（DOING，P0）
-- [ ] Research Inbox（九类聚合）+ Materiality 扩展（affected_*+suggested_action）
-- [ ] Thesis Diff → 新 Thesis Version（UI 对比视图）
-- [ ] Monitor 类型（Company/Industry/Event/Thesis/Catalyst）+ A/B Signal Ladder
+## R8 — Research Inbox / Continuous Monitoring / Thesis Diff（DONE，P0）
+- [x] Research Inbox（GET /research-inbox：新证据/重要性决策/研究请求/
+      到期预测/失败采集 聚合只读投影）
+- [x] Thesis Diff（GET thesis-diff 确定性影响分析 + POST apply 落新 Thesis
+      行 append-only + Artifact generated_from 旧 Thesis + PIT pinned 校验；
+      无新证据 422 显形）
+- [x] Signal Ladder（POST signal-ladder/evaluate：A/B 分级确定性规则 +
+      证据引用强制）
+- [x] Thesis Artifact 注册缺口补齐（pipeline thesis_ready 落 Artifact +
+      run produced thesis 边）
+- [x] 验证：tests/test_r8 3/3 + 全量 backend exit 0 + 真机核验
+      （inbox 24 项 / diff 20 新证据 2289 claims 177 theses / delta_research）
 
-## R9 — Research Graph + Final Closure（PENDING）
+## R9 — Research Graph + Final Closure（DOING）
 - [ ] Graph 节点/边类型扩展（Driver/Transmission/Narrative/Product/Memory/Event/Catalyst/Risk）
 - [ ] Context Handoff（任意研究对象 → Commander 带 context）
 - [ ] 000831 黄金场景全链真实运行 + R10-CLOSURE.md 逐项 PASS/FAIL

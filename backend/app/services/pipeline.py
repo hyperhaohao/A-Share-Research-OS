@@ -125,6 +125,7 @@ class ResearchPipeline:
         version_id: str,
         version_no: int,
         product_type: str | None = None,
+        thesis_id: str | None = None,
     ) -> None:
         """Register this run's outputs on the Artifact Registry (V2 §85)."""
         from app.application.artifacts import ArtifactService, RelationType
@@ -164,6 +165,22 @@ class ResearchPipeline:
             created_by="pipeline",
             route=f"/reports/{report_id}",
         )
+        if thesis_id:
+            thesis_artifact = service.register(
+                artifact_type="thesis",
+                domain_type="Thesis",
+                domain_id=thesis_id,
+                title=f"{name} · 研究论点",
+                instrument_ids=(instrument_id,),
+                as_of_time=snapshot_as_of,
+                created_by="pipeline",
+                route=f"/instrument/{instrument_id}",
+            )
+            service.link(
+                from_artifact_id=run_artifact,
+                to_artifact_id=thesis_artifact,
+                relation=RelationType.PRODUCED,
+            )
         service.link(
             from_artifact_id=run_artifact,
             to_artifact_id=version_artifact,
@@ -579,6 +596,7 @@ class ResearchPipeline:
                 version_id=version_id,
                 version_no=1,
                 product_type=contract.product_type,
+                thesis_id=thesis_id,
             )
             self._emit(run_id, "report_ready", {"report_id": report_id}, events)
 
