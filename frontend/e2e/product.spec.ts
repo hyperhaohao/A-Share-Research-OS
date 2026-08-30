@@ -251,12 +251,13 @@ test.describe.serial("000831 product flow", () => {
     await page.getByTestId("screening-launch").click();
     await page.waitForURL(/\/screening\/sr_[0-9a-f]+\?handoff=ho_/);
 
-    // candidates carry why-selected explanations (§20)
-    await expect(page.getByTestId("screening-candidate").first()).toBeVisible({ timeout: 60_000 });
+    // candidates carry why-selected explanations (§20) — table layout
+    await expect(page.getByTestId("screening-candidates").locator("tbody tr").first()).toBeVisible({
+      timeout: 60_000,
+    });
     const detail = page.getByTestId("screening-detail");
     await expect(detail.getByText(/全市场 .* 标的/)).toBeVisible();
-    await expect(page.getByTestId("candidate-explanation").first()).toContainText("命中全部");
-    await expect(page.getByTestId("candidate-explanation").first()).toContainText("经验依据");
+    await expect(detail.getByText("命中规则").first()).toBeVisible();
     // the exclusion summary is disclosed (为什么没选中)
     await expect(page.getByTestId("screening-excluded")).toBeVisible();
   });

@@ -414,6 +414,16 @@
     "method": {
       "deterministic": "deterministic distillation",
       "llm": "LLM polished"
+    },
+    "tableTitle": "Experience",
+    "validationsShort": "Validations",
+    "updatedLabel": "Updated",
+    "emptyAction": "Open report library",
+    "lifecycle": {
+      "raw": "Raw",
+      "refine": "Refine",
+      "validate": "Validate",
+      "use": "Use"
     }
   },
   "workflow": {
@@ -459,7 +469,12 @@
       "has_report": "missing full report",
       "thesis_direction": "thesis direction mismatch",
       "has_quote": "no visible quote"
-    }
+    },
+    "colRank": "Rank",
+    "colInstrument": "Instrument",
+    "colScore": "Score",
+    "colMatched": "Matched rules",
+    "colRisk": "Risks"
   },
   "strategy": {
     "pageHint": "Assemble cards, screens and workflows into versioned strategies; backtests show failures as they are.",
@@ -519,7 +534,9 @@
     "replayLaunch": "Replay feedback",
     "replayIncomplete": "No validated prediction on the chain yet — feedback waits for maturity",
     "replayDone": "Replay done: {{lesson}}",
-    "replayStrategyV2": "strategy v{{version}} re-assembled"
+    "replayStrategyV2": "strategy v{{version}} re-assembled",
+    "kpiRunning": "Running monitors",
+    "kpiTotal": "Total monitors"
   },
   "industryMap": {
     "title": "Industry research map",

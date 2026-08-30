@@ -69,10 +69,18 @@ export function StrategyMonitorsPage() {
     },
   });
 
+  const running = (data ?? []).filter((m) => m.enabled).length;
+
   return (
-    <main className="page" data-testid="monitors-page">
+    <main className="page layout-workspace" data-testid="monitors-page">
       <h1>{t("nav.monitoring")}</h1>
       <p className="secondary">{t("monitor.pageHint")}</p>
+      <div className="task-grid" data-testid="monitor-kpi">
+        <span>{t("monitor.kpiRunning")}</span>
+        <span className="mono">{running}</span>
+        <span>{t("monitor.kpiTotal")}</span>
+        <span className="mono">{data?.length ?? 0}</span>
+      </div>
       {isPending && <p className="secondary">{t("common.loading")}</p>}
       {isError && <p className="status-error">{t("common.error")}</p>}
       {data && data.length === 0 && <p className="secondary">{t("monitor.empty")}</p>}

@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
-import { useInstrumentName } from "../shared/instrument";
 import { StrategyLaunchButton } from "../components/StrategyLaunchButton";
 
 interface Candidate {
@@ -66,29 +65,6 @@ export function ScreeningRunsPage() {
         </ul>
       )}
     </main>
-  );
-}
-
-function CandidateRow({ candidate }: { candidate: Candidate }) {
-  const profile = useInstrumentName(candidate.instrument_id);
-  const name = profile?.name ?? candidate.name;
-  return (
-    <li className="card watch-card" data-testid="screening-candidate">
-      <div className="watch-card-head">
-        <Link to={`/instrument/${candidate.instrument_id}`} className="watch-card-name">
-          #{candidate.rank} · {name} · {candidate.code}
-        </Link>
-        <span className="mono">{candidate.score}</span>
-      </div>
-      <p data-testid="candidate-explanation">{candidate.explanation}</p>
-      {candidate.risks.length > 0 && (
-        <ul className="watch-list">
-          {candidate.risks.map((r) => (
-            <li key={r} className="secondary">⚠ {r}</li>
-          ))}
-        </ul>
-      )}
-    </li>
   );
 }
 
@@ -167,11 +143,31 @@ export function ScreeningRunDetailPage() {
             </div>
           </section>
 
-          <ul className="watch-list watch-cards">
-            {data.candidates.map((c) => (
-              <CandidateRow key={c.instrument_id} candidate={c} />
-            ))}
-          </ul>
+          {/* 候选表（§27）：排名/股票/Score/命中规则/风险 */}
+          <table className="data-table" data-testid="screening-candidates">
+            <thead>
+              <tr>
+                <th>{t("screening.colRank")}</th>
+                <th>{t("screening.colInstrument")}</th>
+                <th>{t("screening.colScore")}</th>
+                <th>{t("screening.colMatched")}</th>
+                <th>{t("screening.colRisk")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.candidates.map((c) => (
+                <tr key={c.instrument_id} data-testid="screening-candidate">
+                  <td className="mono">#{c.rank}</td>
+                  <td>
+                    <Link to={`/instrument/${c.instrument_id}`}>{c.name}</Link>
+                  </td>
+                  <td className="mono">{c.score}</td>
+                  <td className="secondary">{c.matched_rules.join("；")}</td>
+                  <td className="secondary">{c.risks.join("；") || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           {data.candidates.length === 0 && (
             <p className="secondary">{t("screening.noCandidates")}</p>
           )}

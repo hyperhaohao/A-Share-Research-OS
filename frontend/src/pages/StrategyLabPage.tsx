@@ -56,7 +56,7 @@ export function StrategyLabPage() {
   });
 
   return (
-    <main className="page" data-testid="strategy-page">
+    <main className="page layout-workspace" data-testid="strategy-page">
       <h1>{t("nav.strategy")}</h1>
       <p className="secondary">{t("strategy.pageHint")}</p>
       {isPending && <p className="secondary">{t("common.loading")}</p>}

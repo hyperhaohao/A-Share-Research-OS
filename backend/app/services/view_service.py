@@ -370,6 +370,37 @@ class ViewService:
             )
         return out
 
+    def experience_rows(self, *, limit: int = 50) -> list[dict]:
+        """经验卡 Library 行（§25）：状态/置信度/验证数/来源/更新时间。"""
+        from app.application.experience import ExperienceCardORM, ExperienceValidationORM
+
+        rows = self._session.scalars(
+            select(ExperienceCardORM)
+            .order_by(ExperienceCardORM.created_at.desc(), ExperienceCardORM.id.desc())
+            .limit(limit)
+        ).all()
+        validations = self._session.scalars(select(ExperienceValidationORM)).all()
+        count_by_card: dict[str, int] = {}
+        for v in validations:
+            count_by_card[v.card_id] = count_by_card.get(v.card_id, 0) + 1
+        out = []
+        for r in rows:
+            out.append(
+                {
+                    "card_id": r.card_id,
+                    "title": r.title,
+                    "instrument_id": r.instrument_id,
+                    "status": r.status,
+                    "confidence": r.confidence,
+                    "current_version": r.current_version,
+                    "validation_count": count_by_card.get(r.card_id, 0),
+                    "source_report_id": r.source_report_id,
+                    "created_at": _iso(r.created_at),
+                    "updated_at": _iso(r.updated_at),
+                }
+            )
+        return out
+
     def report_library_rows(self, *, limit: int = 50) -> list[dict]:
         reports = self._session.scalars(
             select(ReportORM)

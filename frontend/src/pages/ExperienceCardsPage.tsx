@@ -4,31 +4,38 @@ import { useTranslation } from "react-i18next";
 import { formatExperienceStatus, uiLang } from "../presentation/enumLabels";
 import { formatWhen } from "../presentation/format";
 
-export interface CardSummary {
+/**
+ * 研究经验卡 Library（UX Foundation / 任务书 §25）：
+ * 单请求消费 /views/experience-cards，桌面表格 Layout。
+ */
+
+interface ExperienceRow {
   card_id: string;
   title: string;
+  instrument_id: string;
   status: string;
-  statement: string;
+  confidence: number;
   current_version: number;
-  created_at: string | null;
+  validation_count: number;
+  source_report_id: string;
+  updated_at: string | null;
 }
 
-export function statusClass(status: string): string {
+function statusClass(status: string): string {
   if (status === "APPROVED") return "status-ok";
   if (status === "REJECTED") return "status-error";
   return "secondary";
 }
 
-/** 经验卡列表页（Phase C v1）。 */
 export function ExperienceCardsPage() {
   const { t, i18n } = useTranslation();
   const lang = uiLang(i18n.language);
   const { data, isPending, isError } = useQuery({
-    queryKey: ["experience-cards"],
-    queryFn: async (): Promise<CardSummary[]> => {
-      const resp = await fetch("/api/v1/experience-cards");
+    queryKey: ["experience-cards-view"],
+    queryFn: async (): Promise<ExperienceRow[]> => {
+      const resp = await fetch("/api/v1/views/experience-cards");
       if (!resp.ok) throw new Error("network.unreachable");
-      const body = (await resp.json()) as { results: CardSummary[] };
+      const body = (await resp.json()) as { results: ExperienceRow[] };
       return body.results;
     },
   });
@@ -38,35 +45,52 @@ export function ExperienceCardsPage() {
       <h1>{t("nav.experience")}</h1>
       {isPending && <p className="secondary">{t("common.loading")}</p>}
       {isError && <p className="status-error">{t("common.error")}</p>}
-      {data && data.length === 0 && <p className="secondary">{t("experience.empty")}</p>}
+      {data && data.length === 0 && (
+        <div className="empty-state">
+          <p>{t("experience.empty")}</p>
+          <p className="secondary">{t("experience.emptyHint")}</p>
+          <Link to="/reports" className="control-btn">
+            {t("experience.emptyAction", { defaultValue: t("nav.reports") })}
+          </Link>
+        </div>
+      )}
       {data && data.length > 0 && (
-        <ul className="watch-list watch-cards">
-          {data.map((card) => (
-            <li className="card watch-card" key={card.card_id} data-testid="experience-card">
-              <div className="watch-card-head">
-                <Link to={`/experience/${card.card_id}`} className="watch-card-name">
-                  {card.title}
-                </Link>
-                <span className={statusClass(card.status)}>
-                  {formatExperienceStatus(card.status, lang)}
-                </span>
-              </div>
-              <div className="task-grid">
-                <span>{t("experience.statementLabel")}</span>
-                <span>{card.statement}</span>
-                <span>{t("experience.versionLabel")}</span>
-                <span className="mono">v{card.current_version}</span>
-                <span>{t("experience.createdLabel")}</span>
-                <span>{formatWhen(card.created_at, lang)}</span>
-              </div>
-              <div className="header-controls">
-                <Link className="control-btn" to={`/experience/${card.card_id}`}>
-                  {t("experience.open")}
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <table className="data-table" data-testid="experience-table">
+          <thead>
+            <tr>
+              <th>{t("experience.tableTitle")}</th>
+              <th>{t("experience.statusLabel")}</th>
+              <th>{t("experience.confidenceLabel")}</th>
+              <th>{t("experience.validationsShort")}</th>
+              <th>{t("experience.versionLabel")}</th>
+              <th>{t("experience.updatedLabel")}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.card_id} data-testid="experience-row">
+                <td>
+                  <Link to={`/experience/${row.card_id}`}>{row.title}</Link>
+                </td>
+                <td>
+                  <span className={statusClass(row.status)}>
+                    {formatExperienceStatus(row.status, lang)}
+                  </span>
+                </td>
+                <td className="mono">{Math.round(row.confidence * 100)}%</td>
+                <td className="mono">{row.validation_count}</td>
+                <td className="mono">v{row.current_version}</td>
+                <td className="secondary">{formatWhen(row.updated_at, lang)}</td>
+                <td>
+                  <Link className="control-btn" to={`/experience/${row.card_id}`}>
+                    {t("experience.open")}
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </main>
   );

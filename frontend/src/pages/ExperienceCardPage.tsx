@@ -125,6 +125,32 @@ export function ExperienceCardPage() {
         {card.current_version} · {t(`experience.method.${card.refine_method}`)}
       </p>
 
+      {/* 生命周期（§25）：原 → 炼 → 验 → 用 */}
+      <div className="lifecycle-bar" data-testid="experience-lifecycle">
+        {[
+          { key: "raw", label: t("experience.lifecycle.raw"), done: true },
+          { key: "refine", label: t("experience.lifecycle.refine"), done: true },
+          {
+            key: "validate",
+            label: t("experience.lifecycle.validate"),
+            done: card.validations.length > 0,
+          },
+          {
+            key: "use",
+            label: t("experience.lifecycle.use"),
+            done: card.status === "APPROVED",
+          },
+        ].map((step, idx) => (
+          <span
+            key={step.key}
+            className={step.done ? "lifecycle-step done" : "lifecycle-step"}
+          >
+            {idx > 0 && <span className="lifecycle-arrow">→</span>}
+            <span className={step.done ? "status-ok" : "secondary"}>{step.label}</span>
+          </span>
+        ))}
+      </div>
+
       <section className="card">
         <h2>{t("experience.statementLabel")}</h2>
         <p>{card.statement}</p>

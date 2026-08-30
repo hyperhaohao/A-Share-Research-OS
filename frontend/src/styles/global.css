@@ -805,3 +805,19 @@
 .workspace-more-menu a:hover {
   background: var(--color-surface);
 }
+
+/* 生命周期条（§25） */
+.lifecycle-bar {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin: var(--space-2) 0;
+}
+.lifecycle-step {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+.lifecycle-arrow {
+  color: var(--color-text-tertiary);
+}

@@ -90,6 +90,25 @@ def test_watchlist_view_aggregates_in_one_request(client, monkeypatch):
     assert card["monitor"] is None
 
 
+def test_experience_cards_view_rows(client, monkeypatch):
+    _research_flow(client, monkeypatch)
+    body = client.post(
+        "/api/v1/experience-cards/from-report",
+        json={"report_id": client.get("/api/v1/reports?limit=1").json()["results"][0]["report_id"]},
+    )
+    assert body.status_code == 201, body.text
+    card = body.json()["card"]
+
+    resp = client.get("/api/v1/views/experience-cards")
+    assert resp.status_code == 200
+    rows = resp.json()["results"]
+    row = next(r for r in rows if r["card_id"] == card["card_id"])
+    assert row["title"] == card["title"]
+    assert row["status"] == "REFINED"
+    assert row["validation_count"] == 0
+    assert row["source_report_id"] == card["source_report_id"]
+
+
 def test_instrument_overview_view_aggregates(client, monkeypatch):
     _research_flow(client, monkeypatch)
     resp = client.get("/api/v1/views/instruments/SZSE:000831/overview")

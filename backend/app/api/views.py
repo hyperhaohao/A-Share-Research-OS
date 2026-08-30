@@ -50,6 +50,15 @@ def report_library_view(
     return {"count": len(rows), "results": rows}
 
 
+@router.get("/experience-cards")
+def experience_cards_view(
+    limit: int = Query(default=50, ge=1, le=200),
+    session: Session = Depends(get_session),
+) -> dict:
+    rows = ViewService(session).experience_rows(limit=limit)
+    return {"count": len(rows), "results": rows}
+
+
 @router.get("/continuous-research")
 def continuous_research_view(session: Session = Depends(get_session)) -> dict:
     rows = ViewService(session).continuous_research_rows()

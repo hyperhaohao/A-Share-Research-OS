@@ -413,6 +413,16 @@
     "method": {
       "deterministic": "确定性提炼",
       "llm": "LLM 润色"
+    },
+    "tableTitle": "经验",
+    "validationsShort": "验证",
+    "updatedLabel": "更新时间",
+    "emptyAction": "打开报告库",
+    "lifecycle": {
+      "raw": "原",
+      "refine": "炼",
+      "validate": "验",
+      "use": "用"
     }
   },
   "workflow": {
@@ -458,7 +468,12 @@
       "has_report": "缺完整研究报告",
       "thesis_direction": "论点方向不符",
       "has_quote": "无可比价行情"
-    }
+    },
+    "colRank": "排名",
+    "colInstrument": "股票",
+    "colScore": "Score",
+    "colMatched": "命中规则",
+    "colRisk": "风险"
   },
   "strategy": {
     "pageHint": "把经验卡、筛选与工作流组装成可版本化策略；回测真实显示失败。",
@@ -518,7 +533,9 @@
     "replayLaunch": "复盘回灌",
     "replayIncomplete": "链上尚无已验证预测 —— 待预测到期验证后再回灌",
     "replayDone": "复盘完成：{{lesson}}",
-    "replayStrategyV2": "策略 v{{version}} 已重组"
+    "replayStrategyV2": "策略 v{{version}} 已重组",
+    "kpiRunning": "运行中策略",
+    "kpiTotal": "盯盘总数"
   },
   "industryMap": {
     "title": "产业研究地图",
