@@ -322,11 +322,63 @@ class ViewService:
     # -- 工作台总览视图（§15） ------------------------------------------------------------
 
     def instrument_overview(self, instrument_id: str) -> dict:
+        """P1-05/06/07: enriched overview with real valuation, specific latest
+        changes, and per-capability data quality."""
         evidence = EvidenceRepository(self._session).list_for_instrument(
             instrument_id, visible_at=datetime.now(timezone.utc)
         )
-        quality_items = len(evidence)
-        source_kinds = len({e.evidence_type.value for e in evidence})
+
+        # P1-07: per-capability data quality
+        by_type: dict[str, int] = {}
+        for e in evidence:
+            by_type[e.evidence_type.value] = by_type.get(e.evidence_type.value, 0) + 1
+        expected_caps = {"market_quote", "financial_report", "announcements", "news", "industry_data", "capital_flow", "macro_indicator"}
+        available_caps = set(by_type.keys()) & expected_caps
+        quality_score = f"{len(available_caps)}/{len(expected_caps)}"
+
+        # P1-06: latest changes — the 5 newest evidence items with type
+        latest_changes = sorted(evidence, key=lambda e: e.available_time, reverse=True)[:5]
+        changes = [
+            {
+                "evidence_type": e.evidence_type.value,
+                "title": e.title[:80],
+                "available_time": _iso(e.available_time),
+            }
+            for e in latest_changes
+        ]
+
+        # P1-05: real valuation from the latest snapshot's valuations
+        valuation_summary = None
+        from app.storage.valuation_repo import ValuationORM
+        from app.storage.orm import SnapshotORM
+        latest_snap = self._session.scalars(
+            select(SnapshotORM)
+            .where(SnapshotORM.instrument_id == instrument_id)
+            .order_by(SnapshotORM.as_of.desc(), SnapshotORM.id.desc())
+            .limit(1)
+        ).first()
+        if latest_snap:
+            val_rows = self._session.scalars(
+                select(ValuationORM).where(
+                    ValuationORM.snapshot_id == latest_snap.snapshot_id,
+                    ValuationORM.computable.is_(True),
+                )
+            ).all()
+            if val_rows:
+                quote = self._latest_quote(instrument_id)
+                price = quote["price"] if quote else None
+                implied = []
+                for v in val_rows:
+                    implied.append({
+                        "method": v.method.value if hasattr(v.method, "value") else str(v.method),
+                        "implied_price": v.value,
+                        "upside_pct": round((v.value / price - 1) * 100, 2) if price and price > 0 else None,
+                    })
+                valuation_summary = {
+                    "current_price": price,
+                    "as_of": _iso(latest_snap.as_of),
+                    "methods": implied,
+                }
 
         thesis = self._research(instrument_id)
         theses = self._session.scalars(
@@ -350,9 +402,13 @@ class ViewService:
             "report": self._latest_report(instrument_id),
             "prediction": self._latest_prediction(instrument_id),
             "monitor": self._monitor(instrument_id),
+            "valuation": valuation_summary,
+            "latest_changes": changes,
             "data_quality": {
-                "evidence_count": quality_items,
-                "source_kinds": source_kinds,
+                "evidence_count": len(evidence),
+                "source_kinds": len({e.evidence_type.value for e in evidence}),
+                "quality_score": quality_score,
+                "capability_breakdown": by_type,
             },
         }
 

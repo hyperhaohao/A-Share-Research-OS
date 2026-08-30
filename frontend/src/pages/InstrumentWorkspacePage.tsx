@@ -261,7 +261,18 @@ interface OverviewView {
   report: { report_id: string; created_at: string | null } | null;
   prediction: { prediction_id: string; horizon: string; expected_direction: string; validated: boolean; due_at: string | null } | null;
   monitor: { monitor_id: string; enabled: boolean; next_run_at: string | null } | null;
-  data_quality: { evidence_count: number; source_kinds: number };
+  valuation: {
+    current_price: number | null;
+    as_of: string | null;
+    methods: Array<{ method: string; implied_price: number; upside_pct: number | null }>;
+  } | null;
+  latest_changes: Array<{ evidence_type: string; title: string; available_time: string }>;
+  data_quality: {
+    evidence_count: number;
+    source_kinds: number;
+    quality_score: string;
+    capability_breakdown: Record<string, number>;
+  };
 }
 
 function OverviewGrid({ instrumentId }: { instrumentId: string }) {
@@ -294,10 +305,17 @@ function OverviewGrid({ instrumentId }: { instrumentId: string }) {
       </section>
       <section className="card">
         <h2>{t("workspace.overviewValuation")}</h2>
-        {ov.quote ? (
-          <p className="mono">
-            {t("workspace.currentPrice")}: {ov.quote.price}
-          </p>
+        {ov.valuation ? (
+          <>
+            <p className="mono">
+              {t("workspace.currentPrice")}: {ov.valuation.current_price}
+            </p>
+            {ov.valuation.methods.map((m) => (
+              <p key={m.method} className="mono secondary">
+                {m.method}: {m.implied_price} ({m.upside_pct != null ? `${m.upside_pct >= 0 ? "+" : ""}${m.upside_pct}%` : "—"})
+              </p>
+            ))}
+          </>
         ) : (
           <p className="secondary">{t("label.no_data")}</p>
         )}
@@ -328,14 +346,24 @@ function OverviewGrid({ instrumentId }: { instrumentId: string }) {
       </section>
       <section className="card">
         <h2>{t("workspace.overviewLatest")}</h2>
-        <p className="secondary">
-          {t("workspace.evidenceCount", { count: ov.data_quality.evidence_count })}
-        </p>
+        {ov.latest_changes.length === 0 ? (
+          <p className="secondary">—</p>
+        ) : (
+          <ul className="watch-list">
+            {ov.latest_changes.map((c, i) => (
+              <li className="result-row" key={i}>
+                <span className="secondary">{c.evidence_type}</span>
+                <span>{c.title}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
       <section className="card">
         <h2>{t("workspace.overviewQuality")}</h2>
         <p className="secondary">
           {t("workspace.qualitySources", { count: ov.data_quality.source_kinds })}
+          {ov.data_quality.quality_score ? ` · ${ov.data_quality.quality_score}` : ""}
         </p>
       </section>
     </div>
