@@ -35,7 +35,15 @@ R4-R7 DONE：
     →retired 禁跳级）+ from_experience（仅 APPROVED）+ /memories API +
     Memory≠Evidence 结构断言。
 
-当前 R8 — Research Inbox / Continuous Monitoring / Thesis Diff（DOING）。
+R8/R9/R10 DONE：Research Inbox + Thesis Diff（append-only apply）+
+    Signal Ladder + 语义对象入图谱 + Handoff 动作扩展 —— 全部完成。
+
+**Research Capability Deep Port R0–R10 全部 DONE —— R10-CLOSURE PASS**
+（docs/research-deep-port/R10-CLOSURE.md：§24 14 项 PASS + 黄金场景 24/24 +
+§20.2 十四问可回答 + 测试全量绿）。
+
+后续候选：LLM 精炼实跑（待 ASRO_LLM_API_KEY）；Transmission/五轴真实数据
+随证据积累自动补全；部署执行（域名+TLS）。
 黄金场景：000831 中国稀土资产整合研究 → docs/research-deep-port/R10-CLOSURE.md
 ```
 
@@ -380,14 +388,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Research Capability Deep Port（R 线）：R0-R4 DONE；当前 R5 — Research
-Product System（DOING）。
-R5 要点：ResearchProduct 类型系统（复用 Report/Artifact/Version，不建平行
-报告系统）——逐类型 Contract（required sections/evidence 规则/质量门），
-P0：COMPANY_DEEP_DIVE / INDUSTRY_DEEP_DIVE / EVENT_INVESTIGATION /
-THESIS_REVIEW；P1：MAINLINE_RADAR / OVERSEAS_MAPPING / DAILY_RESEARCH_BRIEF。
-随后 R6 Experience 非量化 → R7 Memory → R8 Inbox/Thesis Diff → R9 Graph →
-R10-CLOSURE（000831 黄金场景逐项 PASS/FAIL）。
+Research Capability Deep Port（R 线）：R0–R10 全部 DONE —— CLOSURE PASS
+（docs/research-deep-port/R10-CLOSURE.md）。
+
+后续候选（按价值排序）：
+1. LLM 结构化精炼/LLM 研究步骤实跑：设 ASRO_LLM_API_KEY（管道+schema 已就绪）；
+2. Transmission/五轴/叙事数据：随真实证据积累自动补全（引擎/视图已就绪）；
+3. 部署执行：域名 + Let's Encrypt TLS + ASRO_JWT_SECRET；
+4. 因子/量化线保持冻结（NO NEW DEVELOPMENT），恢复需用户明示。
 
 ```
 

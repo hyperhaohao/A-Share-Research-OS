@@ -117,6 +117,12 @@
 - [x] 图谱真机：全类型节点 + 148 边可查
 - [x] R9-MANIFEST.md
 
+- [x] R10-CLOSURE.md 落盘（24/24 黄金场景 + §24 全条件核对）
+
+## R10 — Closure（DONE）
+- [x] docs/research-deep-port/R10-CLOSURE.md：§24 完成定义 14 项逐项 PASS +
+      §20.2 十四问可回答性 + 偏离/边界如实登记
+
 ---
 
 # PW 线（产品闭环二次整改）

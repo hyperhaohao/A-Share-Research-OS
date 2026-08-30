@@ -185,7 +185,6 @@ class ThesisDiffApplyIn(BaseModel):
     instrument_id: str = Field(min_length=4, max_length=32)
     since: str | None = Field(default=None, max_length=40)
     revised_statement: str = Field(min_length=4, max_length=400)
-    snapshot_id: str = Field(min_length=6, max_length=32)
 
 
 @router.post("/thesis-diff/apply", status_code=201)
@@ -215,35 +214,19 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     if old_thesis is None:
         raise AppError("thesis.not_found", status_code=404) from None
 
-    new_ev_ids = sorted({e["evidence_id"] for e in diff["new_evidence"]})
-    new_support = sorted(set(old_thesis.supporting_claims_json or []))
-    # snapshot pin check
-    snap = session.scalars(
-        select(SnapshotORM).where(SnapshotORM.snapshot_id == payload.snapshot_id)
-    ).first()
-    if snap is None:
-        raise AppError("snapshot.not_found", status_code=404) from None
-    pinned = {item["evidence_id"] for item in (snap.items_json or [])}
-    if not set(new_ev_ids).issubset(pinned):
-        raise AppError(
-            "inbox.evidence_not_pinned", status_code=422,
-            detail="new evidence must be pinned by the referenced snapshot (PIT)",
-        ) from None
-
-    repo = ResearchRepository(session)
-    from app.domain.research import ThesisStatus
-
+    # 新 Thesis 钉在旧 Thesis 的快照上（claims 引用完整性：claim 属于旧
+    # 快照）—— 新证据留给下一研究周期的新快照（PIT 纪律）
     thesis = InvestmentThesis(
         instrument_id=payload.instrument_id,
-        snapshot_id=payload.snapshot_id,
-        title=(old_thesis.title + " · 修订")[:200],
+        snapshot_id=old_thesis.snapshot_id,
+        title=(old_thesis.title + " · 修订 " + datetime.now(timezone.utc).strftime("%m-%d %H:%M"))[:200],
         description=payload.revised_statement,
-        supporting_claims=tuple(new_support),
+        supporting_claims=tuple(old_thesis.supporting_claims_json or []),
         opposing_claims=tuple(old_thesis.opposing_claims_json or []),
         confidence=old_thesis.confidence,
     )
     try:
-        thesis_id = repo.save_thesis(thesis)
+        thesis_id = ResearchRepository(session).save_thesis(thesis)
     except ReferenceNotFoundError as exc:
         raise AppError("thesis.claims_not_found", status_code=422, detail=str(exc)) from None
 
@@ -268,7 +251,7 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     record_run_event(
         session, f"run_thesisdiff_{uuid4().hex[:8]}", "thesis_diff_applied",
         {"old_thesis": old_thesis.thesis_id, "new_thesis": thesis_id,
-         "new_evidence": new_ev_ids},
+         "new_evidence": [e["evidence_id"] for e in diff["new_evidence"]]},
     )
     session.commit()
     return {"thesis_id": thesis_id, "diff": diff}

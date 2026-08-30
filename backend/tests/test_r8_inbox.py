@@ -97,15 +97,12 @@ def test_thesis_diff_detects_and_applies(client, monkeypatch):
     assert theses_list, "pipeline must have produced a thesis"
     old_thesis_id = theses_list[0]["thesis_id"]
 
-    snap_id = theses_list[0].get("snapshot_id")
-    assert snap_id, "thesis must carry snapshot_id"
     revised = "修订：减持计划披露后，股份供给压力上升，观察窗口 15 交易日。"
     applied = client.post(
         "/api/v1/research-inbox/thesis-diff/apply",
         json={
             "instrument_id": "SZSE:000831",
             "revised_statement": revised,
-            "snapshot_id": snap_id,
         },
     )
     assert applied.status_code == 201, applied.text
