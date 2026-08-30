@@ -6,6 +6,9 @@ import { uiLang } from "../presentation/enumLabels";
 import { artifactByDomain, handoffPath, recordHandoff } from "../shared/handoff";
 import { newResearchContext } from "../shared/context";
 import { formatWhen } from "../presentation/format";
+import { Badge } from "../ui/guanlan";
+import { StrategyCompositionPanel } from "../features/strategy-lab/StrategyCompositionPanel";
+import { StrategyVersionCompare } from "../features/strategy-lab/StrategyVersionCompare";
 
 interface BacktestResult {
   instrument_id: string;
@@ -37,6 +40,10 @@ interface StrategyVersion {
   verdict: string | null;
   universe: Array<{ instrument_id: string; code: string; name: string; rank: number }>;
   entry_policy: Record<string, unknown>;
+  exit_policy: Record<string, unknown>;
+  risk_policy: Record<string, unknown>;
+  source_card_id: string | null;
+  source_screening_run_id: string | null;
   backtests: Backtest[];
   created_at: string | null;
   updated_at: string | null;
@@ -72,6 +79,7 @@ export function StrategyLabPage() {
               <span className={s.status === "EXPERIMENTAL" ? "status-ok" : "secondary"}>
                 {t(`strategy.status.${s.status}`)}
               </span>
+              {s.verdict && <Badge tone="ok">{t("strategyWs.verdictBadge")}</Badge>}
               <span className="secondary">{formatWhen(s.created_at, lang)}</span>
             </li>
           ))}
@@ -233,6 +241,20 @@ export function StrategyDetailPage() {
     },
   });
 
+  const siblingsQuery = useQuery({
+    queryKey: ["strategies"],
+    queryFn: async (): Promise<
+      Array<{ version_id: string; name: string; version_no: number; status: string; verdict: string | null }>
+    > => {
+      const resp = await fetch("/api/v1/strategies");
+      if (!resp.ok) return [];
+      const body = (await resp.json()) as {
+        results: Array<{ version_id: string; name: string; version_no: number; status: string; verdict: string | null }>;
+      };
+      return body.results;
+    },
+  });
+
   const backtestQuery = useQuery({
     queryKey: ["strategy-backtest", latestBacktestId],
     enabled: latestBacktestId != null,
@@ -370,6 +392,27 @@ export function StrategyDetailPage() {
           {strategy.verdict}
         </p>
       )}
+
+      <StrategyCompositionPanel
+        composition={{
+          source_screening_run_id: strategy.source_screening_run_id,
+          source_card_id: strategy.source_card_id,
+          universe: strategy.universe,
+          entry_policy: strategy.entry_policy,
+          exit_policy: strategy.exit_policy,
+          risk_policy: strategy.risk_policy,
+        }}
+      />
+
+      <StrategyVersionCompare
+        current={{
+          version_id: strategy.version_id,
+          name: strategy.name,
+          version_no: strategy.version_no,
+          backtests: strategy.backtests,
+        }}
+        siblings={siblingsQuery.data ?? []}
+      />
 
       <div className="header-controls" data-testid="strategy-actions">
         <button

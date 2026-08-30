@@ -89,11 +89,16 @@
 - [x] 验证：backend 367 passed（无后端改动）+ vitest 27/27 + build PASS +
       Playwright 30/30（E2E-11/12 契约保留）+ 真机核验（全真实数据 Inspector）
 
-## G6 — 策略实验室（DOING）
-- Donor: ui/seats/luozi-foundry.jsx + luozi-fleet.jsx + luozi-panels.jsx
-  → StrategyLab（物料装配 + 版本比较 + 失败样本）
+## G6 — 策略实验室（DONE）
+- [x] features/strategy-lab/：策略配方面板（物料溯源 chips：来源筛选运行/
+      来源经验卡；政策三件套 entry/exit/risk；股票池 chips）+ 版本比较
+      （同名版本并排回测聚合）+ 列表 已验证 徽标
+- [x] donor 自由装配/模板库/时钟条留待因子引擎与 risk_policy 结构化
+      （PORT-MANIFEST-G6 登记）
+- [x] 验证：backend 367 passed + vitest 27/27 + build PASS + Playwright 30/30
+      （E2E-12/13 契约保留）+ 真机核验（配方面板全真实溯源）
 
-## G7 — 策略盯盘（PENDING）
+## G7 — 策略盯盘（DOING）
 - Donor: ui/seats/luozi-app.jsx + luozi-chart.jsx + luozi-panels.jsx +
   luozi-data.jsx → StrategyMonitor（K线+Signal+Conditions+AI研判+Decision+Replay）
 

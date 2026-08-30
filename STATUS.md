@@ -16,13 +16,25 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0–G4 DONE（bfb4872/9c196ee/488dbd3/dca103b/27c84fe）+ G5 DONE（本轮）：
-智能选股三面板工作台迁植完成，当前 G6 — 策略实验室（DOING）。
+G0–G5 DONE（…/27c84fe/c6f933a）+ G6 DONE（本轮）：策略实验室配方+版本比较
+迁植完成，当前 G7 — 策略盯盘（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G6 — 策略实验室（本轮，DONE）：
+  - features/strategy-lab/：StrategyCompositionPanel（策略配方：物料溯源
+    chips 来源筛选运行/来源经验卡 + 政策三件套 entry/exit/risk（exit/risk
+    此前未渲染）+ 股票池 chips 带排名链接）+ StrategyVersionCompare
+    （同名版本并排回测聚合：组合平均收益/命中率/标的覆盖；无回测显形 —）
+  - 列表行加 已验证 徽标；donor 物料装配观 → §46 ASRO 现实（筛选候选=池 +
+    经验卡=理念 + 工作流=入场规则，全部真实溯源可点）
+  - 诚实边界：donor 假模板/假时钟/自由装配面板不迁（组装走 §46 后端编排；
+    待因子引擎后开面板）；E2E-12/13 契约全保留
+  - 验证：backend 367 passed + vitest 27/27 + build PASS + Playwright 30/30
+    + 真机核验（配方面板：筛选运行/经验卡/股票池 3 标的/政策三件套全真实）
+  - PORT-MANIFEST-G6
 Guanlan Direct Port G5 — 智能选股工作台（本轮，DONE）：
   - features/screening-workbench/：三面板（左 筛选条件侧栏 来自经验卡 +
     逐规则排除计数徽标 / 中 候选池 排名+评级 A 徽标（rank≤3，可推导展示）/
@@ -301,12 +313,11 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G5 DONE；当前 G6 — 策略实验室。
-G6 要点（方案 §17/§37）：donor ui/seats/luozi-foundry.jsx + luozi-fleet.jsx +
-luozi-panels.jsx → StrategyLab（研究物料池 拖入策略 / 策略配方 / 规则组合 /
-历史验证 / 跨标的验证 / 市场状态验证 / 版本比较 / 失败样本 / 保存版本 /
-进入盯盘），接 ASRO StrategyVersion/Backtest（§46/§47 全套已有：regime split
-+ sensitivity → VALIDATED 通道），E2E-12/13 契约保留。
+Guanlan Direct Port（Track B）：G0–G6 DONE；当前 G7 — 策略盯盘。
+G7 要点（方案 §18/§38）：donor ui/seats/luozi-app.jsx + luozi-chart.jsx（372）
++ luozi-panels.jsx → StrategyMonitor 升级（股票+K线+策略+条件+AI研判+
+Decision Timeline+Replay；G0 Candles 组件复用），接 ASRO monitors/
+observations/signals/decisions（三分离已有），E2E-13/16 契约保留。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 

@@ -28,6 +28,7 @@ import "./features/industry-research/industry-research.css"; /* 产业研究三�
 import "./features/experience-workbench/experience-workbench.css"; /* 经验卡原炼验用工作台（G3） */
 import "./features/workflow-studio/workflow-studio.css"; /* 工作流 Editor（G4） */
 import "./features/screening-workbench/screening-workbench.css"; /* 智能选股三面板工作台（G5） */
+import "./features/strategy-lab/strategy-lab.css"; /* 策略实验室 物料配方+版本比较（G6） */
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

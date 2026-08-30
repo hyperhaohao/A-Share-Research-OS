@@ -829,5 +829,21 @@
     "enterResearch": "进入研究",
     "addToWatchlist": "加入关注",
     "addedToWatchlist": "已加入关注"
+  },
+  "strategyWs": {
+    "compositionTitle": "策略配方",
+    "compositionHint": "由筛选运行 + 经验卡组装",
+    "materialPool": "物料",
+    "materialScreening": "来源筛选运行",
+    "materialCard": "来源经验卡",
+    "policies": "政策三件套",
+    "exitPolicy": "出场政策",
+    "riskPolicy": "风险政策",
+    "universeChips": "股票池（{{count}}）",
+    "compareTitle": "版本比较",
+    "compareHint": "同名策略另一版本并排对照",
+    "compareNoSibling": "暂无同名其他版本",
+    "compareAgainst": "对照版本",
+    "verdictBadge": "已验证"
   }
 }

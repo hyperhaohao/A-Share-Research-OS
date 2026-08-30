@@ -830,5 +830,21 @@
     "enterResearch": "Open research",
     "addToWatchlist": "Add to watchlist",
     "addedToWatchlist": "Added to watchlist"
+  },
+  "strategyWs": {
+    "compositionTitle": "Strategy recipe",
+    "compositionHint": "assembled from screening run + experience card",
+    "materialPool": "Materials",
+    "materialScreening": "Source screening run",
+    "materialCard": "Source experience card",
+    "policies": "Policies",
+    "exitPolicy": "Exit policy",
+    "riskPolicy": "Risk policy",
+    "universeChips": "Universe ({{count}})",
+    "compareTitle": "Version compare",
+    "compareHint": "side-by-side with another version of the same strategy",
+    "compareNoSibling": "No sibling versions yet",
+    "compareAgainst": "Compare against",
+    "verdictBadge": "Validated"
   }
 }
