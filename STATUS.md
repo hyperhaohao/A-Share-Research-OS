@@ -202,11 +202,11 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. 角色执行：middleware role gate（viewer GET only / analyst full / admin 管理）；
-2. 前端 auth-aware fetch wrapper（token 注入 + 401 → /login redirect）；
-3. Workflow Studio React Flow 编辑器（Node 库/Canvas/Inspector，§26）；
-4. UI0-UI4 响应式断言（1920/1440/1280 无溢出）；
-5. 部署准备收尾（Let's Encrypt notes、ASRO_JWT_SECRET 生成指引）。
+1. LLM 润色：配置 ASRO_LLM_API_KEY 后 refine_with_llm 自动生效（代码就绪）；
+2. 关系源扩展：上下游关系（当前为同业板块成员+证据共现）；
+3. 宏观数值层：已含美元指数/USDCNY，利率需官方源；
+4. 部署实际执行：域名 + Let's Encrypt + ASRO_JWT_SECRET 设置；
+5. Workflow Studio 编辑器增强（拖拽式节点编辑，当前为可视化+参数模式）。
 ```
 
 ## Tests
