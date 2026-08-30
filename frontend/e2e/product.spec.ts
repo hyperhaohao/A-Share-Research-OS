@@ -197,8 +197,9 @@ test.describe.serial("000831 product flow", () => {
     await page.waitForURL(/\/experience\/exp_[0-9a-f]+\?handoff=ho_/);
     await expect(page.getByTestId("experience-detail")).toBeVisible();
 
-    // sources preserved on the card (§43)
-    await expect(page.getByText("来源主张数")).toBeVisible();
+    // sources preserved on the card (§43) — G3 workbench shows the claim/evidence
+    // counts in the source pane hint ("N 条主张 · M 条证据")
+    await expect(page.getByText(/\d+ 条主张 · \d+ 条证据/)).toBeVisible();
     const claimsText = await page.getByTestId("experience-detail").innerText();
     expect(claimsText).not.toContain("undefined");
 

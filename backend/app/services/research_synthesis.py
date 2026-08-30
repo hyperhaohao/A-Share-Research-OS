@@ -84,13 +84,14 @@ class ThesisBuilder:
         confidence = round(sum(confidences) / len(confidences), 3) if confidences else 0.5
 
         label = f"（{industry_label}）" if industry_label else ""
+        display_name = _registry_display_name(self._session, instrument_id) or instrument_id
         description_parts = [
             c.statement for c in claims if c.claim_id in supporting
         ][:3]
         thesis = InvestmentThesis(
             instrument_id=instrument_id,
             snapshot_id=snapshot_id,
-            title=f"{instrument_id} 研究综合论点",
+            title=f"{display_name} 研究综合论点",
             description=(
                 f"基于本轮证据自动汇编的研究论点{label}："
                 + "；".join(description_parts)
@@ -424,3 +425,17 @@ class ScenarioEngine:
                 )
             )
         return self._repo.save_scenario_set(scenarios)
+
+
+def _registry_display_name(session, instrument_id: str) -> str | None:
+    """Registry business name for titles（PW0：界面不裸显技术 id）."""
+    from app.storage.instrument_repo import InstrumentRegistryORM
+
+    row = session.scalars(
+        select(InstrumentRegistryORM).where(
+            InstrumentRegistryORM.instrument_id == instrument_id
+        )
+    ).first()
+    if row is None:
+        return None
+    return (row.name or "").strip() or None

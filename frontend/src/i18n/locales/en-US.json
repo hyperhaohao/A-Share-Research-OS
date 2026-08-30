@@ -709,5 +709,42 @@
     },
     "noDisclosure": "No disclosure",
     "chainMissing": "Industry profile not collected"
+  },
+  "experienceWs": {
+    "sourceTitle": "Raw · Source & claims",
+    "sourceHint": "{{claims}} claims · {{evidence}} evidence",
+    "openSource": "Open source report",
+    "noClaims": "No claims",
+    "evidenceTitle": "Evidence",
+    "noEvidence": "No evidence",
+    "refineTitle": "Refined · Mechanism & conditions",
+    "statementTitle": "Experience statement",
+    "mechanismTitle": "Mechanism",
+    "applicableTitle": "Applicable when",
+    "invalidTitle": "Invalidated when",
+    "expressionTitle": "Quant expression",
+    "noExpression": "No expression yet — define one in the validation workflow",
+    "validateTitle": "Validated · Records",
+    "metricsTitle": "Quant metrics",
+    "metricsPending": "No quant validation yet — metrics honestly empty, never fabricated",
+    "kbTitle": "Used · Experience KB",
+    "kbHint": "Approved cards",
+    "kbEmpty": "No approved cards yet — approval requires at least one validation",
+    "verdictApproved": "Pass",
+    "verdictRejected": "Rejected",
+    "verdictDoubtful": "Doubtful",
+    "verdictPending": "Unvalidated",
+    "confidence": "Confidence",
+    "version": "Version",
+    "factStatus": {
+      "confirmed_fact": "Confirmed fact",
+      "official_disclosure": "Official disclosure",
+      "regulatory_document": "Regulatory document",
+      "management_statement": "Management statement",
+      "media_report": "Media report",
+      "market_expectation": "Market expectation",
+      "analyst_inference": "Analyst inference",
+      "rumor": "Rumor"
+    }
   }
 }

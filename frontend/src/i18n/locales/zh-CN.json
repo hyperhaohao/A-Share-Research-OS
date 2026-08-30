@@ -708,5 +708,42 @@
     },
     "noDisclosure": "暂无披露",
     "chainMissing": "产业资料未采集"
+  },
+  "experienceWs": {
+    "sourceTitle": "原 · 来源与主张",
+    "sourceHint": "{{claims}} 条主张 · {{evidence}} 条证据",
+    "openSource": "打开来源报告",
+    "noClaims": "暂无主张",
+    "evidenceTitle": "证据",
+    "noEvidence": "暂无证据",
+    "refineTitle": "炼 · 机制与条件",
+    "statementTitle": "经验陈述",
+    "mechanismTitle": "机制",
+    "applicableTitle": "适用条件",
+    "invalidTitle": "失效条件",
+    "expressionTitle": "量化表达式",
+    "noExpression": "暂无表达式 —— 可在验证工作流中定义",
+    "validateTitle": "验 · 验证记录",
+    "metricsTitle": "量化指标",
+    "metricsPending": "尚无量化验证 —— 指标诚实留空，不编数",
+    "kbTitle": "用 · 经验知识库",
+    "kbHint": "已批准卡片",
+    "kbEmpty": "暂无已批准卡片 —— 批准需至少一次验证",
+    "verdictApproved": "通过",
+    "verdictRejected": "驳回",
+    "verdictDoubtful": "存疑",
+    "verdictPending": "未验证",
+    "confidence": "置信度",
+    "version": "版本",
+    "factStatus": {
+      "confirmed_fact": "确认事实",
+      "official_disclosure": "官方披露",
+      "regulatory_document": "监管文件",
+      "management_statement": "管理层表态",
+      "media_report": "媒体报道",
+      "market_expectation": "市场预期",
+      "analyst_inference": "分析师推断",
+      "rumor": "传闻"
+    }
   }
 }

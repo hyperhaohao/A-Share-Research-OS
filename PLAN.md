@@ -55,10 +55,18 @@
       Playwright 30/30（E2E-14/17 契约保留）+ 真机截图核验（三视图 + 诚实披露）
 - [x] PORT-MANIFEST-G2
 
-## G3 — 研究经验卡（DOING）
-- Donor: ui/cards/validation.jsx → ExperienceWorkbench（原炼验用完整迁植）
+## G3 — 研究经验卡（DONE）
+- [x] backend：GET /views/experience/{card_id}（原=主张原文+cite 序号+证据摘要/
+      炼=卡字段/验=验证记录/用=已批准 KB；markdown 三桶库不迁）
+- [x] frontend：features/experience-workbench/ 五组件（原炼验用三栏工作台 +
+      verdict chip + 诚实量化指标区 + 生命周期条；动作/门槛全部后端强制）
+- [x] 附加修复：thesis/卡片标题业务名化（research_synthesis 注册表名解析，
+      界面不裸显 SZSE: 前缀）；E2E-09 来源断言随工作台文案同义更新
+- [x] 验证：backend 367 passed + vitest 23/23 + build PASS + Playwright 30/30
+      （E2E-09/10/11 全链）+ 真机截图核验（11 主张 cite + 事实状态本地化）
+- [x] PORT-MANIFEST-G3
 
-## G4 — Workflow Studio（PENDING）
+## G4 — Workflow Studio（DOING）
 - Donor: ui/factor/workflow.jsx → WorkflowStudio（真正 Editor：Node Library/
   Canvas/Inspector/Run/Metrics/Version，非 Run Viewer）
 

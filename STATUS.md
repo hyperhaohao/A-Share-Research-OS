@@ -16,13 +16,25 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0 DONE（bfb4872）+ G1 DONE（9c196ee）+ G2 DONE（本轮）：产业研究三视图迁植完成，
-当前 G3 — 研究经验卡（DOING）。
+G0 DONE（bfb4872）+ G1 DONE（9c196ee）+ G2 DONE（488dbd3）+ G3 DONE（本轮）：
+研究经验卡原炼验用工作台迁植完成，当前 G4 — Workflow Studio（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G3 — 研究经验卡（本轮，DONE）：
+  - backend：experience_view_service + GET /views/experience/{card_id}
+    （原=报告+主张原文 cite 序号+证据摘要 / 炼=机制条件表达式 /
+    验=验证记录 / 用=已批准 KB；只读装配，不迁 donor markdown 三桶库）
+  - frontend：features/experience-workbench/ 五组件三栏工作台（原炼验用 +
+    生命周期条 + verdict chip 通过/存疑/驳回 + 诚实量化指标区 — +
+    CardWorkflowPanel/ScreeningLaunchButton/批准门槛保留）
+  - 附加修复：thesis 标题业务名化（research_synthesis 经注册表名解析，
+    消除 SZSE: 技术前缀泄漏）；E2E-09 来源断言随工作台文案同义更新
+  - 验证：backend 367 passed + vitest 23/23 + build PASS + Playwright 30/30
+    （E2E-09 全链：炼卡→拦截未验证批准→案例验证→批准）+ 真机截图核验
+  - PORT-MANIFEST-G3
 Guanlan Direct Port G2 — 产业研究三视图（本轮，DONE）：
   - backend：industry_view_service + GET /views/industry/{id}（方案 §24 命名）
     + GET /views/industry/{id}/segment/{segment_id}（链外环节 404 显式拒绝）；
@@ -261,12 +273,12 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0+G1+G2 DONE；当前 G3 — 研究经验卡。
-G3 要点（方案 §14/§34）：donor ui/cards/validation.jsx（1186 行）→
-ExperienceWorkbench（原→炼→验→用 完整迁植：左中右布局/原始经验面板/
-LLM 炼制面板/规则与表达式/验证面板（IC/ICIR/收益/失败案例）/指标区/KB），
-接 ASRO ExperienceCard/Version/Validation API（/views/experience-cards 已有），
-禁止做成 CRUD；donor markdown 三桶数据库不迁。
+Guanlan Direct Port（Track B）：G0+G1+G2+G3 DONE；当前 G4 — Workflow Studio。
+G4 要点（方案 §15/§35）：donor ui/factor/workflow.jsx（3275 行）→ WorkflowStudio
+真正 Editor（Node Library/Canvas/节点结构/连接线/Inspector/Toolbar/参数配置/
+模型配置/指标区/运行控制/错误状态/IC-ICIR/Portfolio/Backtest/Version），
+接 ASRO WorkflowDefinition/Run/NodeRun（workflow_runs 已有），不能再以
+Run Viewer 宣布完成。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 
