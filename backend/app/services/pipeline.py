@@ -208,19 +208,59 @@ class ResearchPipeline:
         canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
-    def run(self, instrument_id: str, *, language: str = "zh-CN", run_id: str | None = None) -> PipelineOutcome:
+    def run(
+        self,
+        instrument_id: str,
+        *,
+        language: str = "zh-CN",
+        run_id: str | None = None,
+        profile: str | None = None,
+        max_collection_passes: int = 1,
+    ) -> PipelineOutcome:
+        """R4（方案 §10.4/§10.6）：profile 过滤采集面与分析师面（Agent Profiles
+        白名单）；max_collection_passes ≥ 2 时启用 Missing Data Loop 的有界
+        第二次采集（只补 ResearchRequest 点名的 capability）。"""
+        from app.domain.profiles import (
+            filter_analysts,
+            filter_capabilities,
+            get_profile,
+        )
+
         run_id = run_id or f"run_{uuid4().hex[:12]}"
         events: list[dict] = []
         now = utc_now()
+        prof = get_profile(profile)
+        capabilities = filter_capabilities(list(_COLLECT_CAPABILITIES), profile)
 
         run = self._runs.create(
             run_id, instrument_id, now, run_type=ResearchRunType.FULL
         )
-        self._emit(run_id, "run_started", {"instrument_id": instrument_id}, events)
+        self._emit(
+            run_id, "run_started",
+            {
+                "instrument_id": instrument_id,
+                "profile": profile or "general",
+                "capabilities": capabilities,
+            },
+            events,
+        )
+        # R4 §10.4：profile 语义显形（裁掉了什么，一手可见）
+        self._emit(
+            run_id, "profile_applied",
+            {
+                "profile": profile or "general",
+                "capabilities": capabilities,
+                "analysts": list(prof["analysts"]),
+                "excluded_capabilities": [
+                    c for c in _COLLECT_CAPABILITIES if c not in set(capabilities)
+                ],
+            },
+            events,
+        )
 
         try:
             # ---- 1) collect every capability ------------------------------
-            for capability in _COLLECT_CAPABILITIES:
+            for capability in capabilities:
                 self._emit(
                     run_id, "source_progress",
                     {"capability": capability, "status": "fetching"}, events,
@@ -240,7 +280,7 @@ class ResearchPipeline:
 
             # macro/policy needs a topic: derive it from the industry chain
             industry_label = self._industry_label(instrument_id)
-            if industry_label:
+            if industry_label and "macro_policy" in capabilities:
                 macro_outcome = collect_capability_evidence(
                     instrument_id, "macro_policy",
                     repo=self._evidence,
@@ -286,15 +326,18 @@ class ResearchPipeline:
             # business keys drive the per-analyst live UI (整改方案 §5):
             # the enum values collide (financial/industry → fundamental,
             # event/news/macro → news), so emit a distinct key per analyst
-            analysts = [
-                ("industry", IndustryAnalyst()),
-                ("financial", FinancialAnalyst()),
-                ("event", EventAnalyst()),
-                ("news", NewsAnalyst()),
-                ("capital_flow", CapitalFlowAnalyst()),
-                ("macro_policy", MacroPolicyAnalyst()),
-                ("market", MarketAnalyst()),
-            ]
+            analysts = filter_analysts(
+                [
+                    ("industry", IndustryAnalyst()),
+                    ("financial", FinancialAnalyst()),
+                    ("event", EventAnalyst()),
+                    ("news", NewsAnalyst()),
+                    ("capital_flow", CapitalFlowAnalyst()),
+                    ("macro_policy", MacroPolicyAnalyst()),
+                    ("market", MarketAnalyst()),
+                ],
+                profile,
+            )
             thesis_id: str | None = None
             for analyst_key, analyst in analysts:
                 self._emit(
@@ -340,6 +383,51 @@ class ResearchPipeline:
                 )
 
             claim_ids = list(dict.fromkeys(claim_ids))
+
+            # ---- 4b) Missing Data Loop（R4 方案 §10.3，有界） ----------------
+            # 分析师在本 run 快照上产生的 OPEN ResearchRequest → 点名的
+            # capability 再采集一轮（max_collection_passes ≥ 2 时）。
+            # 仍缺失的保持 OPEN + brief.missing_data 显形（§10.3：显式
+            # Missing Data → 调整结论置信边界）；不在同一 run 里重跑分析师
+            # （同快照同 statement 的 Claim 是唯一约束，重复建 = 设计错误；
+            # 补采证据由下一个研究周期的新快照继承）。
+            if max_collection_passes >= 2:
+                from app.storage.agent_repo import AgentRepository, ResearchRequestStatus
+
+                agent_repo = AgentRepository(self._session)
+                try:
+                    open_requests = agent_repo.list_requests(
+                        instrument_id, status=ResearchRequestStatus.OPEN
+                    )
+                except Exception:  # noqa: BLE001 — 请求查询失败不阻断主流程
+                    open_requests = []
+                wanted = sorted({req.capability for req in open_requests})
+                still_open = 0
+                if wanted:
+                    self._emit(
+                        run_id, "waiting_data",
+                        {"capabilities": wanted, "attempt": 2}, events,
+                    )
+                    for capability in wanted:
+                        if capability not in capabilities:
+                            continue  # profile 未授权的能力不采
+                        collect_capability_evidence(
+                            instrument_id, capability, repo=self._evidence
+                        )
+                    still_open = len(
+                        agent_repo.list_requests(
+                            instrument_id, status=ResearchRequestStatus.OPEN
+                        )
+                    )
+                self._emit(
+                    run_id, "missing_data_summary",
+                    {"requested_capabilities": wanted, "still_open": still_open},
+                    events,
+                )
+
+            # ---- 4c) 复核阶段语义（§10.5 reviewing） ------------------------
+            self._emit(run_id, "reviewing", {"claims": len(claim_ids)}, events)
+
             self._emit(
                 run_id, "claims_compiled", {"count": len(claim_ids)}, events
             )

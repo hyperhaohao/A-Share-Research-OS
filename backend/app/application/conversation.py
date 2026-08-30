@@ -89,6 +89,7 @@ class ResearchPlanORM(Base):
     title: Mapped[str] = mapped_column(String(256))
     status: Mapped[str] = mapped_column(String(16), default=PlanStatus.RUNNING, index=True)
     steps_json: Mapped[list] = mapped_column(JSON, default=list)
+    meta_json: Mapped[dict] = mapped_column(JSON, default=dict)
     run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     error: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -111,6 +112,7 @@ def _row_to_plan(row: ResearchPlanORM) -> dict:
         "title": row.title,
         "status": row.status,
         "steps": [dict(s) for s in (row.steps_json or [])],
+        "meta": dict(row.meta_json or {}),
         "run_id": row.run_id,
         "error": row.error,
         "created_at": _ensure_utc(row.created_at).isoformat() if row.created_at else None,
@@ -220,6 +222,7 @@ class ConversationRepository:
         steps: list[ResearchPlanStep],
         session_id: str | None = None,
         instrument_id: str | None = None,
+        meta: dict | None = None,
     ) -> dict:
         now = _utc()
         row = ResearchPlanORM(
@@ -229,6 +232,7 @@ class ConversationRepository:
             title=title[:256],
             status=PlanStatus.RUNNING,
             steps_json=[s.model_dump(mode="json") for s in steps],
+            meta_json=meta or {},
             created_at=now,
             updated_at=now,
         )

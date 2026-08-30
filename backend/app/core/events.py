@@ -32,6 +32,11 @@ _EVENT_NAMES = {
     "report_ready",
     "run_completed",
     "run_failed",
+    # R4（方案 §10.3/§10.4/§10.5）：自主研究循环语义事件
+    "profile_applied",
+    "waiting_data",
+    "reviewing",
+    "missing_data_summary",
 }
 
 

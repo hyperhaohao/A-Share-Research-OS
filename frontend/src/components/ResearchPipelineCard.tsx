@@ -57,6 +57,11 @@ const SSE_EVENT_NAMES = [
   "report_ready",
   "run_completed",
   "run_failed",
+  // R4 自主研究循环语义事件（方案 §10.3/§10.4/§10.5）
+  "profile_applied",
+  "waiting_data",
+  "reviewing",
+  "missing_data_summary",
 ];
 
 type Lang = "zh" | "en";
@@ -174,8 +179,77 @@ function singleStages(events: PipelineEvent[], lang: Lang): Stage[] {
   const push = (key: string, title: string, lines: StageLine[]) => {
     if (lines.length > 0) stages.push({ key, title, lines });
   };
+
   const line = (key: string, icon: StageLine["icon"], label: string, detail?: string): StageLine =>
     ({ key, icon, label, detail });
+
+  // R4：Profile 收敛（§10.4）
+  const profileEvent = events.find((e) => e.event === "profile_applied");
+  if (profileEvent) {
+    const excluded = (profileEvent.excluded_capabilities as string[] | undefined) ?? [];
+    push(
+      "profile",
+      lang === "zh" ? "研究面（Profile）" : "Research profile",
+      [
+        line(
+          "profile_applied",
+          "done",
+          `${lang === "zh" ? "采集面" : "collecting"}: ${(
+            (profileEvent.capabilities as string[] | undefined) ?? []
+          ).join(" / ")}${excluded.length ? (lang === "zh" ? ` · 裁剪 ${excluded.length} 项` : ` · excluded ${excluded.length}`) : ""}`,
+        ),
+      ],
+    );
+  }
+
+  // R4：等待补充数据（§10.3）
+  const waiting = events.find((e) => e.event === "waiting_data");
+  if (waiting) {
+    const wanted = (waiting.capabilities as string[] | undefined) ?? [];
+    push(
+      "waiting",
+      lang === "zh" ? "等待补充数据" : "Waiting for data",
+      [
+        line(
+          "waiting_data",
+          "warn",
+          `${lang === "zh" ? "补采" : "re-collecting"}: ${wanted.join(" / ") || "—"}`,
+        ),
+      ],
+    );
+  }
+
+  // R4：复核阶段（§10.5）
+  const reviewing = events.find((e) => e.event === "reviewing");
+  if (reviewing) {
+    push(
+      "review",
+      lang === "zh" ? "研究复核" : "Review",
+      [line("reviewing", "done", lang === "zh" ? "反方证据与质量复核" : "contrarian + quality review")],
+    );
+  }
+
+  const missingSummary = events.find((e) => e.event === "missing_data_summary");
+  if (missingSummary) {
+    const stillOpen = Number(missingSummary.still_open ?? 0);
+    push(
+      "missing",
+      lang === "zh" ? "缺失数据" : "Missing data",
+      [
+        line(
+          "missing_data_summary",
+          stillOpen > 0 ? "warn" : "done",
+          stillOpen > 0
+            ? lang === "zh"
+              ? `仍有 ${stillOpen} 项研究请求待补（下一周期继承）`
+              : `${stillOpen} open research request(s)`
+            : lang === "zh"
+              ? "缺失项本轮已补齐"
+              : "all filled this pass",
+        ),
+      ],
+    );
+  }
 
   const started = events.find((e) => e.event === "run_started");
   if (started) {

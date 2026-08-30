@@ -56,12 +56,19 @@
       （§23 禁造假，manifest 如实记录偏离）
 - [x] 验证：backend exit 0（+4）+ vitest 30/30 + build + E2E 30/30 + 真机核验
 
-## R4 — Research Commander Autonomous Loop（DOING，P0）
-- [ ] Intent Router 九类 + 结构化 Plan 扩展 + Missing Data Loop
-- [ ] Agent Profiles（七类职责/工具白名单契约）+ run 状态机扩展
-- [ ] DeepResearchLoop（max iterations/终止条件）+ Thesis 变异规则（禁静默覆盖）
+## R4 — Research Commander Autonomous Loop（DONE，P0）
+- [x] Intent Router 九类焦点（确定性关键词；识别不了 → general 不猜）
+- [x] Agent Profiles 白名单（7 profiles；pipeline 采集面/分析师面过滤，
+      profile_applied 事件显形裁剪）
+- [x] 结构化 Plan（meta_json migration d4e5f6a7b8c9：objective/questions/
+      required_sources/completion_criteria/max_collection_passes）
+- [x] Missing Data Loop（有界第二遍：ResearchRequest 点名 capability 补采，
+      waiting_data/missing_data_summary 显形；禁同 run 重复建 Claim）
+- [x] run 状态语义扩展（waiting_data/reviewing 事件 + 前端卡片渲染）
+- [x] Live Verify（黄金问题：focus=event 路由正确 + 事件链全 PRESENT +
+      run_completed；manifests/R4-LIVE-VERIFY.md）
 
-## R5 — Research Product System（PENDING，P0/P1）
+## R5 — Research Product System（DOING，P0/P1）
 - [ ] ResearchProduct 类型契约（复用 Report/Artifact/Version；逐类型 Contract）
 - [ ] P0：COMPANY_DEEP_DIVE / INDUSTRY_DEEP_DIVE / EVENT_INVESTIGATION / THESIS_REVIEW
 - [ ] P1：MAINLINE_RADAR / OVERSEAS_MAPPING / DAILY_RESEARCH_BRIEF

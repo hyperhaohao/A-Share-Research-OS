@@ -19,6 +19,7 @@ from app.services.commander import (
     ResearchCommander,
     build_plan_steps,
     find_registry_name_in_text,
+    build_plan_meta,
     interpret_command,
 )
 
@@ -98,6 +99,7 @@ def post_turn(
         title=f"{INTENT_TITLES[interp.intent]} {interp.instrument_hint}",
         steps=steps,
         session_id=session_id,
+        meta=build_plan_meta(interp),
     )
     reply_text = "已创建研究计划：" + " → ".join(s.title for s in steps)
     commander_turn = repo.add_turn(

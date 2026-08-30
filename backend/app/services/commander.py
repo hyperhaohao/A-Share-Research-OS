@@ -35,6 +35,9 @@ class CommandInterpretation:
     schedule: str | None = None
     horizon: str = "20D"
     matched_keyword: str | None = None
+    # R4 §10.1 研究焦点（九类之一；general = 未识别焦点）
+    focus: str = "general"
+    profile: str = "general"
 
 
 _CODE_RE = re.compile(r"(?<!\d)(\d{6})(?!\d)")
@@ -47,6 +50,33 @@ _INTENT_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
     ("continuous", ("持续研究", "定时研究", "定期研究", "每天研究", "自动研究")),
     ("full_research", ("完整研究", "研究", "调研", "分析一下", "出报告")),
 ]
+
+# R4 §10.1 研究焦点（九类）：不改执行动作，只收敛证据面（profile）与计划问题
+_FOCUS_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
+    ("event", ("资产整合", "资产注入", "重组", "减持", "增持", "公告", "事件", "股权变化", "监管审批")),
+    ("earnings", ("财报", "业绩", "季报", "年报", "中报", "业绩预告", "营收", "净利")),
+    ("policy", ("政策", "监管", "部委", "发改委", "工信部")),
+    ("mainline", ("主线", "题材", "板块轮动")),
+    ("overseas_mapping", ("海外", "美股", "境外")),
+    ("thesis_review", ("论点复核", "复核论点", "thesis", "论点变化")),
+    ("comparison", ("对比", "比较", "同业对比", "哪个好")),
+    ("industry", ("产业", "行业", "产业链", "上游", "下游")),
+    ("company", ("公司", "个股", "基本面")),
+]
+
+# 焦点 → Agent Profile（方案 §10.4）；未列出的焦点 → general
+_FOCUS_PROFILE: dict[str, str] = {
+    "company": "company",
+    "industry": "industry",
+    "event": "event",
+    "earnings": "earnings",
+    "policy": "policy",
+    "mainline": "general",
+    "overseas_mapping": "general",
+    "thesis_review": "general",
+    "comparison": "general",
+    "general": "general",
+}
 
 
 def interpret_command(text: str) -> CommandInterpretation:
@@ -84,8 +114,18 @@ def interpret_command(text: str) -> CommandInterpretation:
             intent, matched = name, keyword
             break
 
+    # R4 §10.1：焦点识别（首个命中；识别不了 → general，不猜）
+    focus = "general"
+    focus_matched: str | None = None
+    for name, keywords in _FOCUS_KEYWORDS:
+        hit = next((k for k in keywords if k in text), None)
+        if hit is not None:
+            focus, focus_matched = name, hit
+            break
+
     interp = CommandInterpretation(
-        intent=intent, schedule=schedule, horizon=horizon, matched_keyword=matched
+        intent=intent, schedule=schedule, horizon=horizon, matched_keyword=matched,
+        focus=focus, profile=_FOCUS_PROFILE[focus],
     )
 
     for code in _CODE_RE.findall(text):
@@ -151,6 +191,77 @@ INTENT_TITLES = {
     "continuous": "持续研究",
     "prediction": "生成预测",
 }
+
+
+# R4 §10.2 结构化计划：每个焦点的 研究问题/必需要素/完成标准（研究启发，非事实）
+_FOCUS_PLAN_META: dict[str, dict] = {
+    "general": {
+        "questions": ["公司基本面的当前状态与变化方向？", "当前最重要的反方证据是什么？"],
+        "required_sources": ["T0/T1 交易所公告或官方表态", "T2/T3 研报与主流报道"],
+        "completion_criteria": ["核心 Claim 均有可定位的证据引用", "反方证据已检索"],
+    },
+    "company": {
+        "questions": ["公司基本面当前状态与变化方向？", "公司层面最重要的风险与催化剂？"],
+        "required_sources": ["T0 公司公告/定期报告", "T2/T3 研报与报道"],
+        "completion_criteria": ["核心 Claim 均有可定位的证据引用", "风险清单已生成"],
+    },
+    "industry": {
+        "questions": ["该产业链当前由什么因素驱动？", "产业环节间的传导路径是否成立？"],
+        "required_sources": ["行业数据证据", "T3 行业报道"],
+        "completion_criteria": ["行业面 Claim 有证据引用", "产业链标签已更新"],
+    },
+    "event": {
+        "questions": ["事件事实与时间线是什么？", "事件处于哪个阶段（酝酿/披露/审批/落地）？", "对股本结构与股东的影响路径？"],
+        "required_sources": ["T0 交易所公告", "T1 集团/国资委表态", "T3 财经媒体报道"],
+        "completion_criteria": ["事件时间线 ≥1 条 T0/T1 证据", "反方证据已检索", "Invalidator 已列出"],
+    },
+    "earnings": {
+        "questions": ["本期营收/利润的关键变化及原因？", "与市场预期的差异？"],
+        "required_sources": ["T0 定期报告/业绩预告", "T3 报道"],
+        "completion_criteria": ["财务 Claim 有证据引用", "Missing Data 显式披露"],
+    },
+    "policy": {
+        "questions": ["政策的核心变化点？", "对公司/行业的传导路径与时间窗？"],
+        "required_sources": ["T1 官方机构发布", "T3 主流媒体解读"],
+        "completion_criteria": ["政策原文句已被引用", "影响路径已说明"],
+    },
+    "mainline": {
+        "questions": ["当前市场主线叙事是什么？", "有哪些证据支持/反对该叙事延续？"],
+        "required_sources": ["T3 市场报道", "行业证据"],
+        "completion_criteria": ["叙事状态已标注（emerging/active/…）"],
+    },
+    "overseas_mapping": {
+        "questions": ["海外事件对全球产业的影响路径？", "中国/A 股侧的映射环节与证据？"],
+        "required_sources": ["海外事件证据", "国内映射环节证据"],
+        "completion_criteria": ["每条映射均有证据引用（禁止无证据荐股）"],
+    },
+    "thesis_review": {
+        "questions": ["当前 Thesis 的支撑/反对证据结构？", "哪些 Invalidator 已被触发或临近？"],
+        "required_sources": ["既有 Thesis 及其证据", "新近证据"],
+        "completion_criteria": ["Thesis Diff 已生成", "新版本走质量门"],
+    },
+    "comparison": {
+        "questions": ["对比对象各自的核心 Claim 结构？", "差异的证据基础？"],
+        "required_sources": ["双方标的证据"],
+        "completion_criteria": ["对比结论均有双侧证据引用"],
+    },
+}
+
+
+def build_plan_meta(interp: CommandInterpretation) -> dict:
+    """R4 §10.2：结构化计划元数据（objective/questions/required_sources/
+    completion_criteria/focus/profile/max_collection_passes）。"""
+    focus_meta = _FOCUS_PLAN_META.get(interp.focus) or _FOCUS_PLAN_META["general"]
+    return {
+        "objective": f"{interp.focus} 研究：{interp.instrument_hint or '未定标的'}",
+        "focus": interp.focus,
+        "profile": interp.profile,
+        "questions": list(focus_meta["questions"]),
+        "required_sources": list(focus_meta["required_sources"]),
+        "completion_criteria": list(focus_meta["completion_criteria"]),
+        "expected_artifacts": ["report", "report_version"],
+        "max_collection_passes": 2,
+    }
 
 
 def _now_iso() -> str:
@@ -256,7 +367,12 @@ class ResearchCommander:
         if action == "run_pipeline":
             from app.services.pipeline import ResearchPipeline
 
-            outcome = ResearchPipeline(self._session).run(instrument_id)
+            meta = plan.get("meta") or {}
+            outcome = ResearchPipeline(self._session).run(
+                instrument_id,
+                profile=meta.get("profile"),
+                max_collection_passes=int(meta.get("max_collection_passes") or 1),
+            )
             report_artifact = ArtifactService(self._session).by_domain(
                 "Report", outcome.report_id
             )

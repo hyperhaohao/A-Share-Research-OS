@@ -18,7 +18,15 @@ from app.storage.orm import Base
 
 # 现有事件名 → §37 统一 Stage（映射表见 docs/v2/ARCHITECTURE-V2.md §5）
 EVENT_STAGE = {
+    "profile_applied": "研究面已按 Profile 收敛",
+    "waiting_data": "等待补充数据",
+    "missing_data_summary": "缺失数据摘要",
+    "reviewing": "研究复核中",
     "run_started": "PLANNING",
+    "profile_applied": "PLANNING",
+    "waiting_data": "WAITING_DATA",
+    "missing_data_summary": "WAITING_DATA",
+    "reviewing": "REVIEWING",
     "source_progress": "COLLECTING",
     "evidence_ready": "COLLECTING",
     "snapshot_built": "VALIDATING",
