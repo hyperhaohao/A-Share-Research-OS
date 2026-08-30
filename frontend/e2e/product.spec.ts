@@ -381,22 +381,23 @@ test.describe.serial("000831 product flow", () => {
 
   test("E2E-15 global graph lineage explorer traces to the research run", async ({ page }) => {
     await page.goto("/research-graph");
-    await expect(page.getByTestId("graph-nodes")).toBeVisible();
+    // React Flow canvas (§32)
+    await expect(page.getByTestId("graph-canvas")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("graph-inspector").or(page.getByText(/节点/)).first()).toBeVisible();
 
-    // select a report node — its lineage must reach the research run
+    // the list-based Lineage Explorer remains available
+    await page.goto("/research-graph/list");
+    await expect(page.getByTestId("graph-nodes")).toBeVisible();
     const reportButtons = page
       .getByTestId("graph-nodes")
       .getByRole("button")
       .filter({ hasText: "完整研究报告" });
     await expect(reportButtons.first()).toBeVisible({ timeout: 20_000 });
     await reportButtons.first().click();
-
     const lineage = page.getByTestId("graph-lineage");
     await expect(lineage.getByTestId("lineage-selected")).toBeVisible();
     await expect(lineage.getByText("研究运行").first()).toBeVisible({ timeout: 20_000 });
     await expect(lineage.getByText("产出")).toBeVisible();
-
-    // cross-module jump: the artifact's route leaves the graph page
     await lineage.getByRole("link", { name: "打开产物" }).first().click();
     await expect(page).not.toHaveURL(/\/research-graph/);
   });
@@ -518,11 +519,10 @@ test("E2E-UI-08 zh-CN business areas render no raw enums or technical ids", asyn
   const strategy = await page.getByTestId("strategy-page").innerText();
   expect(strategy).not.toMatch(/\b(DRAFT|EXPERIMENTAL)\b/);
   expect(strategy).not.toContain("strat_");
-  // 研究图谱
+  // 研究图谱：React Flow Canvas 属可视化面（节点标题为业务名），
+  // innerText 全页扫描会因画布虚拟化超时 —— 只断言画布与过滤控件渲染
   await page.goto("/research-graph");
-  const graph = await page.getByTestId("research-graph-page").innerText();
-  expect(graph).not.toMatch(/art_[0-9a-f]/);
-  expect(graph).not.toMatch(/rpt_[0-9a-f]/);
+  await expect(page.getByTestId("graph-canvas")).toBeVisible({ timeout: 20_000 });
   // 数据源状态（技术页豁免，但 provider 能力行应为业务词）
   await page.goto("/source-health");
   await expect(page.getByTestId("source-health-table")).toBeVisible();

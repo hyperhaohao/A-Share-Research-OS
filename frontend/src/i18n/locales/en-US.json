@@ -566,7 +566,10 @@
     "selectHint": "Select a node on the left to see its upstream/downstream",
     "upstream": "Upstream",
     "downstream": "Downstream",
-    "openArtifact": "Open artifact"
+    "openArtifact": "Open artifact",
+    "filter": "Filter by type",
+    "filterAll": "All types",
+    "canvasCount": "{{nodes}} nodes · {{edges}} provenance edges"
   },
   "sidebar": {
     "collapse": "Collapse sidebar",

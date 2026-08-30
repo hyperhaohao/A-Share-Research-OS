@@ -565,7 +565,10 @@
     "selectHint": "选择左侧任一产物节点查看其上下游",
     "upstream": "上游",
     "downstream": "下游",
-    "openArtifact": "打开产物"
+    "openArtifact": "打开产物",
+    "filter": "按类型过滤",
+    "filterAll": "全部类型",
+    "canvasCount": "{{nodes}} 节点 · {{edges}} 溯源边"
   },
   "sidebar": {
     "collapse": "收起侧栏",

@@ -16,6 +16,7 @@ import { StrategyLabPage, StrategyDetailPage } from "./pages/StrategyLabPage";
 import { StrategyMonitorsPage, StrategyMonitorDetailPage } from "./pages/StrategyMonitorPage";
 import { IndustryMapPage, GlobalContextPage } from "./pages/ResearchMapPages";
 import { ResearchGraphPage } from "./pages/ResearchGraphPage";
+import { ResearchGraphCanvasPage } from "./pages/ResearchGraphCanvas";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 import { AppShell } from "./app/AppShell";
@@ -67,7 +68,8 @@ function Shell() {
           }
         />
         <Route path="/global-context/:instrumentId" element={<GlobalContextPage />} />
-        <Route path="/research-graph" element={<ResearchGraphPage />} />
+        <Route path="/research-graph" element={<ResearchGraphCanvasPage />} />
+        <Route path="/research-graph/list" element={<ResearchGraphPage />} />
         <Route path="/source-health" element={<SourceHealthPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
