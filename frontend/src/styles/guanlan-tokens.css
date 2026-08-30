@@ -1,0 +1,98 @@
+/*
+ * Guanlan Direct Port — donor token compatibility layer（方案 §5 TOKEN_MAPPING / §20 / §31）。
+ *
+ * 迁植的观澜组件继续读 donor 变量名（--paper / --ink / --zhu / …），
+ * 全部变量在此以 ASRO 语义 token 定义 —— 方向永远是 donor → ASRO，
+ * 不反向覆盖 ASRO 任何语义 token，不触碰既有页面观感（G1 起逐模块采用）。
+ *
+ * 红线（方案 §20）：A 股上涨红（--color-positive，CN 默认）/ 下跌绿
+ * （--color-negative）/ 错误 danger（--color-danger）三者不混；
+ * 涨跌语义随 <html data-updown="cn|intl"> 自动切换。
+ */
+
+:root {
+  /* 纸 · 墨 → ASRO 背景/文字梯度 */
+  --paper: var(--color-bg);
+  --paper-2: var(--color-surface);
+  --paper-3: var(--color-surface-subtle);
+  --ink: var(--color-text);
+  --ink-1: var(--color-text);
+  --ink-2: var(--color-text-secondary);
+  --ink-3: var(--color-text-tertiary);
+  --line: var(--color-border);
+  --line-soft: var(--color-border);
+
+  /* 色 → ASRO 语义色（克制使用，同 donor「朱砂/黛绿/墨金」分工） */
+  --zhu: var(--color-positive);
+  --zhu-soft: color-mix(in srgb, var(--color-positive) 72%, var(--color-bg));
+  --dai: var(--color-negative);
+  --dai-soft: color-mix(in srgb, var(--color-negative) 72%, var(--color-bg));
+  --jin: var(--color-accent);
+
+  /* 印章红：品牌印记色，独立取值 —— 不是 danger，不与涨跌/错误混用 */
+  --yin: #a8392d;
+
+  /* 字：serif 标题字体（donor 观感）；sans 由 body 提供，mono 复用既有 .mono */
+  --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+}
+
+:root[data-theme="dark"] {
+  --yin: #d8584a;
+}
+
+/* ───── donor 结构性 helpers（迁植 JSX 直接使用的类名，保持原名以零改写迁植） ───── */
+
+.serif { font-family: var(--serif); }
+.sans  { font-family: inherit; }
+.num   { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* 印章红方框 */
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--yin);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-weight: 600;
+  flex: none;
+}
+
+/* 纸纹背景 */
+.paper-bg {
+  background:
+    radial-gradient(120% 80% at 10% 0%, color-mix(in srgb, var(--jin) 12%, transparent) 0%, transparent 50%),
+    radial-gradient(100% 60% at 90% 100%, color-mix(in srgb, var(--yin) 8%, transparent) 0%, transparent 60%),
+    var(--paper);
+}
+
+/* 涨/跌色 */
+.up { color: var(--zhu); }
+.down { color: var(--dai); }
+.up-bg { background: var(--zhu); color: var(--paper); }
+.down-bg { background: var(--dai); color: var(--paper); }
+
+/* 细线 hr */
+hr.ink-rule {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+hr.ink-rule.thick {
+  border-top: 2px solid var(--ink);
+}
+
+/* 折叠摘要（donor details/summary 观感） */
+details.gl-details summary {
+  cursor: pointer;
+  list-style: none;
+}
+details.gl-details summary::-webkit-details-marker { display: none; }
+
+/* 研究步骤运行脉冲（ResearchStep running 态） */
+@keyframes gl-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.15; transform: scale(1.15); }
+}

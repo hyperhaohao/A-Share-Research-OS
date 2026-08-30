@@ -624,5 +624,10 @@
   },
   "a11y": {
     "skipToMain": "跳到主内容"
+  },
+  "guanlan": {
+    "brandSeal": "研",
+    "drawerClose": "关闭",
+    "drawerTitle": "详情"
   }
 }

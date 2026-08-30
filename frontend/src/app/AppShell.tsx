@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="sidebar" data-testid="sidebar">
         <div className="sidebar-brand">
           <NavLink to="/" className="brand-link" end>
-            {collapsed ? "AS" : t("app.name")}
+            {collapsed ? "AS" : t("app.title")}
           </NavLink>
           <button
             type="button"

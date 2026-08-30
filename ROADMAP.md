@@ -60,8 +60,8 @@
 
 | Phase | 内容 | 状态 |
 |-------|------|------|
-| G0 | Shared UI Foundation（token 映射 / 共享组件 TSX 化 / 基础组件集） | DOING |
-| G1 | AI 研究中枢 / 深度研究 | PLANNED |
+| G0 | Shared UI Foundation（token 映射 / 共享组件 TSX 化 / 基础组件集） | DONE |
+| G1 | AI 研究中枢 / 深度研究 | DOING |
 | G2 | 产业研究三视图（产业链+全球坐标+环节详情） | PLANNED |
 | G3 | 研究经验卡（原炼验用） | PLANNED |
 | G4 | Workflow Studio（真 Editor） | PLANNED |

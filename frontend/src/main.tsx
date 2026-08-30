@@ -20,7 +20,9 @@ window.fetch = async function (input: RequestInfo | URL, init?: RequestInit): Pr
 };
 import "./i18n";
 import "./styles/tokens.css";
+import "./styles/guanlan-tokens.css"; /* Guanlan Direct Port G0 — donor token 映射层（方案 §20/§31） */
 import "./styles/global.css";
+import "./ui/guanlan/guanlan.css"; /* Guanlan port 基础组件样式（G0） */
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

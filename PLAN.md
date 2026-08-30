@@ -21,19 +21,23 @@
 > 迁植策略默认 PORT_AND_ADAPT：JSX→TSX、组件化、删 Mock/localStorage/no-build
 > runtime、接 ASRO API/Read Model/Artifact/Handoff（总纲 §5/§21/§22）。
 
-## G0 — Shared UI Foundation（DOING）
-- [ ] Donor token 兼容层（--paper/--ink/--zhu/--dai/--jin → ASRO 语义 token 映射，
-      light/dark 双套 + serif 字体 token；不覆盖 ASRO 语义色与涨跌红线）
-- [ ] Donor 共享组件 TSX 化（Brandmark→ASRO wordmark / MarketTicker / Sparkline /
-      Candles / ResearchStep / MetricCell，frontend/src/ui/guanlan/）
-- [ ] G0 组件集：Panel / Badge / Button / Toolbar / Drawer / Tooltip / Inspector
-- [ ] guanlan-bus 行为登记（BEHAVIOR_PORT_ONLY：handoff 行为 → ASRO HandoffEnvelope，
-      基建不迁）
-- [ ] THIRD_PARTY_NOTICES.md（donor 无 LICENSE 文件、README 标 Apache-2.0，
+## G0 — Shared UI Foundation（DONE）
+- [x] Donor token 兼容层（styles/guanlan-tokens.css：--paper/--ink/--zhu/--dai/--jin
+      → ASRO 语义 token 映射，light/dark 双套 + serif 字体 token；
+      不覆盖 ASRO 语义色，--yin 印章红独立于 danger/涨跌）
+- [x] Donor 共享组件 TSX 化（ui/guanlan/：Brandmark→ASRO wordmark / MarketTicker /
+      Sparkline / Candles / ResearchStep / MetricCell，donor shared.jsx 全 6 组件）
+- [x] G0 组件集：Panel / Badge / Button / Toolbar(+Sep) / Drawer / Tooltip / Inspector
+- [x] guanlan-bus / guanlan-nav 行为承接登记（→ HandoffEnvelope / AppShell navigation，
+      基建不迁，PORT-MANIFEST-G0 记录）
+- [x] THIRD_PARTY_NOTICES.md（donor 无 LICENSE 文件、README 标 Apache-2.0，
       差异如实记录）+ docs/port/PORT-MANIFEST-G0.md
-- [ ] i18n（zh-CN/en-US）+ Theme（light/dark/system）回归 + build/test PASS
+- [x] i18n（zh-CN/en-US guanlan.*）+ Theme 双套验证 + 附加修复：AppShell 品牌裸
+      i18n key（app.name → app.title，a0d200c 引入）
+- [x] 验证：vitest 19/19（+12 新测试）+ build PASS + 视觉回归 12/12 +
+      产品 E2E 18/18（compose 栈，Docker 修复后全量跑）
 
-## G1 — AI 研究中枢 / 深度研究（PENDING）
+## G1 — AI 研究中枢 / 深度研究（DOING）
 - Donor: ui/chat/app.jsx (3442) + agent-adapter.jsx → CommandCenter 重构
 - 左计划 / 中对话+Evidence / 右真实 Artifact Workbench
 

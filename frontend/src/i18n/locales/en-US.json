@@ -625,5 +625,10 @@
   },
   "a11y": {
     "skipToMain": "Skip to main content"
+  },
+  "guanlan": {
+    "brandSeal": "R",
+    "drawerClose": "Close",
+    "drawerTitle": "Details"
   }
 }

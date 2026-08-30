@@ -1,0 +1,401 @@
+/*
+ * Guanlan port — shared primitive components（G0，方案 §31）。
+ * 全部读 guanlan-tokens.css 映射层 token；不散落硬编码色值。
+ * 类名 gl- 前缀避免与既有页面冲突；组件 < 400 行（方案 §22）。
+ */
+
+/* ───── Panel ───── */
+.gl-panel {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gl-panel-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.gl-panel-header.gl-panel-header-flush {
+  border-bottom: none;
+}
+
+.gl-panel-title {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gl-panel-hint {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+
+.gl-panel-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gl-panel-body {
+  padding: 12px 14px;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* ───── Badge ───── */
+.gl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.gl-badge.gl-badge-ok      { color: var(--dai); border-color: color-mix(in srgb, var(--dai) 45%, var(--line)); }
+.gl-badge.gl-badge-error   { color: var(--zhu); border-color: color-mix(in srgb, var(--zhu) 45%, var(--line)); }
+.gl-badge.gl-badge-warning { color: var(--jin); border-color: color-mix(in srgb, var(--jin) 45%, var(--line)); }
+.gl-badge.gl-badge-up      { color: var(--zhu); }
+.gl-badge.gl-badge-down    { color: var(--dai); }
+
+/* ───── Button ───── */
+.gl-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink-1);
+  background: transparent;
+  border: 1px solid var(--ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.gl-button:hover:not(:disabled) {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.gl-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.gl-button.gl-button-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.gl-button.gl-button-primary:hover:not(:disabled) {
+  background: var(--ink-1);
+  color: var(--paper);
+}
+
+.gl-button.gl-button-ghost {
+  border-color: transparent;
+}
+
+.gl-button.gl-button-ghost:hover:not(:disabled) {
+  border-color: var(--line);
+}
+
+/* ───── Toolbar ───── */
+.gl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.gl-toolbar-sep {
+  align-self: stretch;
+  width: 1px;
+  background: var(--line);
+  margin: 2px 0;
+}
+
+/* ───── Drawer ───── */
+.gl-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  z-index: 1100;
+}
+
+.gl-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--paper-2);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  z-index: 1101;
+  display: flex;
+  flex-direction: column;
+  animation: gl-drawer-in 0.18s ease-out;
+}
+
+@keyframes gl-drawer-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.gl-drawer-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.gl-drawer-title {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gl-drawer-close {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: var(--ink-3);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.gl-drawer-close:hover { color: var(--ink); }
+
+.gl-drawer-body {
+  padding: 14px 16px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ───── Tooltip ───── */
+.gl-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.gl-tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+  z-index: 1200;
+}
+
+.gl-tooltip:hover::after,
+.gl-tooltip:focus-within::after {
+  opacity: 1;
+}
+
+/* ───── Inspector ───── */
+.guanlan-inspector {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+  background: var(--paper-2);
+  min-width: 0;
+}
+
+.guanlan-inspector-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.guanlan-inspector-title {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.guanlan-inspector-body {
+  padding: 12px 14px;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* ───── MarketTicker ───── */
+.gl-ticker {
+  display: flex;
+  gap: 28px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-1);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gl-ticker-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.gl-ticker-name { color: var(--ink-2); }
+.gl-ticker-value { font-weight: 600; }
+
+/* ───── ResearchStep ───── */
+.gl-research-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.gl-step-marker {
+  position: relative;
+  width: 18px;
+  flex: 0 0 18px;
+  margin-top: 4px;
+}
+
+.gl-step-marker-dot {
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  background: transparent;
+  border: 1px solid var(--ink-3);
+}
+
+.gl-research-step[data-status="done"] .gl-step-marker-dot {
+  background: var(--ink);
+  border: none;
+}
+
+.gl-research-step[data-status="running"] .gl-step-marker-dot {
+  background: var(--yin);
+  border: none;
+}
+
+.gl-research-step[data-status="running"] .gl-step-marker-ring {
+  position: absolute;
+  inset: -3px;
+  margin-left: 4px;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--yin);
+  opacity: 0.4;
+  animation: gl-pulse 1.6s ease-in-out infinite;
+}
+
+.gl-step-index {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+}
+
+.gl-step-label {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.gl-step-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-left: auto;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* ───── MetricCell ───── */
+.gl-metric-cell {
+  padding: 14px 20px 14px 0;
+  border-right: 1px solid var(--line-soft);
+}
+
+.gl-metric-label {
+  font-size: 11px;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.gl-metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.gl-metric-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.gl-metric-unit {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.gl-metric-delta {
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 4px;
+}

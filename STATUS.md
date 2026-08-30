@@ -23,6 +23,21 @@ token 映射层 + 共享组件 TSX 化 + 基础组件集 + i18n/Theme 回归。
 ## Completed
 
 ```text
+Guanlan Direct Port G0 — Shared UI Foundation（本轮，DONE）：
+  - token 映射层 styles/guanlan-tokens.css：donor 变量（--paper/--ink/--zhu/--dai/
+    --jin/--yin/--serif + .seal/.up/.down/.paper-bg/ink-rule/gl-pulse）全部以
+    ASRO 语义 token 重定义；涨跌/danger 红线不混；真机双主题探针验证
+    （light --zhu=#c23a2f 涨红、dark --yin=#d8584a 印章红，均正确切换）
+  - ui/guanlan/ 组件库（donor shared.jsx 全 6 组件 TSX 化 + G0 基础组件集）：
+    Brandmark（ASRO wordmark，i18n 印章字符）/ MarketTicker / Sparkline / Candles /
+    ResearchStep / MetricCell / Panel / Badge / Button / Toolbar+Sep / Drawer /
+    Tooltip / Inspector + guanlan.css + barrel index.ts
+  - i18n：guanlan.brandSeal/drawerClose/drawerTitle（zh-CN + en-US）
+  - THIRD_PARTY_NOTICES.md（donor 无 LICENSE 文件 vs README Apache-2.0 badge，
+    差异如实记录，commit 98f1398）+ docs/port/PORT-MANIFEST-G0.md
+  - 附加修复：AppShell 品牌裸 i18n key（t("app.name")→t("app.title")，a0d200c 引入）
+  - 验证：vitest 19/19（+12 guanlan-ui）+ tsc/vite build PASS +
+    视觉回归 12/12 PASS + 产品 E2E 18/18 PASS（compose 栈全量真机）
 Guanlan Direct Port 状态集成（本轮）：
   - 总任务书入库（docs/A-Share-Research-OS-Guanlan-Direct-Port-*.md）
   - Donor 审计确认：upstreams/financial-analyst 存在，非 git clone；
@@ -210,13 +225,11 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）按序推进，当前 G0 — Shared UI Foundation：
-1. G0：Donor token 兼容层（styles/guanlan-tokens.css，映射不覆盖 ASRO 语义色）
-2. G0：共享组件 TSX 化（ui/guanlan/：Brandmark/MarketTicker/Sparkline/Candles/
-   ResearchStep/MetricCell + Panel/Badge/Button/Toolbar/Drawer/Tooltip/Inspector）
-3. G0：THIRD_PARTY_NOTICES.md + docs/port/PORT-MANIFEST-G0.md
-4. G0：i18n/Theme 回归 + frontend build/test PASS → git checkpoint → G1
-之后：G1 AI 研究中枢（donor ui/chat/app.jsx）→ G2…G10 依总纲 §30 优先级。
+Guanlan Direct Port（Track B）：G0 DONE；当前 G1 — AI 研究中枢 / 深度研究。
+G1 要点（总纲 §6/§32）：donor ui/chat/app.jsx（3442 行）+ agent-adapter.jsx →
+拆解为 features/command-center 三栏工作台（左计划 ResearchStep 实时 / 中对话+
+Evidence / 右真实 Artifact Workbench），接 ResearchPlan/RunEvent/Artifact/Handoff，
+删 donor mock/localStorage/window bus，全部 i18n + 双主题。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 
