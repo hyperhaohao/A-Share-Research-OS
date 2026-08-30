@@ -5,7 +5,7 @@
 > 本文件是 R0–R5 整改的历史记录。当前状态以 STATUS.md 为准。
 > 旧 M0–M29 记录保留于 git 历史与 `docs/milestones/`（历史，不代表当前完成结论）。
 >
-> 整改依据：`A-Share-Research-OS-整改实施任务书.md`
+> 整改依据：`docs/archive/A-Share-Research-OS-整改实施任务书.md`
 > 原则：保留现有 Kernel，修正「对象存在 = 完成」的错误判定，
 > 补齐真实数据 → 真实研究 → 真实调度 → 真实端到端闭环。
 

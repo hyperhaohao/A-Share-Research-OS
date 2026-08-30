@@ -4,9 +4,9 @@
 
 > 现行两层执行线：
 > 1. **产品闭环二次整改（PW0–PW3）**——依据
->    `docs/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md`；
+>    `docs/archive/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md`；
 > 2. **V2 产品与架构总纲（Phase A–J）**——依据
->    `docs/A-Share-Research-OS-最终产品与架构修改方案.md`（观澜吸收 / Artifact 总线 /
+>    `docs/archive/A-Share-Research-OS-最终产品与架构修改方案.md`（观澜吸收 / Artifact 总线 /
 >    AI 研究中枢）。PW 线与总纲 Phase A 重叠项已完成的部分直接计入。
 
 ---
@@ -54,7 +54,7 @@
 
 ---
 
-# V2 总纲执行线（docs/A-Share-Research-OS-最终产品与架构修改方案.md）
+# V2 总纲执行线（docs/archive/A-Share-Research-OS-最终产品与架构修改方案.md）
 
 > 红线：不建第二套 Research Core；Artifact 不取代强类型 Domain；PIT 全覆盖；
 > 业务物料不进 localStorage；跨模块走 Artifact+Context+Handoff；LLM 不创造事实；

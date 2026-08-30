@@ -2219,7 +2219,7 @@ UI0 → UI8
 当前事实总纲：
 
 ```text
-docs/A-Share-Research-OS-最终产品与架构修改方案.md
+docs/archive/A-Share-Research-OS-最终产品与架构修改方案.md（V2 总纲，已归档）
 本任务说明书
 docs/v2/*
 ```

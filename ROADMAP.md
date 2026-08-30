@@ -12,7 +12,7 @@
 
 ## 产品闭环二次整改（PW，当前执行线）
 
-> 依据 `docs/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md`。
+> 依据 `docs/archive/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md`。
 > 核心回归标的：000831 中国稀土（禁止为其写特殊业务逻辑）。
 
 | 阶段 | 内容 | 状态 |
@@ -26,7 +26,7 @@
 
 ## V2 总纲执行线（Phase A–J，当前长期线）
 
-> 依据 `docs/A-Share-Research-OS-最终产品与架构修改方案.md`。
+> 依据 `docs/archive/A-Share-Research-OS-最终产品与架构修改方案.md`。
 > 以 Artifact/Provenance 为物料总线、AI 研究中枢为统一入口，
 > 按「研报→经验→验证→选股→策略→盯盘→决策→复盘→回灌」纵向闭环推进。
 
@@ -51,7 +51,7 @@
 
 ## 整改阶段（REMEDIATION，历史执行线）
 
-> 整改依据 `A-Share-Research-OS-整改实施任务书.md`；状态详情见 `REMEDIATION.md`。
+> 整改依据 `docs/archive/A-Share-Research-OS-整改实施任务书.md`；状态详情见 `REMEDIATION.md`。
 > 整改 R0–R5 已全部完成。下方 M0–M29 为首轮交付历史记录。
 
 ### Final Integrity Pass — COMPLETE（第二轮整改）
