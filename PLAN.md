@@ -142,7 +142,7 @@
 - [x] d. §47 全套策略验证（regime split + sensitivity → VALIDATED 通道）
 - [x] e. 盯盘观察源扩展（公告/新闻/资金/宏观）
 
-## 部署准备 + 持续打磨（PLANNED，UI Foundation 后恢复）
+## 部署准备 + 持续打磨（DONE）
 - [x] 预测一致性披露（方向/区间异号显形）+ 中报口径年化修复（000831 问题）
 
 ## UX Foundation（DOING，新任务书 docs/A-Share-Research-OS-UI信息架构与全产品体验重构任务说明书.md）
