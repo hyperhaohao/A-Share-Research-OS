@@ -168,25 +168,156 @@ class ViewService:
     # -- 关注池卡片视图 ---------------------------------------------------------------
 
     def watchlist_cards(self) -> list[dict]:
-        rows = self._session.scalars(
+        """P1-01: batch projection — constant SQL count regardless of N."""
+        from app.storage.prediction_repo import PredictionORM
+        from app.storage.report_repo import ReportORM
+        from app.storage.research_orm import ThesisORM
+        from app.storage.orm import EvidenceORM
+        from app.application.strategy_monitor import StrategyMonitorORM
+
+        watch_rows = self._session.scalars(
             select(WatchlistORM).order_by(WatchlistORM.added_at.desc())
         ).all()
-        cards: list[dict] = []
-        for row in rows:
-            instrument_id = row.instrument_id
-            cards.append(
-                {
-                    "instrument_id": instrument_id,
-                    "instrument": self._identity(instrument_id),
-                    "quote": self._latest_quote(instrument_id),
-                    "research": self._research(instrument_id),
-                    "report": self._latest_report(instrument_id),
-                    "prediction": self._latest_prediction(instrument_id),
-                    "monitor": self._monitor(instrument_id),
-                    "added_at": _iso(row.added_at),
-                }
+        ids = [w.instrument_id for w in watch_rows]
+        if not ids:
+            return []
+
+        # batch: identities
+        inst_rows = self._session.scalars(
+            select(InstrumentRegistryORM).where(InstrumentRegistryORM.instrument_id.in_(ids))
+        ).all()
+        identities = {
+            r.instrument_id: {
+                "instrument_id": r.instrument_id,
+                "name": r.name if r.name != r.code else None,
+                "code": r.code,
+                "exchange": r.exchange,
+                "board": r.board,
+            }
+            for r in inst_rows
+        }
+
+        # batch: latest priced quote per instrument
+        quote_rows = self._session.scalars(
+            select(EvidenceORM).where(
+                EvidenceORM.instrument_id.in_(ids),
+                EvidenceORM.evidence_type == "market_quote",
             )
+        ).all()
+        latest_quote: dict[str, dict] = {}
+        for e in quote_rows:
+            md = e.metadata_json or {}
+            price = md.get("price")
+            if not isinstance(price, (int, float)) or price <= 0:
+                continue
+            iid = e.instrument_id
+            prev = latest_quote.get(iid)
+            if prev is None or e.available_time > prev["available_time_dt"]:
+                latest_quote[iid] = {
+                    "price": float(price),
+                    "change_pct": md.get("change_pct"),
+                    "available_time_dt": e.available_time,
+                }
+
+        # batch: latest thesis per instrument
+        thesis_rows = self._session.scalars(
+            select(ThesisORM).where(ThesisORM.instrument_id.in_(ids))
+        ).all()
+        latest_thesis: dict[str, ThesisORM] = {}
+        for t in thesis_rows:
+            prev = latest_thesis.get(t.instrument_id)
+            if prev is None or (t.created_at and prev.created_at and t.created_at > prev.created_at):
+                latest_thesis[t.instrument_id] = t
+
+        # batch: latest report per instrument
+        report_rows = self._session.scalars(
+            select(ReportORM).where(ReportORM.instrument_id.in_(ids))
+        ).all()
+        latest_report: dict[str, ReportORM] = {}
+        for r in report_rows:
+            prev = latest_report.get(r.instrument_id)
+            if prev is None or (r.created_at and prev.created_at and r.created_at > prev.created_at):
+                latest_report[r.instrument_id] = r
+
+        # batch: latest prediction per instrument
+        pred_rows = self._session.scalars(
+            select(PredictionORM).where(PredictionORM.instrument_id.in_(ids))
+        ).all()
+        latest_pred: dict[str, PredictionORM] = {}
+        for p_row in pred_rows:
+            prev = latest_pred.get(p_row.instrument_id)
+            if prev is None or (p_row.created_at and prev.created_at and p_row.created_at > prev.created_at):
+                latest_pred[p_row.instrument_id] = p_row
+
+        # batch: monitors covering any of the ids
+        monitors = self._session.scalars(
+            select(StrategyMonitorORM).where(StrategyMonitorORM.enabled.is_(True))
+        ).all()
+        monitor_by_id: dict[str, dict] = {}
+        for m in monitors:
+            for u in (m.universe_json or []):
+                if isinstance(u, dict) and u.get("instrument_id") in ids:
+                    mid = u["instrument_id"]
+                    if mid not in monitor_by_id:
+                        monitor_by_id[mid] = {
+                            "monitor_id": m.monitor_id,
+                            "enabled": m.enabled,
+                            "next_run_at": _iso(m.next_run_at),
+                        }
+
+        # memory join
+        cards = []
+        for w in watch_rows:
+            iid = w.instrument_id
+            inst = identities.get(iid)
+            quote = latest_quote.get(iid)
+            t = latest_thesis.get(iid)
+            rep = latest_report.get(iid)
+            pred = latest_pred.get(iid)
+            cards.append({
+                "instrument_id": iid,
+                "instrument": inst,
+                "quote": (
+                    {
+                        "price": quote["price"],
+                        "change_pct": quote.get("change_pct"),
+                        "quote_time": _iso(quote["available_time_dt"]),
+                    }
+                    if quote
+                    else None
+                ),
+                "research": {
+                    "judgment": None,
+                    "confidence": t.confidence if t else None,
+                    "thesis_title": t.title if t else None,
+                    "support_balance": (
+                        f"{len(t.supporting_claims_json or [])}:{len(t.opposing_claims_json or [])}"
+                        if t
+                        else None
+                    ),
+                },
+                "report": (
+                    {"report_id": rep.report_id, "created_at": _iso(rep.created_at)}
+                    if rep
+                    else None
+                ),
+                "prediction": (
+                    {
+                        "prediction_id": pred.prediction_id,
+                        "horizon": pred.horizon,
+                        "expected_direction": pred.expected_direction,
+                        "expected_return_range": [pred.expected_return_min, pred.expected_return_max],
+                        "validated": False,
+                        "due_at": _iso(pred.due_at),
+                    }
+                    if pred
+                    else None
+                ),
+                "monitor": monitor_by_id.get(iid),
+                "added_at": _iso(w.added_at),
+            })
         return cards
+
 
     # -- 工作台总览视图（§15） ------------------------------------------------------------
 
