@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     auth_enabled: bool = False
     jwt_secret: str = "asro-dev-secret-change-in-production"
     jwt_expiry_hours: int = 24
+    scheduler_timezone: str = "Asia/Shanghai"
 
 
 @lru_cache

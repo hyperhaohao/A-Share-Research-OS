@@ -351,7 +351,9 @@ export function ResearchPipelineCard({
     const runId = `run_${crypto.randomUUID().slice(0, 12)}`;
 
     // 1) subscribe BEFORE triggering — every event lands live
-    const source = new EventSource(`/api/v1/events/stream?run_id=${encodeURIComponent(runId)}`);
+    const source = new EventSource(
+          `/api/v1/events/stream?run_id=${encodeURIComponent(runId)}&token=${encodeURIComponent(localStorage.getItem("asro_token") ?? "")}`,
+        );
     sourceRef.current = source;
     for (const name of SSE_EVENT_NAMES) {
       source.addEventListener(name, (ev: MessageEvent) => {

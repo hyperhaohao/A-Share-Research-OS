@@ -44,6 +44,14 @@ def register(payload: RegisterIn, request: Request, session: Session = Depends(g
     repo = UserRepository(session)
     is_first = repo.count() == 0
 
+    # P0-07: open bootstrap only when auth is DISABLED or table is empty AND
+    # no other registration is in progress (the DB unique constraint on
+    # username prevents the race; concurrent calls will get a 500 from the
+    # constraint violation, which we catch and return 409 for)
+    if not is_first and not _auth_enabled():
+        raise AppError("auth.registration_closed",
+                       status_code=403,
+                       detail="user registration requires ASRO_AUTH_ENABLED=true")
     if not is_first:
         # after bootstrap: only admins can create additional users (when auth is on)
         if _auth_enabled():

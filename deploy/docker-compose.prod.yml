@@ -18,14 +18,24 @@ services:
     environment:
       - ASRO_AUTH_ENABLED=true
       - ASRO_JWT_SECRET=${ASRO_JWT_SECRET:?set ASRO_JWT_SECRET in .env}
-      - ASRO_DATABASE_URL=postgresql+psycopg2://asro:${ASRO_PG_PASSWORD:-asro_prod}@db:5432/asro
+      - ASRO_DATABASE_URL=postgresql+psycopg2://asro:${ASRO_PG_PASSWORD:?set ASRO_PG_PASSWORD}@db:5432/asro
+    # P0-05: internal only — no published ports
+    ports: []
+
+  scheduler:
+    # P0-03: scheduler uses the SAME database as backend
+    environment:
+      - ASRO_DATABASE_URL=postgresql+psycopg2://asro:${ASRO_PG_PASSWORD:?set ASRO_PG_PASSWORD}@db:5432/asro
+    ports: []
 
   db:
     image: postgres:16-alpine
+    # P0-06: production password is mandatory, no default
     environment:
       - POSTGRES_USER=asro
-      - POSTGRES_PASSWORD=${ASRO_PG_PASSWORD:-asro_prod}
+      - POSTGRES_PASSWORD=${ASRO_PG_PASSWORD:?set ASRO_PG_PASSWORD in .env}
       - POSTGRES_DB=asro
+    ports: []
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: unless-stopped

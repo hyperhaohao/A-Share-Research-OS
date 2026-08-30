@@ -25,9 +25,16 @@ from sqlalchemy import JSON, DateTime, Integer, String, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.orm import Session
 
+from zoneinfo import ZoneInfo
+
+from app.config import get_settings
 from app.domain.evidence import utc_now
 from app.storage.agent_repo import _ensure_utc
 from app.storage.orm import Base
+
+
+def _scheduler_tz() -> ZoneInfo:
+    return ZoneInfo(get_settings().scheduler_timezone)
 
 
 class TaskType(str, Enum):
@@ -116,7 +123,7 @@ def compute_next_run(schedule: str, after: datetime) -> datetime:
     spec = ScheduleSpec(schedule)
     if spec.kind == "interval":
         return after + timedelta(seconds=spec.interval_seconds)
-    local = after.astimezone()
+    local = after.astimezone(_scheduler_tz())
     candidate = local.replace(hour=spec.hour, minute=spec.minute, second=0, microsecond=0)
     for _ in range(8):  # bounded: every wall-clock schedule fires within a week
         if candidate > local and (spec.weekdays is None or candidate.weekday() in spec.weekdays):

@@ -85,10 +85,16 @@ def prediction_review_view(
         1 for p in validated if p["validation"] and p["validation"]["direction_correct"]
     )
     range_hit = sum(1 for p in validated if p["validation"] and p["validation"]["range_hit"])
-    excess = [
+    # P0-10: instrument_return ≠ excess_return — 分开报，不混淆
+    instrument_rets = [
         p["validation"]["instrument_return_pct"]
         for p in validated
         if p["validation"] and p["validation"]["instrument_return_pct"] is not None
+    ]
+    excess_rets = [
+        p["validation"]["excess_return_pct"]
+        for p in validated
+        if p["validation"] and p["validation"].get("excess_return_pct") is not None
     ]
     return {
         "count": len(rows),
@@ -100,7 +106,12 @@ def prediction_review_view(
             if validated
             else None,
             "range_hit_rate": round(range_hit / len(validated) * 100, 1) if validated else None,
-            "avg_return_pct": round(sum(excess) / len(excess), 3) if excess else None,
+            "avg_instrument_return_pct": round(sum(instrument_rets) / len(instrument_rets), 3)
+            if instrument_rets
+            else None,
+            "avg_excess_return_pct": round(sum(excess_rets) / len(excess_rets), 3)
+            if excess_rets
+            else None,
             "conflicts": sum(1 for p in rows if p["consistency"] == "conflict"),
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),

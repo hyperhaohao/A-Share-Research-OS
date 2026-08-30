@@ -71,10 +71,13 @@ def create_app() -> FastAPI:
         if not path.startswith("/api/v1/"):
             return await call_next(request)
         auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
+        token = auth_header.removeprefix("Bearer ").strip() if auth_header.startswith("Bearer ") else ""
+        if not token:
+            token = request.query_params.get("token", "")
+        if not token:
             from fastapi.responses import JSONResponse
             return JSONResponse(status_code=401, content={"status": "error", "error_code": "auth.token_required"})
-        payload = decode_token(auth_header.removeprefix("Bearer ").strip())
+        payload = decode_token(token)
         if payload is None:
             from fastapi.responses import JSONResponse
             return JSONResponse(status_code=401, content={"status": "error", "error_code": "auth.token_invalid"})

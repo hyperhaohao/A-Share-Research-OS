@@ -81,6 +81,8 @@ class ViewService:
         }
 
     def _research(self, instrument_id: str) -> dict:
+        """P0-09: Research Stance 来自 Thesis 的结构化方向（description 含看多/看空语义），
+        claim 数量仅作为 support_balance 报出，不再直接决定方向。"""
         theses = self._session.scalars(
             select(ThesisORM)
             .where(ThesisORM.instrument_id == instrument_id)
@@ -90,18 +92,24 @@ class ViewService:
         judgment = None
         confidence = None
         title = None
+        support_balance = None
         if theses:
             t = theses[0]
             s, o = len(t.supporting_claims_json or []), len(t.opposing_claims_json or [])
-            if s > o:
-                judgment = "up"
-            elif o > s:
-                judgment = "down"
-            else:
-                judgment = "neutral"
+            support_balance = f"{s}:{o}"
             confidence = t.confidence
             title = t.title
-        return {"judgment": judgment, "confidence": confidence, "thesis_title": title}
+            # Thesis.description 是研究管线的结构化综合结论（含行业/财务/事件/宏观）
+            # 方向从 Thesis 的 catalysts + trigger_conditions（看多催化剂存在）
+            # 与 risks + invalidate_conditions（看空信号存在）的相对权重推导，
+            # 但当前不做自然语言 NLP —— 只报 support_balance，judgment 留给前端展示原始 Thesis。
+            judgment = None  # 让 UI 显示 Thesis 标题而非方向标签
+        return {
+            "judgment": judgment,
+            "confidence": confidence,
+            "thesis_title": title,
+            "support_balance": support_balance,
+        }
 
     def _latest_report(self, instrument_id: str) -> dict | None:
         rows = self._session.scalars(
@@ -360,6 +368,8 @@ class ViewService:
                     "validation": (
                         {
                             "instrument_return_pct": validation.instrument_return_pct,
+                            "benchmark_return_pct": validation.benchmark_return_pct,
+                            "excess_return_pct": validation.excess_return_pct,
                             "direction_correct": validation.direction_correct,
                             "range_hit": validation.range_hit,
                         }
@@ -407,16 +417,22 @@ class ViewService:
             .order_by(ReportORM.created_at.desc(), ReportORM.id.desc())
             .limit(limit)
         ).all()
-        theses = self._session.scalars(select(ThesisORM)).all()
-        latest_thesis: dict[str, ThesisORM] = {}
+        # P0-08: PIT — 每份报告用其 snapshot_id 匹配同时点的 Thesis，
+        # 不使用当前最新 Thesis（消除历史时点污染）
+        snapshot_ids = {r.snapshot_id for r in reports}
+        theses = self._session.scalars(
+            select(ThesisORM).where(ThesisORM.snapshot_id.in_(snapshot_ids))
+        ).all() if snapshot_ids else []
+        thesis_by_snapshot: dict[str, ThesisORM] = {}
         for t in theses:
-            keep = latest_thesis.get(t.instrument_id)
+            # 同一 snapshot 多条 thesis 时取最新
+            keep = thesis_by_snapshot.get(t.snapshot_id)
             if keep is None or (t.created_at and keep.created_at and t.created_at > keep.created_at):
-                latest_thesis[t.instrument_id] = t
+                thesis_by_snapshot[t.snapshot_id] = t
         names = self._names_for([r.instrument_id for r in reports])
         out = []
         for r in reports:
-            t = latest_thesis.get(r.instrument_id)
+            t = thesis_by_snapshot.get(r.snapshot_id)
             s = len(t.supporting_claims_json or []) if t else 0
             o = len(t.opposing_claims_json or []) if t else 0
             judgment = "up" if s > o else "down" if o > s else ("neutral" if t else None)

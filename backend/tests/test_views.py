@@ -81,8 +81,8 @@ def test_watchlist_view_aggregates_in_one_request(client, monkeypatch):
     # quote from the pinned evidence
     assert card["quote"]["price"] == 24.83
     # research state
-    assert card["research"]["judgment"] == "up"
     assert card["research"]["confidence"] is not None
+    assert card["research"]["support_balance"] is not None  # P0-09: support balance, not vote
     # report exists with its own section
     assert card["report"]["report_id"]
     # prediction section (absent — none created) is an explicit null
@@ -116,7 +116,7 @@ def test_instrument_overview_view_aggregates(client, monkeypatch):
     ov = resp.json()["overview"]
     assert ov["instrument"]["name"] == "中国稀土"
     assert ov["quote"]["price"] == 24.83
-    assert ov["research"]["judgment"] == "up"
+    assert ov["research"]["support_balance"] is not None
     assert ov["data_quality"]["evidence_count"] > 0
     assert ov["report"]["report_id"]
     # catalysts/risks may be empty on the mocked flow but the sections exist
