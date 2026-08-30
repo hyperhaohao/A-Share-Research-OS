@@ -15,20 +15,27 @@
 Current Execution Line: **Guanlan Research Capability Deep Port（R0–R9）**
 依据 docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md。
 License Gate：donor 无 LICENSE → REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
-三方 commit：ASRO（见 git log）/ donor 98f1398（无 drift）。
 Quant 本轮冻结（NO NEW DEVELOPMENT，保留不删）。
 
-R0-R4 DONE：
-  R0 差距矩阵 27 项（docs/research-deep-port/00-*.md）；
-  R1 ADR-Research-First + 导航研究优先 + README 定位；
-  R2 Source Trust T0-T4（读时派生）+ Claim 升级双防线 + Extraction 契约/
-    CitationVerifier/extraction_records + 注入防线 + 真实公告 live verify 4/4；
-  R3 industry_semantic_objects 四类语义对象（append-only 版本化）+
-    引用反查强制（422 显形）+ /industry-semantics API + /views/industry
-    semantics 并入 + 可复算温度 + 稀土试点真实数据（广晟减持 Driver/
-    Narrative，真实证据引用反查通过）+ UI 真机显示。
+R0-R3 DONE：R0 差距矩阵 27 项；R1 ADR-Research-First + 导航研究优先；
+R2 Source Trust T0-T4 + Claim 升级双防线 + Extraction/CitationVerifier +
+真实公告 live verify；R3 industry_semantic_objects 四类语义对象 +
+引用反查强制 + 稀土试点真实数据（广晟减持 Driver/Narrative）。
 
+R4-R7 DONE：
+  R4 Intent Router 九类焦点 + Agent Profiles 白名单 + 结构化 Plan（meta_json）
+    + Missing Data Loop（有界补采 + waiting_data/missing_data_summary）
+    + reviewing 事件 + 黄金问题 live verify（focus=event 全事件链 PRESENT）；
+  R5 Research Product 契约（7 类 product_type + reports.product_type 列 +
+    编译期校验缺失显形 + Artifact 标题类型化；黄金问题落 EVENT_INVESTIGATION）；
+  R6 Experience 非量化：LLM 九字段结构化精炼（refined_json，无 KEY 422）+
+    非量化验证四方法（反例搜索/历史证据/跨公司/人工复核）+ Playbook 检索
+    （Playbook≠Evidence 结构锁死）；
+  R7 Research Memory：research_memories 表 + 七类 + 晋升门（candidate→active
+    →retired 禁跳级）+ from_experience（仅 APPROVED）+ /memories API +
+    Memory≠Evidence 结构断言。
 
+当前 R8 — Research Inbox / Continuous Monitoring / Thesis Diff（DOING）。
 黄金场景：000831 中国稀土资产整合研究 → docs/research-deep-port/R10-CLOSURE.md
 ```
 
