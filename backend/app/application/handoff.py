@@ -48,6 +48,14 @@ HANDOFF_ACTIONS: set[tuple[str, str, str]] = {
     ("global_context", "workspace", "open_with_context"),
     ("report", "workspace", "open_workspace"),
     ("prediction", "workspace", "open_with_context"),
+    # R9（方案 §15.3）：任意研究对象 → Commander 带完整上下文
+    ("evidence", "commander", "open_in_commander"),
+    ("claim", "commander", "open_in_commander"),
+    ("driver", "commander", "open_in_commander"),
+    ("narrative", "commander", "open_in_commander"),
+    ("thesis", "commander", "open_in_commander"),
+    ("memory", "commander", "open_in_commander"),
+    ("research_product", "commander", "open_in_commander"),
 }
 
 

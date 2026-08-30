@@ -93,8 +93,8 @@
 | R6 | Experience 非量化改造（LLM Refinement 九字段/非量化验证/Playbook） | DONE |
 | R7 | Research Memory（七类/versioned/检索/staging 晋升/Memory≠Evidence） | DONE |
 | R8 | Research Inbox / Materiality 扩展 / Thesis Diff / Monitor 类型 / A-B Signal Ladder | DONE |
-| R9 | Research Graph 扩展 + Context Handoff + 000831 黄金场景 | DOING |
-| R10 | Closure（逐项 PASS/FAIL 文档） | PLANNED |
+| R9 | Research Graph 扩展 + Context Handoff + 000831 黄金场景 | DONE |
+| R10 | Closure（逐项 PASS/FAIL 文档） | DOING |
 
 ---
 

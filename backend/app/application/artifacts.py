@@ -38,6 +38,12 @@ class ArtifactType(str, Enum):
     INDUSTRY_MAP = "industry_map"
     GLOBAL_CONTEXT = "global_context"
     REVIEW = "review"
+    # R9（方案 §15.1）：研究语义对象进图谱
+    INDUSTRY_DRIVER = "industry_driver"
+    INDUSTRY_TRANSMISSION = "industry_transmission"
+    INDUSTRY_NARRATIVE = "industry_narrative"
+    INDUSTRY_POSITION = "industry_position"
+    RESEARCH_MEMORY = "research_memory"
 
 
 class RelationType(str, Enum):

@@ -216,7 +216,33 @@ class IndustrySemanticService:
             created_at=_utc(),
             as_of=as_of or _utc(),
         )
-        return self._repo.add(row)
+        saved = self._repo.add(row)
+        # R9（方案 §15.1）：语义对象注册为 Artifact —— 进入全库图谱。
+        # 幂等：按 domain 查已有 artifact 则只更新 title/version（append-only
+        # 版本在 artifact 内以 version 字段递进，不重复建行）。
+        from app.application.artifacts import ArtifactService
+
+        try:
+            svc = ArtifactService(self._session)
+            domain_id = f"{object_type}:{object_key}"
+            # register 幂等 per (domain_type, domain_id)：已有行刷新
+            # title/version，不重复建行
+            svc.register(
+                artifact_type=f"industry_{object_type}",
+                domain_type="IndustrySemantic",
+                domain_id=domain_id,
+                title=title[:200],
+                summary=mechanism[:300] or None,
+                instrument_ids=(instrument_id,) if instrument_id else (),
+                as_of_time=as_of or _utc(),
+                version=version,
+                created_by="industry_semantic",
+                route="/industry-map",
+                metadata={"industry_id": industry_id, "status": status},
+            )
+        except Exception:  # noqa: BLE001 — 注册失败不阻断研究状态写入
+            pass
+        return saved
 
     @staticmethod
     def _require(condition: bool, message: str) -> None:
