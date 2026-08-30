@@ -16,13 +16,25 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0–G3 DONE（bfb4872/9c196ee/488dbd3/dca103b）+ G4 DONE（27c84fe）：
-Workflow Studio 真 Editor 迁植完成，当前 G5 — 智能选股（DOING）。
+G0–G4 DONE（bfb4872/9c196ee/488dbd3/dca103b/27c84fe）+ G5 DONE（本轮）：
+智能选股三面板工作台迁植完成，当前 G6 — 策略实验室（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G5 — 智能选股工作台（本轮，DONE）：
+  - features/screening-workbench/：三面板（左 筛选条件侧栏 来自经验卡 +
+    逐规则排除计数徽标 / 中 候选池 排名+评级 A 徽标（rank≤3，可推导展示）/
+    右 研究解释 Inspector：Why Selected 真实 explanation + 命中规则 + 风险 +
+    CTA 进入研究/加入关注（POST /watchlist）/做成策略（§47 门保留））
+  - ScreeningRunDetailPage 重定向工作台；screening-excluded/candidates 等
+    E2E 契约全保留（E2E-11/12 PASS）
+  - 诚实边界：因子 IC/模型评分/regime 无引擎源 → 不显示不编数（§25）；
+    ScreenDefinition/版本层待因子引擎接入（G4 模式，manifest 登记）
+  - 验证：backend 367 passed + vitest 27/27 + build PASS + Playwright 30/30
+    + 真机核验（中国稀土 命中全部 3 条规则 全真实数据）
+  - PORT-MANIFEST-G5
 Guanlan Direct Port G4 — Workflow Studio 真 Editor（本轮，DONE）：
   - backend：workflow_definitions + append-only 版本（migration a9b8c7d6e5f4）
     + workflow_definition_service（图校验矩阵：未知 kind/缺 data/双 output/
@@ -289,12 +301,12 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G4 DONE；当前 G5 — 智能选股。
-G5 要点（方案 §16/§36）：donor ui/screen/screen-app.jsx（1897 行）+
-screen-data.jsx → ScreeningWorkbench（因子/条件侧栏 + 筛选配置 + 候选池 +
-排序评级 + Inspector + Why Selected/Why Rejected + 进入研究/加入关注/进入
-策略），接 ASRO ScreeningRun/Candidate（/views/screening 面板已有），
-E2E-11 契约保留。
+Guanlan Direct Port（Track B）：G0–G5 DONE；当前 G6 — 策略实验室。
+G6 要点（方案 §17/§37）：donor ui/seats/luozi-foundry.jsx + luozi-fleet.jsx +
+luozi-panels.jsx → StrategyLab（研究物料池 拖入策略 / 策略配方 / 规则组合 /
+历史验证 / 跨标的验证 / 市场状态验证 / 版本比较 / 失败样本 / 保存版本 /
+进入盯盘），接 ASRO StrategyVersion/Backtest（§46/§47 全套已有：regime split
++ sensitivity → VALIDATED 通道），E2E-12/13 契约保留。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 

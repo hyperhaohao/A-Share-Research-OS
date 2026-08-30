@@ -1,0 +1,70 @@
+/*
+ * 智能选股工作台（Guanlan Direct Port G5，方案 §16）。
+ * 三栏：条件侧栏 / 候选池 / 研究解释 Inspector；sw- 前缀类。
+ */
+
+.sw-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: start;
+}
+
+.sw-col-rules,
+.sw-col-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sw-card-link {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+}
+
+.sw-example {
+  font-size: 10.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sw-row-selected {
+  background: var(--color-surface);
+  outline: 1px solid var(--color-border-strong);
+}
+
+tbody tr[data-testid="screening-candidate"] {
+  cursor: pointer;
+}
+
+.sw-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sw-explanation {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--color-text);
+  border-left: 3px solid var(--color-accent);
+  padding-left: 10px;
+}
+
+.sw-cta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+}
+
+@media (max-width: 1100px) {
+  .sw-grid {
+    grid-template-columns: 1fr;
+  }
+}

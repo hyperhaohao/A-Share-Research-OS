@@ -80,11 +80,16 @@
       逐节点状态 + 诚实失败）
 - [x] PORT-MANIFEST-G4
 
-## G5 — 智能选股（DOING）
-- Donor: ui/screen/screen-app.jsx + screen-data.jsx → ScreeningWorkbench
-  （因子/候选/解释三面板）
+## G5 — 智能选股（DONE）
+- [x] features/screening-workbench/ 三面板工作台（条件侧栏含逐规则排除计数 /
+      候选池排名+评级徽标 / 研究解释 Inspector：Why Selected + 进入研究 +
+      加入关注 POST /watchlist + 做成策略 §47 门）
+- [x] 因子 IC/模型评分无引擎 → 不显示不编数；ScreenDefinition/版本层留待
+      因子引擎接入（PORT-MANIFEST-G5 登记）
+- [x] 验证：backend 367 passed（无后端改动）+ vitest 27/27 + build PASS +
+      Playwright 30/30（E2E-11/12 契约保留）+ 真机核验（全真实数据 Inspector）
 
-## G6 — 策略实验室（PENDING）
+## G6 — 策略实验室（DOING）
 - Donor: ui/seats/luozi-foundry.jsx + luozi-fleet.jsx + luozi-panels.jsx
   → StrategyLab（物料装配 + 版本比较 + 失败样本）
 

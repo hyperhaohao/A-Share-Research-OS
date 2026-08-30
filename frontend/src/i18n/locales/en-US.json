@@ -814,5 +814,21 @@
       "expr": "e.g. hit_rate >= 55 AND avg_return > 0 (metrics: hit_rate/avg_return/best_return/worst_return)",
       "card": "Empty = metrics stay on the workflow run (honestly recorded)"
     }
+  },
+  "screenWs": {
+    "rulesTitle": "Screening rules",
+    "fromCard": "from experience card",
+    "excludedN": "excluded {{count}}",
+    "excludedTitle": "Why others were rejected",
+    "openSourceCard": "Open source experience card",
+    "inspectorTitle": "Research explanation",
+    "inspectorEmpty": "Click a candidate row for the why-selected explanation",
+    "whySelected": "Selected",
+    "matchedRules": "Matches all experience rules",
+    "percentile": "top {{pct}}%",
+    "topRated": "Rated A",
+    "enterResearch": "Open research",
+    "addToWatchlist": "Add to watchlist",
+    "addedToWatchlist": "Added to watchlist"
   }
 }

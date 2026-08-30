@@ -813,5 +813,21 @@
       "expr": "如 hit_rate >= 55 AND avg_return > 0（指标: hit_rate/avg_return/best_return/worst_return）",
       "card": "留空 = 指标仅存于工作流运行（诚实记录）"
     }
+  },
+  "screenWs": {
+    "rulesTitle": "筛选条件",
+    "fromCard": "来自经验卡",
+    "excludedN": "排除 {{count}}",
+    "excludedTitle": "为什么没选中",
+    "openSourceCard": "打开来源经验卡",
+    "inspectorTitle": "研究解释",
+    "inspectorEmpty": "点击候选行查看入选解释",
+    "whySelected": "入选",
+    "matchedRules": "命中全部经验依据",
+    "percentile": "前 {{pct}}%",
+    "topRated": "评级 A",
+    "enterResearch": "进入研究",
+    "addToWatchlist": "加入关注",
+    "addedToWatchlist": "已加入关注"
   }
 }
