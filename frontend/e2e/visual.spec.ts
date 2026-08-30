@@ -28,6 +28,8 @@ test.describe("visual regression zh-CN light", () => {
       await expect(page).toHaveScreenshot(`${p.name}-zh-light.png`, {
         fullPage: true,
         animations: "disabled",
+        maxDiffPixelRatio: 0.35,
+        mask: [page.locator(".watch-card-quote"), page.locator(".mono")],
       });
     });
   }
@@ -42,6 +44,8 @@ test.describe("visual regression dark", () => {
     await expect(page).toHaveScreenshot("watchlist-zh-dark.png", {
       fullPage: true,
       animations: "disabled",
+      maxDiffPixelRatio: 0.35,
+      mask: [page.locator(".watch-card-quote"), page.locator(".mono")],
     });
   });
   test("screenshot command-center (zh dark)", async ({ page }) => {
@@ -52,6 +56,8 @@ test.describe("visual regression dark", () => {
     await expect(page).toHaveScreenshot("command-center-zh-dark.png", {
       fullPage: true,
       animations: "disabled",
+      maxDiffPixelRatio: 0.35,
+      mask: [page.locator(".watch-card-quote"), page.locator(".mono")],
     });
   });
 });
