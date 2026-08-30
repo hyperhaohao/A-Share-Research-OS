@@ -37,6 +37,8 @@ git log --oneline -10
 8. docs/00-文档索引.md
 9. 当前 Milestone 相关 docs
 10. docs/A-Share-Research-OS-最终实施任务书.md（需要详细规格时）
+11. docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md（当前正式执行线）
+12. docs/research-deep-port/00-观澜研究能力差距矩阵.md
 ```
 
 恢复任务时：
@@ -253,6 +255,13 @@ docs/adr/
 下一会话直接从该 Next Action 继续。
 
 ---
+
+## 10.5 当前执行线约束
+
+> **Research Capability Deep Port（R 线）完成前，不以部署、量化引擎扩展、
+> 选股模型扩展作为主执行线**，除非它们构成本轮阻塞。
+> Quant/Strategy 现有实现保留冻结（不删、不再扩）。
+> 执行依据：docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md。
 
 ## 11. i18n / Theme
 

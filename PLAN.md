@@ -2,15 +2,76 @@
 
 # A-Share Research OS — Execution Plan
 
-> 现行三层执行线：
-> 1. **Guanlan Direct Port（Track B，G0–G10）**——依据
->    `docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md`
->    （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）；
-> 2. **产品闭环二次整改（PW0–PW3）**——DONE；
-> 3. **V2 产品与架构总纲（Phase A–J）**——DONE。
+> 现行执行线：
+> 1. **Research Capability Deep Port（R0–R9，当前 DOING）**——依据
+>    `docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md`：
+>    观澜非量化 Research Capability（Source Trust / Extraction / Industry
+>    Driver-Transmission-Narrative / Commander 自主循环 / Research Products /
+>    非量化 Experience / Memory / Inbox / Thesis Diff / Graph）深度融合
+>    ASRO Evidence/PIT/Claim/Thesis/Version/Monitor/Validation 内核。
+>    Quant 本轮冻结（NO NEW DEVELOPMENT，保留不删）。
+> 2. Guanlan Direct Port（G0–G10）——DONE（PORT COMPLETE，历史事实）；
+> 3. PW0–PW3 / V2 Phase A–J / M0–M29——DONE（历史）。
 >
-> Donor-First 原则（总纲 §47）：后端坚持 ASRO，前端优先迁观澜；
-> 迁植模块进 main 前必须过 Track A 边界（Auth / PIT / Artifact / Handoff）。
+> License Gate：donor 无 LICENSE → 全程 REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
+> 黄金场景：000831 中国稀土资产整合研究 → docs/research-deep-port/R10-CLOSURE.md。
+
+---
+
+# Research Capability Deep Port（R 线，当前执行线）
+
+## R0 — Donor Delta Audit + Bootstrap（DONE）
+- [x] 三方 commit 固定（ASRO 89b4f6c / donor 98f1398 / 无 drift）
+- [x] License Gate：无 LICENSE → REFERENCE_ONLY / BEHAVIORAL ADAPTATION
+- [x] 源码级差距矩阵 27 项（docs/research-deep-port/00-观澜研究能力差距矩阵.md）
+- [x] TASK/PLAN/STATUS/ROADMAP/CLAUDE 执行线注册
+- [x] 基线测试全绿（backend 368 exit 0 / vitest 30 + build PASS / Playwright 30）
+- [x] Git checkpoint
+
+## R1 — Research Domain Boundary & Product Repositioning（DOING）
+- [ ] ADR-Research-First-Product-Boundary
+- [ ] 一级导航研究优先（研究核心 vs 实验 分组；Quant 不删不占核心）
+- [ ] README 产品定位更新 + i18n/theme 回归
+
+## R2 — Source Trust + Evidence-backed Extraction（PENDING，P0）
+- [ ] Source Trust T0-T4 业务层（映射 authority/fact_status/source，不建平行字段）
+- [ ] Claim 升级规则（T4 不得成 Confirmed Fact，质量门强制）
+- [ ] Extraction 契约 + CitationVerifier（抽取→原文定位→entailment→拒绝）
+- [ ] Prompt Injection 防线测试 + PIT 测试 + 真实公告 live verify
+
+## R3 — Industry Semantic Research Engine（PENDING，P0）
+- [ ] IndustryFramework/Driver/Transmission/Narrative/SegmentPosition domain
+- [ ] 稀土真实框架跑通（≥真实环节/驱动/传导/叙事；五轴部分真实定位）
+- [ ] 快照版本化 + 新证据→新版 Industry Snapshot
+
+## R4 — Research Commander Autonomous Loop（PENDING，P0）
+- [ ] Intent Router 九类 + 结构化 Plan 扩展 + Missing Data Loop
+- [ ] Agent Profiles（七类职责/工具白名单契约）+ run 状态机扩展
+- [ ] DeepResearchLoop（max iterations/终止条件）+ Thesis 变异规则（禁静默覆盖）
+
+## R5 — Research Product System（PENDING，P0/P1）
+- [ ] ResearchProduct 类型契约（复用 Report/Artifact/Version；逐类型 Contract）
+- [ ] P0：COMPANY_DEEP_DIVE / INDUSTRY_DEEP_DIVE / EVENT_INVESTIGATION / THESIS_REVIEW
+- [ ] P1：MAINLINE_RADAR / OVERSEAS_MAPPING / DAILY_RESEARCH_BRIEF
+
+## R6 — Experience 非量化改造（PENDING，P1）
+- [ ] LLM Refinement 结构化（九字段；原文+炼果双存；无 KEY 422 显形）
+- [ ] 非量化验证方法（case/historical/counterexample/cross-company/cross-cycle/review）
+- [ ] Playbook（批准后可检索；Memory≠Evidence 边界测试）
+
+## R7 — Research Memory（PENDING，P1）
+- [ ] ResearchMemory domain（七类/scope/version/staging→review 晋升）
+- [ ] 检索（instrument/industry/event_type/intent/tags）+ Agent 三段上下文
+
+## R8 — Research Inbox / Continuous Monitoring / Thesis Diff（PENDING，P0）
+- [ ] Research Inbox（九类聚合）+ Materiality 扩展（affected_*+suggested_action）
+- [ ] Thesis Diff → 新 Thesis Version（UI 对比视图）
+- [ ] Monitor 类型（Company/Industry/Event/Thesis/Catalyst）+ A/B Signal Ladder
+
+## R9 — Research Graph + Final Closure（PENDING）
+- [ ] Graph 节点/边类型扩展（Driver/Transmission/Narrative/Product/Memory/Event/Catalyst/Risk）
+- [ ] Context Handoff（任意研究对象 → Commander 带 context）
+- [ ] 000831 黄金场景全链真实运行 + R10-CLOSURE.md 逐项 PASS/FAIL
 
 ---
 

@@ -74,6 +74,30 @@
 
 ---
 
+## Research Capability Deep Port（R 线，当前 DOING）
+
+> 依据 `docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md`（正式任务书）。
+> 目标：观澜非量化 Research Capability 深度融合 ASRO
+> Evidence/PIT/Claim/Thesis/Version/Monitor/Validation 内核。
+> Quant 冻结（NO NEW DEVELOPMENT，保留不删）。License Gate：REFERENCE_ONLY。
+> 黄金场景：000831 中国稀土资产整合 → docs/research-deep-port/R10-CLOSURE.md。
+
+| 阶段 | 内容 | 状态 |
+|-------|------|------|
+| R0 | Donor Delta Audit + Bootstrap（三方 commit/License Gate/差距矩阵 27 项/执行线注册） | DONE |
+| R1 | Research Domain Boundary & Product Repositioning（ADR/导航/README） | DOING |
+| R2 | Source Trust + Evidence-backed Extraction（T0-T4/升级规则/Citation Verification/注入防线） | PLANNED |
+| R3 | Industry Semantic Engine（Driver/Transmission/Narrative/五轴站位，稀土跑通） | PLANNED |
+| R4 | Research Commander Autonomous Loop（九类意图/结构化 Plan/Missing Data Loop/Profiles/状态机/迭代上限） | PLANNED |
+| R5 | Research Product System（P0 四类 + P1 三类，逐类型 Contract） | PLANNED |
+| R6 | Experience 非量化改造（LLM Refinement 九字段/非量化验证/Playbook） | PLANNED |
+| R7 | Research Memory（七类/versioned/检索/staging 晋升/Memory≠Evidence） | PLANNED |
+| R8 | Research Inbox / Materiality 扩展 / Thesis Diff / Monitor 类型 / A-B Signal Ladder | PLANNED |
+| R9 | Research Graph 扩展 + Context Handoff + 000831 黄金场景 | PLANNED |
+| R10 | Closure（逐项 PASS/FAIL 文档） | PLANNED |
+
+---
+
 ## 整改阶段（REMEDIATION，历史执行线）
 
 > 整改依据 `docs/archive/A-Share-Research-OS-整改实施任务书.md`；状态详情见 `REMEDIATION.md`。

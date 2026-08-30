@@ -646,7 +646,21 @@ No obvious TODO / Mock / Placeholder
 
 ---
 
-## 22. 详细规格
+## 22. Research Capability Deep Port（不可降级目标）
+
+> 在不扩展 Quant 的前提下，完成观澜非量化 Research Capability 的系统性吸收，
+> 并与 ASRO Evidence / PIT / Claim / Thesis / Revision / Monitor / Memory 内核融合。
+>
+> 执行方案：`docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md`
+> 差距矩阵：`docs/research-deep-port/00-观澜研究能力差距矩阵.md`
+>
+> 边界：Alpha / IC / ML 选股 / 量化回测 / 自动交易本轮 NO NEW DEVELOPMENT
+> （现有实现保留冻结，不得删除）。黄金验收场景：000831 中国稀土资产整合研究。
+> 完成定义：方案 §24 全条件 + docs/research-deep-port/R10-CLOSURE.md 逐项 PASS。
+
+---
+
+## 23. 详细规格
 
 所有领域字段、Milestone 细节、UI、Source、Report、Quant、API、测试和部署规范见：
 

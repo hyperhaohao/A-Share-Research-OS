@@ -16,11 +16,20 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-Guanlan Direct Port **G0–G10 全部 DONE**（G10 = 验收 + Reviewer Pass）：
-**Guanlan Experience Port — PORT COMPLETE**（docs/port/G10-CLOSURE.md，
-9/9 模块 parity PASS + §45 基础设施 PASS；外部源依赖单元按 §25 显形）。
-下一候选：部署执行（域名+TLS+ASRO_JWT_SECRET）；LLM 润色（待 KEY）；
-因子引擎接入后扩 Workflow 目录与选股因子面（PORT-MANIFEST 已登记落点）。
+历史事实（保留）：Guanlan Direct Port G0–G10 全部 DONE —— PORT COMPLETE
+（docs/port/G10-CLOSURE.md；G10 完成 = 既定 Experience Port 清单完成，
+**不等于研究能力/方法/细节吸收完成**）。
+
+Current Execution Line: **Guanlan Research Capability Deep Port（R0–R9）**
+依据 docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md（正式任务书）。
+License Gate：donor 无 LICENSE → 全程 REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
+三方 commit：ASRO 89b4f6c / donor 98f1398（无 drift）/ 基线一致。
+Quant 本轮冻结（NO NEW DEVELOPMENT，保留不删）。
+
+R0 差距矩阵完成：docs/research-deep-port/00-观澜研究能力差距矩阵.md（27 项：
+Source Trust 5 / 产业语义 7 / Commander 7 / Products 7 / Experience-Memory 5 /
+Console 3 + REJECT_QUANT 清单）。当前 R1 — Research Domain Boundary（DOING）。
+黄金场景：000831 中国稀土资产整合研究 → R10-CLOSURE.md。
 ```
 
 ## Completed
@@ -364,13 +373,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G10 全部 DONE —— PORT COMPLETE。
-后续候选（按价值排序）：
-1. 部署执行：域名 + Let's Encrypt TLS + ASRO_JWT_SECRET（PLAN 部署线 PLANNED）；
-2. LLM 润色：设 ASRO_LLM_API_KEY + rebuild 即生效（管道已通）；
-3. 因子引擎接入：M21 审计的 TideTrading 因子库 → Workflow 目录扩展 +
-   选股因子面 + ScreenDefinition 版本层（落点已在 PORT-MANIFEST 登记）；
-4. kline 源恢复后真机复验工作流/回测完成路径（E2E 全链自动覆盖）。
+Research Capability Deep Port（R 线）：R0 DONE；当前 R1 — Research Domain
+Boundary & Product Repositioning。
+R1 要点：ADR-Research-First-Product-Boundary + 一级导航研究优先
+（研究核心 / 实验 两分组，Quant 不删不占核心）+ README 定位更新 +
+i18n/theme 回归。随后 R2 Source Trust（P0）→ R3 产业语义（P0）→
+R4 Commander 自主循环（P0）→ R5 Research Products（P0/P1）→
+R6 Experience 非量化 → R7 Memory → R8 Inbox/Thesis Diff → R9 Graph →
+R10-CLOSURE（000831 黄金场景逐项 PASS/FAIL）。
 ```
 
 ## Tests
