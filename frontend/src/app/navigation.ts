@@ -32,6 +32,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: "/experience", labelKey: "nav.experience" },
       { to: "/workflows", labelKey: "nav.workflows" },
       { to: "/screening", labelKey: "nav.screening" },
+      { to: "/workflow-studio", labelKey: "nav.workflows" },
     ],
   },
   {

@@ -586,7 +586,13 @@
     "emptyTitle": "No validation workflows yet.",
     "emptyHint": "Create one from an experience card.",
     "emptyAction": "Open experience cards",
-    "statusLabel": "Status"
+    "statusLabel": "Status",
+    "studioTitle": "Workflow Studio",
+    "studioRuns": "Run list",
+    "studioInspector": "Parameters / Run",
+    "studioSelectRun": "Select a run on the left to view its DAG",
+    "studioNoDag": "No DAG — launch a run to see nodes",
+    "studioMetrics": "Metrics"
   },
   "sourceHealth": {
     "provider": "Provider",

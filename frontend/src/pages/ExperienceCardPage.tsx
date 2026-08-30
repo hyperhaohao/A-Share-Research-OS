@@ -201,6 +201,9 @@ export function ExperienceCardPage() {
 
       <div className="header-controls" data-testid="experience-actions">
         <ScreeningLaunchButton cardId={card.card_id} />
+        <Link className="control-btn" to="/workflow-studio">
+          {t("workflows.studioTitle")}
+        </Link>
         <button
           type="button"
           className="control-btn"

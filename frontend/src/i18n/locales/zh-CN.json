@@ -585,7 +585,13 @@
     "emptyTitle": "还没有验证工作流。",
     "emptyHint": "从一张研究经验卡创建验证。",
     "emptyAction": "打开经验卡",
-    "statusLabel": "状态"
+    "statusLabel": "状态",
+    "studioTitle": "Workflow Studio",
+    "studioRuns": "运行列表",
+    "studioInspector": "参数 / 运行",
+    "studioSelectRun": "选择左侧运行查看 DAG",
+    "studioNoDag": "暂无 DAG —— 发起运行后此处显示节点",
+    "studioMetrics": "指标"
   },
   "sourceHealth": {
     "provider": "Provider",

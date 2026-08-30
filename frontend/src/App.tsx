@@ -22,6 +22,7 @@ import { LanguageProvider } from "./i18n/LanguageProvider";
 import { AppShell } from "./app/AppShell";
 import { WithInstrumentRedirect } from "./app/InstrumentRedirect";
 import { WorkflowsPage, WorkflowDetailPage } from "./pages/WorkflowsPage";
+import { WorkflowStudioPage } from "./pages/WorkflowStudioPage";
 import { SourceHealthPage } from "./pages/SourceHealthPage";
 import { LoginPage } from "./pages/LoginPage";
 import { Navigate } from "react-router-dom";
@@ -45,6 +46,7 @@ function Shell() {
         <Route path="/experience/:cardId" element={<ExperienceCardPage />} />
         <Route path="/workflows" element={<WorkflowsPage />} />
         <Route path="/workflows/:runId" element={<WorkflowDetailPage />} />
+        <Route path="/workflow-studio" element={<WorkflowStudioPage />} />
         <Route path="/screening" element={<ScreeningRunsPage />} />
         <Route path="/screening/:runId" element={<ScreeningRunDetailPage />} />
         <Route path="/strategy" element={<StrategyLabPage />} />
