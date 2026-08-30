@@ -16,13 +16,26 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0–G8 DONE（…/bfd4fb8/7dd2b47）+ G9 DONE（本轮）：全库图谱整合审计与
-缺口补齐完成，当前 G10 — Full Product Closure（DOING）。
+Guanlan Direct Port **G0–G10 全部 DONE**（G10 = 验收 + Reviewer Pass）：
+**Guanlan Experience Port — PORT COMPLETE**（docs/port/G10-CLOSURE.md，
+9/9 模块 parity PASS + §45 基础设施 PASS；外部源依赖单元按 §25 显形）。
+下一候选：部署执行（域名+TLS+ASRO_JWT_SECRET）；LLM 润色（待 KEY）；
+因子引擎接入后扩 Workflow 目录与选股因子面（PORT-MANIFEST 已登记落点）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G10 — Full Product Closure（本轮，DONE）：
+  - Reviewer Pass：新代码 TODO/FIXME/mock/console.log 扫描 0 命中；
+    §45 parity 14 项逐项核对（9 模块 + Evidence/PIT/Artifact/Auth/
+    Scheduler/CI[本地全量三线]）全 PASS
+  - docs/port/G10-CLOSURE.md：§44 端到端链覆盖说明（E2E-01…17 + 确定性
+    后端覆盖）+ 环境性限制（本机 kline 断连）如实记录
+  - docs/known-limitations.md 增补 4 条（kline 网络限制/工作流目录边界/
+    风险偏好温度计/盯盘 AI 研判）
+  - 结论：**PORT COMPLETE** —— 9/9 模块迁植 + 整合验收 PASS；
+    Track A 边界（Auth/PIT/Artifact/Handoff）全满足
 Guanlan Direct Port G9 — 全库研究图谱整合（本轮，DONE）：
   - 审计：八类产物已在册（research_run/report/prediction/experience_card/
     workflow_run[卡路径]/screening_run/strategy_version/industry_map/
@@ -351,12 +364,13 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G9 DONE；当前 G10 — Full Product Closure。
-G10 要点（方案 §44/§45/§41）：000831 端到端验收链（登录→中枢→研究→产业→
-经验→工作流→选股→策略→盯盘→预测→复盘→Experience v2→图谱）+ §45 parity
-清单逐项核对 + 最终 Reviewer Pass；全 PASS 才宣布 Guanlan Experience Port
-COMPLETE。
-遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
+Guanlan Direct Port（Track B）：G0–G10 全部 DONE —— PORT COMPLETE。
+后续候选（按价值排序）：
+1. 部署执行：域名 + Let's Encrypt TLS + ASRO_JWT_SECRET（PLAN 部署线 PLANNED）；
+2. LLM 润色：设 ASRO_LLM_API_KEY + rebuild 即生效（管道已通）；
+3. 因子引擎接入：M21 审计的 TideTrading 因子库 → Workflow 目录扩展 +
+   选股因子面 + ScreenDefinition 版本层（落点已在 PORT-MANIFEST 登记）；
+4. kline 源恢复后真机复验工作流/回测完成路径（E2E 全链自动覆盖）。
 ```
 
 ## Tests

@@ -125,9 +125,14 @@
 - [x] 验证：backend 368 passed（+1）+ vitest 30/30 + build PASS +
       Playwright 30/30（E2E-15 PASS）+ 真机核验（定义运行入图谱）
 
-## G10 — Full Product Closure（DOING）
-- §44 端到端验收（登录→中枢→研究→经验→工作流→选股→策略→盯盘→预测→复盘），
-  §45 parity 全 PASS 才宣布 COMPLETE
+## G10 — Full Product Closure（DONE）
+- [x] Reviewer Pass（新代码 TODO/mock/console 扫描 0 命中）+ §45 parity
+      14 项逐项核对（9 模块 parity + Evidence/PIT/Artifact/Auth/Scheduler/CI）
+- [x] docs/port/G10-CLOSURE.md（诚实矩阵：环境性限制=本机 kline 断连；
+      源依赖展示单元显形不编数）+ known-limitations 增补 4 条
+- [x] 验证：backend 368 + vitest 30 + Playwright 30 + build 全绿
+- [x] 结论：**Guanlan Experience Port — PORT COMPLETE**（9/9 模块；
+      外部源依赖单元按 §25 显形，接入后自动补全）
 
 ---
 
