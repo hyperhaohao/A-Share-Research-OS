@@ -186,3 +186,39 @@ class IndustryViewService:
             if len(rows) >= limit:
                 break
         return rows
+
+
+    # -- 全球宏观（G8，方案 §12/§13：与产业全球坐标分离的市场级视图） -----------
+
+    def global_macro_view(self) -> dict:
+        """市场级全球宏观：取最新 global_context 快照（指标=市场级指数/商品
+        真实行情数值层；主题=宏观政策证据）。无任何快照 → 各区诚实为空。"""
+        from app.application.research_map import GlobalContextSnapshotORM
+
+        row = self._session.scalars(
+            select(GlobalContextSnapshotORM)
+            .order_by(GlobalContextSnapshotORM.as_of.desc(), GlobalContextSnapshotORM.id.desc())
+            .limit(1)
+        ).first()
+        if row is None:
+            return {
+                "indicators": [],
+                "themes": [],
+                "disclosures": {
+                    "note": "宏观快照未采集 —— 对任一标的运行一次研究后，市场级指标与主题在此显示"
+                },
+                "as_of": None,
+                "has_data": False,
+            }
+        import json as _json
+
+        indicators = row.indicators_json if isinstance(row.indicators_json, list) else _json.loads(row.indicators_json or "[]")
+        themes = row.themes_json if isinstance(row.themes_json, list) else _json.loads(row.themes_json or "[]")
+        disclosures = dict(row.disclosures_json or {})
+        return {
+            "indicators": indicators[:12],
+            "themes": themes[:10],
+            "disclosures": disclosures,
+            "as_of": _iso(row.as_of),
+            "has_data": True,
+        }

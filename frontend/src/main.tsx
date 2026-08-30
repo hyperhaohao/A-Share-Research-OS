@@ -30,6 +30,7 @@ import "./features/workflow-studio/workflow-studio.css"; /* 工作流 Editor（G
 import "./features/screening-workbench/screening-workbench.css"; /* 智能选股三面板工作台（G5） */
 import "./features/strategy-lab/strategy-lab.css"; /* 策略实验室 物料配方+版本比较（G6） */
 import "./features/strategy-monitor/strategy-monitor.css"; /* 策略盯盘 K线+回放（G7） */
+import "./features/global-macro/global-macro.css"; /* 全球宏观工作台（G8） */
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

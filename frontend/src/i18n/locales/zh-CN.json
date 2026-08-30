@@ -25,7 +25,9 @@
     "industryMap": "产业研究地图",
     "globalContext": "全球宏观视图",
     "workflows": "研究验证工作流",
-    "sourceHealth": "数据源状态"
+    "sourceHealth": "数据源状态",
+    "industryGlobal": "全球产业坐标",
+    "globalMacro": "全球宏观"
   },
   "home": {
     "title": "研究总览",
@@ -859,6 +861,27 @@
       "observation": "观察",
       "signal": "信号",
       "decision": "决策"
+    }
+  },
+  "macroWs": {
+    "title": "全球宏观",
+    "subtitle": "当前整个资本市场处于怎样的全球宏观环境（与产业全球坐标分离）",
+    "asOf": "数据截至",
+    "unavailable": "全球宏观视图暂不可用",
+    "empty": "宏观快照未采集",
+    "noThemes": "暂无主题",
+    "officialMention": "官方提及",
+    "themesTitle": "宏观主题",
+    "themesHint": "政策/宏观资讯（官方机构提及标注）",
+    "riskTitle": "风险偏好",
+    "riskHint": "风险偏好温度计",
+    "riskPending": "暂无风险偏好源 —— 预测市场/波动率源接入后显示温度计（不编温度）",
+    "technical": "技术详情",
+    "region": {
+      "china": "中国",
+      "hongkong": "香港",
+      "us": "美国",
+      "commodity": "商品"
     }
   }
 }

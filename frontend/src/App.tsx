@@ -15,6 +15,7 @@ import { ScreeningRunsPage, ScreeningRunDetailPage } from "./pages/ScreeningPage
 import { StrategyLabPage, StrategyDetailPage } from "./pages/StrategyLabPage";
 import { StrategyMonitorsPage, StrategyMonitorDetailPage } from "./pages/StrategyMonitorPage";
 import { IndustryResearchWorkspace } from "./features/industry-research/IndustryResearchWorkspace";
+import { GlobalMacroWorkspace } from "./features/global-macro/GlobalMacroWorkspace";
 import { ResearchGraphPage } from "./pages/ResearchGraphPage";
 import { ResearchGraphCanvasPage } from "./pages/ResearchGraphCanvas";
 import { ThemeProvider } from "./theme/ThemeProvider";
@@ -71,6 +72,7 @@ function Shell() {
           }
         />
         <Route path="/global-context/:instrumentId" element={<IndustryResearchWorkspace initialTab="global" />} />
+        <Route path="/global-macro" element={<GlobalMacroWorkspace />} />
         <Route path="/research-graph" element={<ResearchGraphCanvasPage />} />
         <Route path="/research-graph/list" element={<ResearchGraphPage />} />
         <Route path="/source-health" element={<SourceHealthPage />} />

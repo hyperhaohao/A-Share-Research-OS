@@ -107,11 +107,16 @@
 - [x] 验证：backend 367 passed（+bars 端点）+ vitest 30/30（+3）+ build PASS +
       Playwright 30/30（E2E-13 诚实双路径/E2E-16 契约保留）
 
-## G8 — 全球宏观 / 海外（DOING）
-- Donor: ui/macro/macro-app.jsx + ui/overseas/overseas-app.jsx
-  → GlobalMacroWorkspace（与全球产业坐标分离）
+## G8 — 全球宏观 / 海外（DONE）
+- [x] backend：GET /views/global-macro（市场级：最新 GlobalContextSnapshot 的
+      指数/商品数值层 + 宏观主题；无快照显形）
+- [x] frontend：features/global-macro/（区域归组 中国/香港/美国/商品 + 宏观
+      主题流 + 风险偏好诚实显形；/global-macro 路由 + nav 新入口；
+      旧入口更名 产业研究·全球产业坐标 —— §12 分离落地）
+- [x] 验证：backend 367 passed + vitest 30/30 + build PASS + Playwright 30/30
+      + 真机核验（四区 6 指标全真实 + 10 主题）
 
-## G9 — 全库研究图谱整合（PENDING）
+## G9 — 全库研究图谱整合（DOING）
 - 全部 Workbench 注册 Artifact/Provenance/Handoff；Graph 节点带上下文跳转
 
 ## G10 — Full Product Closure（PENDING）

@@ -25,7 +25,9 @@
     "industryMap": "Industry map",
     "globalContext": "Global context",
     "workflows": "Validation workflows",
-    "sourceHealth": "Source health"
+    "sourceHealth": "Source health",
+    "industryGlobal": "Global industry position",
+    "globalMacro": "Global macro"
   },
   "home": {
     "title": "Dashboard",
@@ -860,6 +862,27 @@
       "observation": "OBS",
       "signal": "SIG",
       "decision": "DEC"
+    }
+  },
+  "macroWs": {
+    "title": "Global Macro",
+    "subtitle": "What kind of global macro environment is the market in (separate from industry position)",
+    "asOf": "As of",
+    "unavailable": "Global macro view unavailable",
+    "empty": "Macro snapshot not collected yet",
+    "noThemes": "No themes",
+    "officialMention": "Official mention",
+    "themesTitle": "Macro themes",
+    "themesHint": "policy/macro news (official-body mentions flagged)",
+    "riskTitle": "Risk appetite",
+    "riskHint": "risk-appetite thermometer",
+    "riskPending": "No risk-appetite source yet — thermometer appears once prediction-market/vol sources connect (never faked)",
+    "technical": "Technical details",
+    "region": {
+      "china": "China",
+      "hongkong": "Hong Kong",
+      "us": "United States",
+      "commodity": "Commodities"
     }
   }
 }

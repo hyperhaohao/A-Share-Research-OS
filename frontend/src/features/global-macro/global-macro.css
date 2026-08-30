@@ -1,0 +1,37 @@
+/*
+ * 全球宏观工作台（Guanlan Direct Port G8，方案 §13）。gm- 前缀类。
+ */
+
+.gm-regions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.gm-region-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.gm-region-row > * {
+  flex: 1 1 160px;
+}
+
+.gm-region-row > *:last-child {
+  border-right: none;
+}
+
+.gm-lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .gm-regions,
+  .gm-lower {
+    grid-template-columns: 1fr;
+  }
+}

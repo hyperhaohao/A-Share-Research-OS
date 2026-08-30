@@ -22,7 +22,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: "/watchlist", labelKey: "nav.watchlist" },
       { to: "/reports", labelKey: "nav.reports" },
       { to: "/industry-map", labelKey: "nav.industryMap" },
-      { to: "/global-context", labelKey: "nav.globalContext" },
+      { to: "/global-context", labelKey: "nav.industryGlobal" },
+      { to: "/global-macro", labelKey: "nav.globalMacro" },
     ],
   },
   {
