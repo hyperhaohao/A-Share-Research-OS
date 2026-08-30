@@ -630,5 +630,23 @@
     "brandSeal": "R",
     "drawerClose": "Close",
     "drawerTitle": "Details"
+  },
+  "cc": {
+    "sessions": "Research conversations",
+    "newSession": "New conversation",
+    "noSessions": "No past conversations",
+    "currentSession": "Current conversation",
+    "pastSession": "Past conversation",
+    "contextChip": "Current research context",
+    "briefCard": "Current instrument · Brief",
+    "quoteUnavailable": "Quote unavailable",
+    "marketCap": "Market cap",
+    "yi": "100M",
+    "openCurrentReport": "Open this research report",
+    "briefHintNoReport": "Complete a research run and the report appears here",
+    "openWorkspace": "Open workspace",
+    "quoteAsOf": "Quote as of",
+    "workbenchEmptyTitle": "Research an instrument first",
+    "workbenchEmptyHint": "Instrument brief · research artifacts · pending predictions"
   }
 }

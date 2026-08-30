@@ -1,0 +1,226 @@
+/*
+ * AI 研究中枢（Guanlan Direct Port G1，方案 §6/§32）—— 三栏工作台样式。
+ * 全部读 token（含 guanlan-tokens 映射层）；cc- 前缀类。
+ */
+
+.cc-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cc-header h1 {
+  font-family: var(--serif);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+}
+
+.cc-header p {
+  margin: 0 0 10px;
+}
+
+.cc-grid {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.cc-grid .commander-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* 左/右栏内部滚动，中栏对话自身滚动（donor 三栏工作台行为） */
+.cc-grid .commander-left,
+.cc-grid .commander-right {
+  overflow-y: auto;
+}
+
+.cc-step-detail {
+  margin: -4px 0 0 32px;
+  font-size: 12px;
+}
+
+/* ───── 会话切换 ───── */
+.cc-session-list .result-row {
+  align-items: baseline;
+}
+
+.cc-session-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-2);
+  cursor: pointer;
+  text-align: left;
+}
+
+.cc-session-link:hover {
+  color: var(--ink);
+}
+
+.cc-session-active {
+  color: var(--yin);
+  font-weight: 600;
+}
+
+/* ───── 中栏对话 ───── */
+.cc-plan-chain {
+  border-left: 2px solid var(--line);
+  margin: 6px 0 6px 10px;
+  padding-left: 12px;
+}
+
+.cc-chain-done {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+}
+
+.cc-composer-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cc-composer-row .control-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-context-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink-1);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 4px 10px;
+  margin-bottom: 8px;
+}
+
+/* ───── 右栏 Workbench ───── */
+.cc-empty-hint {
+  border: 1px dashed var(--line);
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.cc-empty-title {
+  font-family: var(--serif);
+  color: var(--ink-2);
+  margin: 0 0 4px;
+}
+
+.cc-brief-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cc-brief-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cc-brief-name {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.cc-brief-code {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.cc-brief-quote {
+  text-align: right;
+}
+
+.cc-brief-price {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.cc-brief-delta {
+  font-size: 11px;
+}
+
+.cc-brief-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line-soft);
+  border: 1px solid var(--line-soft);
+}
+
+.cc-brief-cell {
+  background: var(--paper);
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.cc-brief-label {
+  font-size: 9.5px;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+
+.cc-brief-unit {
+  font-size: 10px;
+  color: var(--ink-2);
+  margin-left: 3px;
+}
+
+.cc-brief-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 9px;
+}
+
+.cc-brief-report {
+  font-family: var(--serif);
+  font-size: 12.5px;
+  color: var(--yin);
+  text-decoration: none;
+}
+
+.cc-brief-report:hover {
+  text-decoration: underline;
+}
+
+.cc-brief-arrow {
+  color: var(--ink-3);
+}
+
+.cc-brief-hint {
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.cc-brief-ws {
+  font-size: 11.5px;
+  text-decoration: none;
+  flex: none;
+}
+
+.cc-brief-ws:hover {
+  color: var(--ink);
+}
+
+.cc-brief-time {
+  font-size: 9.5px;
+  margin: 0;
+}

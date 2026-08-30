@@ -16,13 +16,33 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-当前 G0 — Shared UI Foundation（DOING）：
-token 映射层 + 共享组件 TSX 化 + 基础组件集 + i18n/Theme 回归。
+G0 DONE（bfb4872）+ G1 DONE（本轮）：AI 研究中枢三栏工作台迁植完成，
+当前 G2 — 产业研究三视图（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G1 — AI 研究中枢 / 深度研究（本轮，DONE）：
+  - features/command-center/：CommandCenterPage（三栏编排 + 会话自举）/
+    CommandCenterLeft（计划墨痕 ResearchStep 三态 + 正在运行 + 最近计划 +
+    多会话切换）/ CommandCenterTranscript（对话 + 计划执行链 + 上下文 chip
+    Composer）/ CommandCenterWorkbench（真实当前 Workbench：标的速记卡
+    真实行情 价格/涨跌/PE/PB/市值/行情时间 + 计划产物报告 CTA 置顶 +
+    待验证预测）/ plan.ts + command-center.css
+  - 替换：观澜 GuanlanAgent SSE/GUANLAN_BACKEND/localStorage 持久化/
+    mock 假流式报告/假步骤定时器 → ASRO /views/command-center 单请求聚合 +
+    /command/sessions + /artifacts + /market-data/quote（全部真实数据，
+    缺行情显形「行情暂不可用」）
+  - E2E 契约全保留（commander-* testid 矩阵 + artifact-row/-open + plan-row）；
+    修复回归中发现的 commander-reply testid 缺失 + 计划完成文案国际化
+  - i18n cc.* 16 组（zh/en）；附加修复：删除会话切换草稿中的 hook 规则违规
+  - 验证：vitest 23/23（+4 command-center）+ tsc/build PASS +
+    Playwright 30/30（product 18 含 E2E-08 全链 + visual 12，
+    command-center 双主题基线按内容变更重生成）+ 真机三栏截图核验
+    （左 计划墨痕 01→03 完成 · 中国稀土 / 中 对话+链 / 右 60.18 -1.04%
+    PE 257.7 PB 12.69 639亿 全真实行情）
+  - PORT-MANIFEST-G1（donor 3442 行 chat/app.jsx 行为级对标记录）
 Guanlan Direct Port G0 — Shared UI Foundation（本轮，DONE）：
   - token 映射层 styles/guanlan-tokens.css：donor 变量（--paper/--ink/--zhu/--dai/
     --jin/--yin/--serif + .seal/.up/.down/.paper-bg/ink-rule/gl-pulse）全部以
@@ -225,11 +245,13 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0 DONE；当前 G1 — AI 研究中枢 / 深度研究。
-G1 要点（总纲 §6/§32）：donor ui/chat/app.jsx（3442 行）+ agent-adapter.jsx →
-拆解为 features/command-center 三栏工作台（左计划 ResearchStep 实时 / 中对话+
-Evidence / 右真实 Artifact Workbench），接 ResearchPlan/RunEvent/Artifact/Handoff，
-删 donor mock/localStorage/window bus，全部 i18n + 双主题。
+Guanlan Direct Port（Track B）：G0+G1 DONE；当前 G2 — 产业研究三视图。
+G2 要点（总纲 §7-§12/§33）：donor ui/industry/industry-app.jsx（749 行）+
+industry-data.jsx → features/industry-research/（IndustryChainView +
+GlobalIndustryPositionView + IndustrySegmentDetail 三视图共享 IndustrySnapshot；
+GROUPS/SEGS/DRIVERS/EDGES/NARRS → IndustryGroup/Node/Edge/Driver/Narrative；
+五轴 β/Δ/Ω/Θ/Ψ 保留字段名；接 /views/industry 与 open_with_context；
+禁止退化成 React Flow Node+Edge）。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 

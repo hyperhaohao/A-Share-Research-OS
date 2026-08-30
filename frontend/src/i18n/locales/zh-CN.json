@@ -629,5 +629,23 @@
     "brandSeal": "研",
     "drawerClose": "关闭",
     "drawerTitle": "详情"
+  },
+  "cc": {
+    "sessions": "研究对话",
+    "newSession": "新建对话",
+    "noSessions": "暂无历史会话",
+    "currentSession": "当前对话",
+    "pastSession": "历史对话",
+    "contextChip": "当前研究上下文",
+    "briefCard": "当前标的 · 速记",
+    "quoteUnavailable": "行情暂不可用",
+    "marketCap": "总市值",
+    "yi": "亿",
+    "openCurrentReport": "查看本次研究报告",
+    "briefHintNoReport": "完成一次研究后，报告会显示在这里",
+    "openWorkspace": "打开工作台",
+    "quoteAsOf": "行情时间",
+    "workbenchEmptyTitle": "先研究一只标的",
+    "workbenchEmptyHint": "这里显示标的速记 · 研究产物 · 待验证预测"
   }
 }

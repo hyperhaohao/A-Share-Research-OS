@@ -37,13 +37,16 @@
 - [x] 验证：vitest 19/19（+12 新测试）+ build PASS + 视觉回归 12/12 +
       产品 E2E 18/18（compose 栈，Docker 修复后全量跑）
 
-## G1 — AI 研究中枢 / 深度研究（DOING）
-- Donor: ui/chat/app.jsx (3442) + agent-adapter.jsx → CommandCenter 重构
-- 左计划 / 中对话+Evidence / 右真实 Artifact Workbench
+## G1 — AI 研究中枢 / 深度研究（DONE）
+- [x] features/command-center/ 四组件 + plan.ts + css（donor 三栏/多会话/墨痕计划链/
+      上下文 chip/右栏真实 Workbench：标的速记卡 + 计划产物 + 待验证预测）
+- [x] 替换：观澜 Agent API/localStorage/mock 假流式 → ASRO 视图/会话/Artifact/行情
+- [x] 验证：vitest 23/23 + build PASS + Playwright 30/30（含 E2E-08 全链 +
+      command-center 双主题基线按内容变更重生成）+ PORT-MANIFEST-G1
 
-## G2 — 产业研究三视图（PENDING）
-- Donor: ui/industry/industry-app.jsx → IndustryResearchWorkspace
-  （产业链 + 全球产业坐标 + 环节详情共享 IndustrySnapshot）
+## G2 — 产业研究三视图（DOING）
+- Donor: ui/industry/industry-app.jsx (749) + industry-data.jsx →
+  IndustryResearchWorkspace（产业链 + 全球产业坐标 + 环节详情共享 IndustrySnapshot）
 
 ## G3 — 研究经验卡（PENDING）
 - Donor: ui/cards/validation.jsx → ExperienceWorkbench（原炼验用完整迁植）
