@@ -62,8 +62,8 @@
 |-------|------|------|
 | G0 | Shared UI Foundation（token 映射 / 共享组件 TSX 化 / 基础组件集） | DONE |
 | G1 | AI 研究中枢 / 深度研究 | DONE |
-| G2 | 产业研究三视图（产业链+全球坐标+环节详情） | DOING |
-| G3 | 研究经验卡（原炼验用） | PLANNED |
+| G2 | 产业研究三视图（产业链+全球坐标+环节详情） | DONE |
+| G3 | 研究经验卡（原炼验用） | DOING |
 | G4 | Workflow Studio（真 Editor） | PLANNED |
 | G5 | 智能选股（三面板） | PLANNED |
 | G6 | 策略实验室（物料装配） | PLANNED |

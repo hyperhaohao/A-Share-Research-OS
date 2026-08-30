@@ -14,7 +14,7 @@ import { ExperienceCardPage } from "./pages/ExperienceCardPage";
 import { ScreeningRunsPage, ScreeningRunDetailPage } from "./pages/ScreeningPage";
 import { StrategyLabPage, StrategyDetailPage } from "./pages/StrategyLabPage";
 import { StrategyMonitorsPage, StrategyMonitorDetailPage } from "./pages/StrategyMonitorPage";
-import { IndustryMapPage, GlobalContextPage } from "./pages/ResearchMapPages";
+import { IndustryResearchWorkspace } from "./features/industry-research/IndustryResearchWorkspace";
 import { ResearchGraphPage } from "./pages/ResearchGraphPage";
 import { ResearchGraphCanvasPage } from "./pages/ResearchGraphCanvas";
 import { ThemeProvider } from "./theme/ThemeProvider";
@@ -57,20 +57,20 @@ function Shell() {
           path="/industry-map"
           element={
             <WithInstrumentRedirect basePath="/industry-map">
-              {() => <IndustryMapPage />}
+              {() => <IndustryResearchWorkspace initialTab="chain" />}
             </WithInstrumentRedirect>
           }
         />
-        <Route path="/industry-map/:instrumentId" element={<IndustryMapPage />} />
+        <Route path="/industry-map/:instrumentId" element={<IndustryResearchWorkspace initialTab="chain" />} />
         <Route
           path="/global-context"
           element={
             <WithInstrumentRedirect basePath="/global-context">
-              {() => <GlobalContextPage />}
+              {() => <IndustryResearchWorkspace initialTab="global" />}
             </WithInstrumentRedirect>
           }
         />
-        <Route path="/global-context/:instrumentId" element={<GlobalContextPage />} />
+        <Route path="/global-context/:instrumentId" element={<IndustryResearchWorkspace initialTab="global" />} />
         <Route path="/research-graph" element={<ResearchGraphCanvasPage />} />
         <Route path="/research-graph/list" element={<ResearchGraphPage />} />
         <Route path="/source-health" element={<SourceHealthPage />} />

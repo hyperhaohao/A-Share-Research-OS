@@ -185,3 +185,53 @@ def test_views_refuse_without_research_state(client):
     assert missing_map.status_code in (404,)
     body = missing_map.json()
     assert body["error_code"] in ("instrument.not_found", "industry_map.not_collected")
+
+
+# ── Guanlan Direct Port G2 — 产业研究三视图 Read Model（方案 §7-§12/§24）────────
+
+
+def test_g2_industry_view_assembles_from_real_evidence(client, monkeypatch):
+    """GET /views/industry/{id}：链级→segments、五轴、真实主题/指标、披露；
+    驱动/传导/站位无证据源 → None/[]（§25 诚实置空）。"""
+    _run_pipeline(client, monkeypatch)
+
+    resp = client.get("/api/v1/views/industry/SZSE:000831")
+    assert resp.status_code == 200, resp.text
+    view = resp.json()["view"]
+
+    # EM2016 产业链 "稀土-稀土资源-稀土矿采选" → 三级链（fixture 驱动）
+    assert view["chain_levels"] == ["稀土", "稀土资源", "稀土矿采选"]
+    assert [s["segment_id"] for s in view["segments"]] == view["chain_levels"]
+    assert view["segments"][-1]["is_current"] is True
+    assert view["segments"][0]["is_current"] is False
+
+    axes = view["global"]["axes"]
+    assert [a["greek"] for a in axes] == ["β", "Δ", "Ω", "Θ", "Ψ"]
+    assert len(view["global"]["indicators"]) >= 1
+    ind = view["global"]["indicators"][0]
+    assert ind["name"] == "上证指数" and ind["value"] is not None
+    assert view["global"]["positions"] == []
+
+    assert view["map_id"] and view["map_id"].startswith("imap_")
+    assert "note" in view["disclosures"]
+    assert all(s["momentum"] is None and s["temperature"] is None for s in view["segments"])
+
+
+def test_g2_segment_view_evidence_and_404(client, monkeypatch):
+    """环节详情：环节证据为真实共现检索；链外环节 404 显式拒绝。"""
+    _run_pipeline(client, monkeypatch)
+
+    resp = client.get("/api/v1/views/industry/SZSE:000831/segment/稀土矿采选")
+    assert resp.status_code == 200, resp.text
+    view = resp.json()["view"]
+    assert view["segment"]["name"] == "稀土矿采选"
+    assert view["segment"]["is_current"] is True
+    assert view["segment"]["evidence_count"] == len(view["evidence"])
+    assert len(view["evidence"]) >= 1
+    for row in view["evidence"]:
+        assert row["evidence_id"].startswith("ev_")
+        assert row["available_time"] is not None
+
+    missing = client.get("/api/v1/views/industry/SZSE:000831/segment/不存在环节")
+    assert missing.status_code == 404
+    assert missing.json()["error_code"] == "industry_map.segment_not_found"

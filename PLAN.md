@@ -44,11 +44,18 @@
 - [x] 验证：vitest 23/23 + build PASS + Playwright 30/30（含 E2E-08 全链 +
       command-center 双主题基线按内容变更重生成）+ PORT-MANIFEST-G1
 
-## G2 — 产业研究三视图（DOING）
-- Donor: ui/industry/industry-app.jsx (749) + industry-data.jsx →
-  IndustryResearchWorkspace（产业链 + 全球产业坐标 + 环节详情共享 IndustrySnapshot）
+## G2 — 产业研究三视图（DONE）
+- [x] backend：GET /views/industry/{id} + /segment/{segment_id}（industry_view_service，
+      真实证据组装只读投影，携带 map_id/context_snapshot_id 溯源）
+- [x] frontend：features/industry-research/ 四组件（三视图一体：产业链 + 全球坐标
+      β/Δ/Ω/Θ/Ψ 五轴 + 环节详情；open_with_context 保留）
+- [x] 诚实置空：Driver/Transmission/Narrative/站位/动量/温度 无证据源 → 显形
+      暂无观点/暂无定位（不迁 donor YAML 板库，不造假边假象限）
+- [x] 验证：backend 367 passed（+2 G2）+ vitest 23/23 + build PASS +
+      Playwright 30/30（E2E-14/17 契约保留）+ 真机截图核验（三视图 + 诚实披露）
+- [x] PORT-MANIFEST-G2
 
-## G3 — 研究经验卡（PENDING）
+## G3 — 研究经验卡（DOING）
 - Donor: ui/cards/validation.jsx → ExperienceWorkbench（原炼验用完整迁植）
 
 ## G4 — Workflow Studio（PENDING）

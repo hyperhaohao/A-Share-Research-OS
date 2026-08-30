@@ -41,6 +41,32 @@ def command_center_view(session: Session = Depends(get_session)) -> dict:
     return {"view": view}
 
 
+@router.get("/industry/{instrument_id}")
+def industry_view(instrument_id: str, session: Session = Depends(get_session)) -> dict:
+    resolved = resolve_instrument_id(instrument_id, session, allow_remote=False)
+    if resolved is None:
+        raise AppError("instrument.not_found", status_code=404)
+    from app.services.industry_view_service import IndustryViewService
+
+    return {"view": IndustryViewService(session).industry_view(resolved)}
+
+
+@router.get("/industry/{instrument_id}/segment/{segment_id}")
+def industry_segment_view(
+    instrument_id: str,
+    segment_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    resolved = resolve_instrument_id(instrument_id, session, allow_remote=False)
+    if resolved is None:
+        raise AppError("instrument.not_found", status_code=404)
+    from app.services.industry_view_service import IndustryViewService
+
+    return {
+        "view": IndustryViewService(session).segment_view(resolved, segment_id)
+    }
+
+
 @router.get("/report-library")
 def report_library_view(
     limit: int = Query(default=50, ge=1, le=200),

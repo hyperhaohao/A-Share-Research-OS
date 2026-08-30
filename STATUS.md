@@ -16,13 +16,29 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0 DONE（bfb4872）+ G1 DONE（本轮）：AI 研究中枢三栏工作台迁植完成，
-当前 G2 — 产业研究三视图（DOING）。
+G0 DONE（bfb4872）+ G1 DONE（9c196ee）+ G2 DONE（本轮）：产业研究三视图迁植完成，
+当前 G3 — 研究经验卡（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G2 — 产业研究三视图（本轮，DONE）：
+  - backend：industry_view_service + GET /views/industry/{id}（方案 §24 命名）
+    + GET /views/industry/{id}/segment/{segment_id}（链外环节 404 显式拒绝）；
+    只读投影复用 industry_map_snapshots + global_context_snapshots（无新表），
+    携带 map_id/context_snapshot_id 供 open_with_context 溯源
+  - frontend：features/industry-research/（IndustryResearchWorkspace 三视图一体
+    双 tab + IndustryChainView 阶段列/环节 tile/股票池 + GlobalIndustryPositionView
+    β/Δ/Ω/Θ/Ψ 五轴/宏观主题/指标网格 + IndustrySegmentDetail 环节详情）；
+    替换旧 ResearchMapPages（两孤立页面 → 三视图一体，方案 §7）
+  - 诚实置空：Driver/Transmission/Narrative/站位/动量/温度 无证据源 → 显形
+    「暂无观点/暂无定位」（不迁 donor YAML 板库/假边/假象限；关系源接入后自动补全）
+  - 修复：evidence 标题技术串泄漏（改显真实摘要）+ artifactByDomain 域类型
+    （IndustryMapSnapshot，E2E-14 契约）+ i18n industryWs.*（zh/en）
+  - 验证：backend 367 passed（+2：三视图装配/环节证据+404）+ vitest 23/23 +
+    build PASS + Playwright 30/30 + 真机截图核验（产业链列/五轴/披露/环节详情）
+  - PORT-MANIFEST-G2
 Guanlan Direct Port G1 — AI 研究中枢 / 深度研究（本轮，DONE）：
   - features/command-center/：CommandCenterPage（三栏编排 + 会话自举）/
     CommandCenterLeft（计划墨痕 ResearchStep 三态 + 正在运行 + 最近计划 +
@@ -245,13 +261,12 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0+G1 DONE；当前 G2 — 产业研究三视图。
-G2 要点（总纲 §7-§12/§33）：donor ui/industry/industry-app.jsx（749 行）+
-industry-data.jsx → features/industry-research/（IndustryChainView +
-GlobalIndustryPositionView + IndustrySegmentDetail 三视图共享 IndustrySnapshot；
-GROUPS/SEGS/DRIVERS/EDGES/NARRS → IndustryGroup/Node/Edge/Driver/Narrative；
-五轴 β/Δ/Ω/Θ/Ψ 保留字段名；接 /views/industry 与 open_with_context；
-禁止退化成 React Flow Node+Edge）。
+Guanlan Direct Port（Track B）：G0+G1+G2 DONE；当前 G3 — 研究经验卡。
+G3 要点（方案 §14/§34）：donor ui/cards/validation.jsx（1186 行）→
+ExperienceWorkbench（原→炼→验→用 完整迁植：左中右布局/原始经验面板/
+LLM 炼制面板/规则与表达式/验证面板（IC/ICIR/收益/失败案例）/指标区/KB），
+接 ASRO ExperienceCard/Version/Validation API（/views/experience-cards 已有），
+禁止做成 CRUD；donor markdown 三桶数据库不迁。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 

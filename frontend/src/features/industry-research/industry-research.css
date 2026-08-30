@@ -1,0 +1,342 @@
+/*
+ * 产业研究三视图工作区（Guanlan Direct Port G2，方案 §7-§12）。
+ * 全部 token 驱动；ir- 前缀类。
+ */
+
+.ir-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ir-header h1 {
+  font-family: var(--serif);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.ir-header p {
+  margin: 2px 0 0;
+}
+
+.ir-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ir-tabs {
+  display: inline-flex;
+  border: 1px solid var(--line);
+}
+
+.ir-tab {
+  border: none;
+  background: transparent;
+  padding: 6px 16px;
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.ir-tab.ir-tab-on {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+/* ───── 产业链视图 ───── */
+.ir-chain {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.ir-chain-columns {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 1fr);
+  gap: 14px;
+}
+
+.ir-chain-col {
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: 10px;
+  min-width: 0;
+}
+
+.ir-chain-col-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.ir-chain-level {
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+}
+
+.ir-chain-col-name {
+  font-family: var(--serif);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+
+.ir-current-chip {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--yin);
+  border: 1px solid color-mix(in srgb, var(--yin) 45%, var(--line));
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.ir-seg-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink-3);
+  padding: 9px 10px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ir-seg-tile:hover {
+  border-color: var(--ink);
+  border-left-color: var(--yin);
+  box-shadow: var(--shadow-sm);
+}
+
+.ir-seg-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ir-seg-meta {
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+.ir-seg-thermo {
+  display: block;
+  height: 3px;
+  background: var(--line-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.ir-seg-thermo i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--jin);
+  display: block;
+}
+
+.ir-chain-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ir-legend {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 8px 2px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+/* ───── 全球产业坐标 ───── */
+.ir-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ir-matrix-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.ir-matrix-title {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+
+.ir-axes {
+  display: flex;
+  flex-direction: column;
+}
+
+.ir-axis-lane {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.ir-axis-label {
+  width: 210px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ir-axis-greek {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-3);
+  border: 1px solid var(--line);
+  font-size: 17px;
+  color: var(--ink);
+  flex: none;
+}
+
+.ir-axis-name {
+  font-family: var(--serif);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+
+.ir-axis-items {
+  flex: 1;
+  min-width: 0;
+}
+
+.ir-matrix-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.ir-theme-row {
+  align-items: baseline;
+}
+
+.ir-theme-title {
+  font-size: 12px;
+  color: var(--ink-1);
+  min-width: 0;
+}
+
+.ir-indicator-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line-soft);
+  border: 1px solid var(--line-soft);
+}
+
+.ir-ind-chg {
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+.ir-reading {
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 0;
+  max-width: 1040px;
+}
+
+/* ───── 环节详情 ───── */
+.ir-detail {
+  animation: ir-rise 0.35s both;
+}
+
+.ir-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.ir-detail-seal {
+  width: 38px;
+  height: 38px;
+  font-size: 19px;
+}
+
+.ir-detail-name {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.ir-detail-asof {
+  margin-left: auto;
+  font-size: 10px;
+}
+
+.ir-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+@keyframes ir-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .ir-chain,
+  .ir-matrix-panels,
+  .ir-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .ir-chain-columns {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+  }
+}
