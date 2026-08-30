@@ -373,13 +373,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Research Capability Deep Port（R 线）：R0 DONE；当前 R1 — Research Domain
-Boundary & Product Repositioning。
-R1 要点：ADR-Research-First-Product-Boundary + 一级导航研究优先
-（研究核心 / 实验 两分组，Quant 不删不占核心）+ README 定位更新 +
-i18n/theme 回归。随后 R2 Source Trust（P0）→ R3 产业语义（P0）→
-R4 Commander 自主循环（P0）→ R5 Research Products（P0/P1）→
-R6 Experience 非量化 → R7 Memory → R8 Inbox/Thesis Diff → R9 Graph →
+Research Capability Deep Port（R 线）：R0+R1 DONE；当前 R2 — Source Trust +
+Evidence-backed Extraction（P0，本轮最重要底层增强）。
+R2 要点：T0-T4 业务信任层（映射 authority/fact_status/source，不建平行字段）
++ Claim 升级规则（T4 不得成 Confirmed Fact，质量门强制）+ Extraction 契约
+（statement/source_evidence_id/support_span/fact_status/extractor/
+prompt_version）+ CitationVerifier（locate support→entailment→reject）+
+Prompt Injection 防线测试 + PIT 测试 + 真实公告 live verify。
+随后 R3 产业语义 → R4 Commander 循环 → R5 Products → R6/R7 → R8 → R9 →
 R10-CLOSURE（000831 黄金场景逐项 PASS/FAIL）。
 ```
 
