@@ -45,12 +45,18 @@
       live verify（4 场景全符合预期，manifests/R2-LIVE-VERIFY.md）
 - [x] THIRD_PARTY_NOTICES 增补 R 线 License Gate 结论
 
-## R3 — Industry Semantic Research Engine（DOING，P0）
-- [ ] IndustryFramework/Driver/Transmission/Narrative/SegmentPosition domain
-- [ ] 稀土真实框架跑通（≥真实环节/驱动/传导/叙事；五轴部分真实定位）
-- [ ] 快照版本化 + 新证据→新版 Industry Snapshot
+## R3 — Industry Semantic Research Engine（DONE，P0）
+- [x] IndustrySemantic 单表四类对象（driver/transmission/narrative/position，
+      migration c3d4e5f6a7b8，append-only 版本化）+ 引用反查强制（422 显形）
+- [x] /industry-semantics API + /views/industry semantics 并入（链级聚合）
+- [x] Narrative 可复算温度（不足 → insufficient，不造数字）
+- [x] UI：产业链面板消费真实语义（方向/状态徽章），空时诚实置空
+- [x] 稀土试点：广晟减持 Driver(negative)+Narrative(active)，2+2 条真实证据
+      引用反查通过；伪造 span 422；Transmission/五轴无真实证据 → 诚实置空
+      （§23 禁造假，manifest 如实记录偏离）
+- [x] 验证：backend exit 0（+4）+ vitest 30/30 + build + E2E 30/30 + 真机核验
 
-## R4 — Research Commander Autonomous Loop（PENDING，P0）
+## R4 — Research Commander Autonomous Loop（DOING，P0）
 - [ ] Intent Router 九类 + 结构化 Plan 扩展 + Missing Data Loop
 - [ ] Agent Profiles（七类职责/工具白名单契约）+ run 状态机扩展
 - [ ] DeepResearchLoop（max iterations/终止条件）+ Thesis 变异规则（禁静默覆盖）

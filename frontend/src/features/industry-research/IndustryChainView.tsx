@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { Panel } from "../../ui/guanlan";
+import { Badge, Panel } from "../../ui/guanlan";
 import type { IndustryView } from "./industryView";
 
 /**
@@ -87,13 +87,59 @@ export function IndustryChainView({
         </Panel>
 
         <Panel title={t("industryWs.drivers")}>
-          <p className="secondary">{t("industryWs.pendingDrivers")}</p>
+          {view.semantics.drivers.length === 0 ? (
+            <p className="secondary">{t("industryWs.pendingDrivers")}</p>
+          ) : (
+            <ul className="watch-list" data-testid="industry-drivers">
+              {view.semantics.drivers.map((d) => (
+                <li key={d.object_key} className="result-row ir-theme-row">
+                  <span className="ir-theme-title">{d.title}</span>
+                  {d.direction && (
+                    <Badge
+                      tone={
+                        d.direction === "negative"
+                          ? "down"
+                          : d.direction === "positive"
+                            ? "up"
+                            : "neutral"
+                      }
+                    >
+                      {t(`industryWs.direction.${d.direction}`)}
+                    </Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
+
         <Panel title={t("industryWs.transmission")}>
-          <p className="secondary">{t("industryWs.pendingTransmission")}</p>
+          {view.semantics.transmissions.length === 0 ? (
+            <p className="secondary">{t("industryWs.pendingTransmission")}</p>
+          ) : (
+            <ul className="watch-list" data-testid="industry-transmissions">
+              {view.semantics.transmissions.map((tr) => (
+                <li key={tr.object_key} className="result-row ir-theme-row">
+                  <span className="ir-theme-title">{tr.title}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
+
         <Panel title={t("industryWs.narratives")}>
-          <p className="secondary">{t("industryWs.pendingNarratives")}</p>
+          {view.semantics.narratives.length === 0 ? (
+            <p className="secondary">{t("industryWs.pendingNarratives")}</p>
+          ) : (
+            <ul className="watch-list" data-testid="industry-narratives">
+              {view.semantics.narratives.map((nn) => (
+                <li key={nn.object_key} className="result-row ir-theme-row">
+                  <span className="ir-theme-title">{nn.title}</span>
+                  {nn.status && <Badge tone="neutral">{t(`industryWs.nstatus.${nn.status}`)}</Badge>}
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
       </div>
 

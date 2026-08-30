@@ -87,8 +87,8 @@
 | R0 | Donor Delta Audit + Bootstrap（三方 commit/License Gate/差距矩阵 27 项/执行线注册） | DONE |
 | R1 | Research Domain Boundary & Product Repositioning（ADR/导航/README） | DONE |
 | R2 | Source Trust + Evidence-backed Extraction（T0-T4/升级规则/Citation Verification/注入防线） | DONE |
-| R3 | Industry Semantic Engine（Driver/Transmission/Narrative/五轴站位，稀土跑通） | DOING |
-| R4 | Research Commander Autonomous Loop（九类意图/结构化 Plan/Missing Data Loop/Profiles/状态机/迭代上限） | PLANNED |
+| R3 | Industry Semantic Engine（Driver/Transmission/Narrative/五轴站位，稀土跑通） | DONE |
+| R4 | Research Commander Autonomous Loop（九类意图/结构化 Plan/Missing Data Loop/Profiles/状态机/迭代上限） | DOING |
 | R5 | Research Product System（P0 四类 + P1 三类，逐类型 Contract） | PLANNED |
 | R6 | Experience 非量化改造（LLM Refinement 九字段/非量化验证/Playbook） | PLANNED |
 | R7 | Research Memory（七类/versioned/检索/staging 晋升/Memory≠Evidence） | PLANNED |

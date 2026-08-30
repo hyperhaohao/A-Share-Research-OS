@@ -76,6 +76,30 @@ class IndustryViewService:
             for i, name in enumerate(chain)
         ]
 
+        # R3（方案 §9）：真实语义对象并入视图 —— 语义条目挂在链上任一级
+        # （稀土级 driver 与 有色金属级 driver 都属于本行业视图），在 Python 侧
+        # 按链级集合过滤（规模 v1 可接受）。
+        from app.application.industry_semantic import IndustrySemanticRepository
+
+        sem_repo = IndustrySemanticRepository(self._session)
+        chain_levels = set(chain) | {industry_map.get("industry_label") or ""}
+        drivers = [
+            d for d in sem_repo.latest_by_type("driver", limit=200)
+            if d["industry_id"] in chain_levels
+        ]
+        transmissions = [
+            d for d in sem_repo.latest_by_type("transmission", limit=200)
+            if d["industry_id"] in chain_levels
+        ]
+        narratives = [
+            d for d in sem_repo.latest_by_type("narrative", limit=200)
+            if d["industry_id"] in chain_levels
+        ]
+        positions = [
+            d for d in sem_repo.latest_by_type("position", limit=200)
+            if d["industry_id"] in chain_levels
+        ]
+
         context = self._maps.latest_context(instrument_id)
         if context is None:
             try:
@@ -98,6 +122,12 @@ class IndustryViewService:
             "chain_levels": chain,
             "segments": segments,
             "related_instruments": related,
+            "semantics": {
+                "drivers": drivers,
+                "transmissions": transmissions,
+                "narratives": narratives,
+                "positions": positions,
+            },
             "global": {
                 "axes": GLOBAL_AXES,
                 "themes": themes,

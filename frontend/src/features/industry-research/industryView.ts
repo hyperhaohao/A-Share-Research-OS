@@ -62,6 +62,30 @@ export interface IndustryView {
     disclosures: Record<string, string>;
   };
   as_of: string | null;
+  semantics: {
+    drivers: Array<{
+      object_key: string;
+      title: string;
+      mechanism: string;
+      direction: string | null;
+      status: string;
+      evidence_refs: Array<{ evidence_id: string; support_span: string }>;
+    }>;
+    transmissions: Array<{
+      object_key: string;
+      title: string;
+      mechanism: string;
+      direction: string | null;
+      evidence_refs: Array<{ evidence_id: string }>;
+    }>;
+    narratives: Array<{
+      object_key: string;
+      title: string;
+      status: string;
+      evidence_refs: Array<{ evidence_id: string }>;
+    }>;
+    positions: unknown[];
+  };
   reports: Array<{
     report_id: string;
     name: string | null;

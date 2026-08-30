@@ -714,7 +714,20 @@
       "theme_mapping": "theme rotation"
     },
     "noDisclosure": "No disclosure",
-    "chainMissing": "Industry profile not collected"
+    "chainMissing": "Industry profile not collected",
+    "direction": {
+      "positive": "positive",
+      "negative": "negative",
+      "mixed": "mixed",
+      "uncertain": "uncertain"
+    },
+    "nstatus": {
+      "emerging": "emerging",
+      "active": "active",
+      "weakening": "weakening",
+      "invalidated": "invalidated",
+      "uncertain": "uncertain"
+    }
   },
   "experienceWs": {
     "sourceTitle": "Raw · Source & claims",
