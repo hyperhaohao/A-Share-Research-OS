@@ -100,7 +100,10 @@
     "industry_map.not_collected": "Industry profile not collected — run full research first",
     "global_context.not_collected": "Macro evidence not collected — run full research first",
     "replay.chain_incomplete": "No validated prediction on the chain yet — feedback waits for maturity",
-    "workflow.expression_invalid": "Cannot parse the expression (metric op value, AND-combined)"
+    "workflow.expression_invalid": "Cannot parse the expression (metric op value, AND-combined)",
+    "auth.invalid_credentials": "Invalid username or password",
+    "auth.token_required": "Authentication required",
+    "auth.token_invalid": "Session expired"
   },
   "watchlist": {
     "add": "Add to watchlist",
@@ -606,5 +609,12 @@
     "emptyTitle": "No research reports yet.",
     "emptyHint": "Run a full research first.",
     "emptyAction": "Research now"
+  },
+  "login": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "invalidCredentials": "Invalid username or password",
+    "submit": "Sign in"
   }
 }

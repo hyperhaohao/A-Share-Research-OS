@@ -100,7 +100,10 @@
     "industry_map.not_collected": "产业资料未采集，先运行完整研究",
     "global_context.not_collected": "宏观资讯未采集，先运行完整研究",
     "replay.chain_incomplete": "链上尚无已验证预测 —— 待预测到期验证后再回灌",
-    "workflow.expression_invalid": "表达式无法解析（格式：指标 比较符 数值，AND 连接）"
+    "workflow.expression_invalid": "表达式无法解析（格式：指标 比较符 数值，AND 连接）",
+    "auth.invalid_credentials": "用户名或密码错误",
+    "auth.token_required": "需要登录",
+    "auth.token_invalid": "会话已过期，请重新登录"
   },
   "watchlist": {
     "add": "添加关注",
@@ -605,5 +608,12 @@
     "emptyTitle": "还没有研究报告。",
     "emptyHint": "先执行一次完整研究。",
     "emptyAction": "立即研究"
+  },
+  "login": {
+    "title": "登录",
+    "username": "用户名",
+    "password": "密码",
+    "invalidCredentials": "用户名或密码错误",
+    "submit": "登录"
   }
 }

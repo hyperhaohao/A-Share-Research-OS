@@ -23,6 +23,7 @@ import { AppShell } from "./app/AppShell";
 import { WithInstrumentRedirect } from "./app/InstrumentRedirect";
 import { WorkflowsPage, WorkflowDetailPage } from "./pages/WorkflowsPage";
 import { SourceHealthPage } from "./pages/SourceHealthPage";
+import { LoginPage } from "./pages/LoginPage";
 import { Navigate } from "react-router-dom";
 
 const queryClient = new QueryClient({
@@ -71,6 +72,7 @@ function Shell() {
         <Route path="/research-graph" element={<ResearchGraphCanvasPage />} />
         <Route path="/research-graph/list" element={<ResearchGraphPage />} />
         <Route path="/source-health" element={<SourceHealthPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:reportId" element={<InteractiveReportPage />} />
         <Route path="/instrument/:instrumentId" element={<InstrumentWorkspacePage />} />

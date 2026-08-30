@@ -39,6 +39,7 @@ from app.api.strategy_monitors import router as strategy_monitors_router
 from app.api.research_map import router as research_map_router
 from app.api.replay import router as replay_router
 from app.api.views import router as views_router
+from app.api.auth import router as auth_router
 from app.config import get_settings
 from app.core.errors import register_error_handlers
 
@@ -53,6 +54,32 @@ def create_app() -> FastAPI:
     )
 
     from fastapi import Request as FastAPIRequest
+
+    from app.auth import decode_token
+    from app.config import get_settings as _gs
+
+    _OPEN_PATHS = {"/api/v1/health", "/api/v1/auth/login", "/api/v1/auth/register", "/api/openapi.json", "/api/docs"}
+
+    @app.middleware("http")
+    async def auth_gate(request: FastAPIRequest, call_next):
+        """Multi-user auth gate — active only when ASRO_AUTH_ENABLED=true."""
+        if not _gs().auth_enabled:
+            return await call_next(request)
+        path = request.url.path
+        if path in _OPEN_PATHS or path.startswith("/api/v1/auth/"):
+            return await call_next(request)
+        if not path.startswith("/api/v1/"):
+            return await call_next(request)
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=401, content={"status": "error", "error_code": "auth.token_required"})
+        payload = decode_token(auth_header.removeprefix("Bearer ").strip())
+        if payload is None:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=401, content={"status": "error", "error_code": "auth.token_invalid"})
+        request.state.user = {"username": payload["sub"], "role": payload.get("role", "viewer")}
+        return await call_next(request)
 
     from app.db import get_session as _get_session_dep
 
@@ -115,6 +142,7 @@ def create_app() -> FastAPI:
     app.include_router(research_map_router, prefix="/api/v1")
     app.include_router(replay_router, prefix="/api/v1")
     app.include_router(views_router, prefix="/api/v1")
+    app.include_router(auth_router, prefix="/api/v1")
     return app
 
 

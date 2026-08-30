@@ -24,6 +24,7 @@ from app.application.research_map import (  # noqa: F401
     GlobalContextSnapshotORM,
     IndustryMapSnapshotORM,
 )
+from app.auth import UserORM  # noqa: F401
 from app.application.strategy_monitor import (  # noqa: F401
     DecisionRecordORM,
     ObservationORM,

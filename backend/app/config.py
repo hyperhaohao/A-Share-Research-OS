@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     # Development default is file SQLite; production target is PostgreSQL (任务书 §5).
     database_url: str = "sqlite:///./asro_dev.db"
+    auth_enabled: bool = False
+    jwt_secret: str = "asro-dev-secret-change-in-production"
+    jwt_expiry_hours: int = 24
 
 
 @lru_cache
