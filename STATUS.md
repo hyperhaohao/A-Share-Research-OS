@@ -16,13 +16,29 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0 DONE（bfb4872）+ G1 DONE（9c196ee）+ G2 DONE（488dbd3）+ G3 DONE（本轮）：
-研究经验卡原炼验用工作台迁植完成，当前 G4 — Workflow Studio（DOING）。
+G0–G3 DONE（bfb4872/9c196ee/488dbd3/dca103b）+ G4 DONE（27c84fe）：
+Workflow Studio 真 Editor 迁植完成，当前 G5 — 智能选股（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G4 — Workflow Studio 真 Editor（本轮，DONE）：
+  - backend：workflow_definitions + append-only 版本（migration a9b8c7d6e5f4）
+    + workflow_definition_service（图校验矩阵：未知 kind/缺 data/双 output/
+    环/output 不可达 → 422 workflow.graph_invalid）+ run_definition 拓扑展开
+    （Kahn）+ API（list/create/get/versions/run 202 后台）+ 执行器节点级
+    参数泛化（card 运行回退全局参数，向后兼容）
+  - frontend：features/workflow-studio/ 五文件（Node Library 分组目录点击加节点 /
+    React Flow Canvas 交互连线+Delete 删节点 / Inspector 按 schema 编辑参数 /
+    Toolbar 命名+存版本+运行 / 运行面板逐节点点灯+指标区+错误显形）
+  - 目录与执行器强对应（5 类可执行 kind 进目录；donor 20 类未接引擎节点
+    不伪造）；定义/版本/运行全部服务端持久化（donor localStorage 不迁）
+  - 真机全链：加节点 → 保存被图校验正确拦截（未连线 422 显形）→ API 建图 →
+    UI 载入（4 节点 3 边 v1 徽标）→ Run → 逐节点点灯 + 日线源诚实失败
+    （本机 kline 源断连为已知问题，DAG 行为正确）
+  - 验证：backend 367 passed（+3）+ vitest 27/27（+4）+ build PASS +
+    Playwright 30/30；PORT-MANIFEST-G4
 Guanlan Direct Port G3 — 研究经验卡（本轮，DONE）：
   - backend：experience_view_service + GET /views/experience/{card_id}
     （原=报告+主张原文 cite 序号+证据摘要 / 炼=机制条件表达式 /
@@ -273,12 +289,12 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0+G1+G2+G3 DONE；当前 G4 — Workflow Studio。
-G4 要点（方案 §15/§35）：donor ui/factor/workflow.jsx（3275 行）→ WorkflowStudio
-真正 Editor（Node Library/Canvas/节点结构/连接线/Inspector/Toolbar/参数配置/
-模型配置/指标区/运行控制/错误状态/IC-ICIR/Portfolio/Backtest/Version），
-接 ASRO WorkflowDefinition/Run/NodeRun（workflow_runs 已有），不能再以
-Run Viewer 宣布完成。
+Guanlan Direct Port（Track B）：G0–G4 DONE；当前 G5 — 智能选股。
+G5 要点（方案 §16/§36）：donor ui/screen/screen-app.jsx（1897 行）+
+screen-data.jsx → ScreeningWorkbench（因子/条件侧栏 + 筛选配置 + 候选池 +
+排序评级 + Inspector + Why Selected/Why Rejected + 进入研究/加入关注/进入
+策略），接 ASRO ScreeningRun/Candidate（/views/screening 面板已有），
+E2E-11 契约保留。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 
