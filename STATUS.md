@@ -16,13 +16,27 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0–G6 DONE（…/c6f933a/bc81d92）+ G7 DONE（本轮）：策略盯盘 K线+Replay
-迁植完成，当前 G8 — 全球宏观 / 海外（DOING）。
+G0–G7 DONE（…/bc81d92/bfd4fb8）+ G8 DONE（7dd2b47）：全球宏观工作台
+（与产业全球坐标分离）迁植完成，当前 G9 — 全库研究图谱整合（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G8 — 全球宏观 / 海外（本轮，DONE）：
+  - backend：industry_view_service.global_macro_view + GET /views/global-macro
+    （市场级视图：最新 GlobalContextSnapshot 的 6 指标真实数值 + 宏观主题；
+    无快照显形「宏观快照未采集」）
+  - frontend：features/global-macro/（区域归组 中国/香港/美国/商品 MetricCell
+    复用 + 宏观主题流 官方提及标注 + 风险偏好诚实显形「不编温度」）；
+    /global-macro 路由 + nav 研究组入口；旧入口更名 产业研究·全球产业坐标
+    —— §12 分离正式落地（产业坐标=产业位置 vs 全球宏观=市场环境）
+  - donor PM/Kalshi 预测市场温度计无源不迁（风险偏好区显形）；overseas
+    静态卡并入区域面板
+  - 验证：backend 367 passed + vitest 30/30 + build PASS + Playwright 30/30
+    + 真机核验（四区 6 指标全真实：上证 3952.18/道指 53559.99/纳指 29433.43/
+    恒指 25584.79/金 4503.37/油 88.33 + 10 主题）
+  - PORT-MANIFEST-G8
 Guanlan Direct Port G7 — 策略盯盘（本轮，DONE）：
   - backend：GET /market-data/daily-bars（证据层真实日线 PIT 可见；
     无 K 线证据 → has_data=false 显形，不回退假图）
@@ -326,12 +340,10 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G7 DONE；当前 G8 — 全球宏观 / 海外。
-G8 要点（方案 §12/§13/§39）：donor ui/macro/macro-app.jsx + macro-data.jsx +
-ui/overseas/overseas-app.jsx → GlobalMacroWorkspace（市场状态 中/美/港/海外 +
-宏观 利率汇率美元流动性 + 商品 金油铜 + 风险偏好波动率全球事件；
-GlobalContextSnapshot PIT；与全球产业坐标分离），接 ASRO global_context
-快照（6 指标真实数值层已有），E2E-14 契约保留。
+Guanlan Direct Port（Track B）：G0–G8 DONE；当前 G9 — 全库研究图谱整合。
+G9 要点（方案 §19/§40）：审计全部 Workbench 的 Artifact/Provenance/Handoff
+注册（G1-G8 新页面与既有 ResearchGraph Canvas/Lineage 的节点覆盖与跳转），
+补缺失注册与上下文跳转；Graph 点击任意节点带 ResearchContext 回原模块。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 
