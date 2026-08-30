@@ -87,11 +87,16 @@
       Playbook≠Evidence 结构锁死）
 - [x] 验证：tests/test_r6 3/3 + 全量 backend exit 0 + Playwright 30/30
 
-## R7 — Research Memory（DOING，P1）
-- [ ] ResearchMemory domain（七类/scope/version/staging→review 晋升）
-- [ ] 检索（instrument/industry/event_type/intent/tags）+ Agent 三段上下文
+## R7 — Research Memory（DONE，P1）
+- [x] research_memories 表（migration a7b8c9d0e1f3）+ Memory domain（七类/
+      scope/instrument+industry+event_type+intent+tags 检索）
+- [x] 晋升门：candidate→active→retired（禁跳级）；更新=version+1
+- [x] POST/GET /memories + /from-experience/{card}（仅 APPROVED 可转，
+      未批准 422 显形；源 artifact/experience 引用保留）
+- [x] Memory≠Evidence 结构锁死：条目无 authority/fact_status 字段（测试断言）
+- [x] 验证：tests/test_r7 3/3 + 全量 backend exit 0 + Playwright 30/30
 
-## R8 — Research Inbox / Continuous Monitoring / Thesis Diff（PENDING，P0）
+## R8 — Research Inbox / Continuous Monitoring / Thesis Diff（DOING，P0）
 - [ ] Research Inbox（九类聚合）+ Materiality 扩展（affected_*+suggested_action）
 - [ ] Thesis Diff → 新 Thesis Version（UI 对比视图）
 - [ ] Monitor 类型（Company/Industry/Event/Thesis/Catalyst）+ A/B Signal Ladder

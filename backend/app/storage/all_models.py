@@ -21,6 +21,7 @@ from app.application.handoff import HandoffORM  # noqa: F401
 from app.application.workflow import WorkflowRunORM  # noqa: F401
 from app.application.extraction import ExtractionRecordORM  # noqa: F401
 from app.application.industry_semantic import IndustrySemanticORM  # noqa: F401
+from app.application.memory import ResearchMemoryORM  # noqa: F401
 from app.application.workflow_defs import (  # noqa: F401
     WorkflowDefinitionORM,
     WorkflowDefinitionVersionORM,

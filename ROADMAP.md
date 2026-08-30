@@ -91,8 +91,8 @@
 | R4 | Research Commander Autonomous Loop（九类意图/结构化 Plan/Missing Data Loop/Profiles/状态机/迭代上限） | DONE |
 | R5 | Research Product System（P0 四类 + P1 三类，逐类型 Contract） | DONE |
 | R6 | Experience 非量化改造（LLM Refinement 九字段/非量化验证/Playbook） | DONE |
-| R7 | Research Memory（七类/versioned/检索/staging 晋升/Memory≠Evidence） | DOING |
-| R8 | Research Inbox / Materiality 扩展 / Thesis Diff / Monitor 类型 / A-B Signal Ladder | PLANNED |
+| R7 | Research Memory（七类/versioned/检索/staging 晋升/Memory≠Evidence） | DONE |
+| R8 | Research Inbox / Materiality 扩展 / Thesis Diff / Monitor 类型 / A-B Signal Ladder | DOING |
 | R9 | Research Graph 扩展 + Context Handoff + 000831 黄金场景 | PLANNED |
 | R10 | Closure（逐项 PASS/FAIL 文档） | PLANNED |
 

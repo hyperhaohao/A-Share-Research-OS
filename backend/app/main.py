@@ -36,6 +36,7 @@ from app.api.workflows import router as workflows_router
 from app.api.workflow_defs import router as workflow_defs_router
 from app.api.extractions import router as extractions_router
 from app.api.industry_semantics import router as industry_semantics_router
+from app.api.memory import router as memory_router
 from app.api.screening import router as screening_router
 from app.api.strategies import router as strategies_router
 from app.api.strategy_monitors import router as strategy_monitors_router
@@ -150,6 +151,7 @@ def create_app() -> FastAPI:
     app.include_router(workflow_defs_router, prefix="/api/v1")
     app.include_router(extractions_router, prefix="/api/v1")
     app.include_router(industry_semantics_router, prefix="/api/v1")
+    app.include_router(memory_router, prefix="/api/v1")
     app.include_router(screening_router, prefix="/api/v1")
     app.include_router(strategies_router, prefix="/api/v1")
     app.include_router(strategy_monitors_router, prefix="/api/v1")
