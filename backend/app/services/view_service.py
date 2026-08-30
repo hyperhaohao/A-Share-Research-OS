@@ -61,24 +61,21 @@ class ViewService:
         }
 
     def _latest_quote(self, instrument_id: str) -> dict | None:
-        evidence = EvidenceRepository(self._session).list_for_instrument(
-            instrument_id, visible_at=datetime.now(timezone.utc)
+        """P1-02: LIMIT-based query — only the newest priced quote."""
+        evidence_repo = EvidenceRepository(self._session)
+        quotes = evidence_repo.latest_by_type(
+            instrument_id, evidence_type="market_quote",
+            visible_at=datetime.now(timezone.utc), limit=3,
         )
-        priced = [
-            e
-            for e in evidence
-            if e.evidence_type is EvidenceType.MARKET_QUOTE
-            and isinstance((e.metadata or {}).get("price"), (int, float))
-        ]
-        if not priced:
-            return None
-        latest = max(priced, key=lambda e: e.available_time)
-        md = latest.metadata
-        return {
-            "price": float(md["price"]),
-            "change_pct": md.get("change_pct"),
-            "quote_time": _iso(latest.available_time),
-        }
+        for q in quotes:
+            price = (q.metadata or {}).get("price")
+            if isinstance(price, (int, float)) and price > 0:
+                return {
+                    "price": float(price),
+                    "change_pct": (q.metadata or {}).get("change_pct"),
+                    "quote_time": _iso(q.available_time),
+                }
+        return None
 
     def _research(self, instrument_id: str) -> dict:
         """P0-09: Research Stance 来自 Thesis 的结构化方向（description 含看多/看空语义），

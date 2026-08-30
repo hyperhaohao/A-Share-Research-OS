@@ -57,6 +57,32 @@ class EvidenceRepository:
         self._session.flush()
         return row.evidence_id, True
 
+    def latest_by_type(
+        self,
+        instrument_id: str,
+        *,
+        evidence_type: str,
+        visible_at: datetime | None = None,
+        limit: int = 1,
+    ) -> list[EvidenceRecord]:
+        """Newest N evidence records of one type for an instrument.
+
+        P1-02: LIMIT-based query — avoids loading the full evidence ledger
+        when only the latest record(s) are needed (e.g. quote price)."""
+        stmt = (
+            select(EvidenceORM)
+            .where(
+                EvidenceORM.instrument_id == instrument_id,
+                EvidenceORM.evidence_type == evidence_type,
+            )
+            .order_by(EvidenceORM.available_time.desc())
+            .limit(limit)
+        )
+        if visible_at is not None:
+            stmt = stmt.where(EvidenceORM.available_time <= visible_at)
+            stmt = stmt.order_by(EvidenceORM.available_time.desc())
+        return [_row_to_domain(row) for row in self._session.scalars(stmt)]
+
     def list_for_instrument(
         self,
         instrument_id: str,
