@@ -9,18 +9,26 @@
 ## Current Phase
 
 ```text
-V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
-E2E 17/17 于 compose 栈；全部已推送 GitHub main（13f7346..360b532 48 提交）。
-总纲 Phase A–J v1 + 验收复查 + 深度扩展 a–e 完成。
-当前执行线：P0 全清 ✅ + UX Foundation ✅ + 部署准备 ✅ + P1-01/02/05/06/07 全部完成 ✅（GitHub main = 57c125e）
-唯一遗留为 Workflow Studio 编辑器 Canvas 增强项；报告 docs/ux-foundation-self-review.md）。
-GitHub main 已同步至最新（全部产品 E2E + 视觉回归通过）。
-下一候选：LLM 润色（需 ASRO_LLM_API_KEY）+ 关系源扩展 + 宏观数值层扩指标
+V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域）+ E2E 17/17 + UX Foundation ✅
++ P1-01/02/05/06/07 全部完成。
+新执行线：Guanlan Direct Port（Track B）启动 —— 依据
+docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
+（Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
+Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
+README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
+当前 G0 — Shared UI Foundation（DOING）：
+token 映射层 + 共享组件 TSX 化 + 基础组件集 + i18n/Theme 回归。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port 状态集成（本轮）：
+  - 总任务书入库（docs/A-Share-Research-OS-Guanlan-Direct-Port-*.md）
+  - Donor 审计确认：upstreams/financial-analyst 存在，非 git clone；
+    GitHub HEAD = 98f1398（2026-08-21）；license=None（README badge 标 Apache-2.0）
+    —— 已记录，THIRD_PARTY_NOTICES.md 落 G0 交付
+  - PLAN/ROADMAP/STATUS 增 Track B G0–G10；文档索引登记为现行 Experience 总任务书
 首轮 M0–M29（历史，docs/milestones/）
 首轮整改 R0–R5（历史，REMEDIATION.md）
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
@@ -202,11 +210,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. [就绪待 KEY] LLM 润色：在 .env 设 ASRO_LLM_API_KEY + rebuild 即生效（管道已通）；
-2. 关系源扩展：上下游关系（当前为同业板块成员+证据共现）；
-3. 宏观数值层：已含美元指数/USDCNY，利率需官方源；
-4. 部署实际执行：域名 + Let's Encrypt + ASRO_JWT_SECRET 设置；
-5. Workflow Studio 编辑器增强（拖拽式节点编辑，当前为可视化+参数模式）。
+Guanlan Direct Port（Track B）按序推进，当前 G0 — Shared UI Foundation：
+1. G0：Donor token 兼容层（styles/guanlan-tokens.css，映射不覆盖 ASRO 语义色）
+2. G0：共享组件 TSX 化（ui/guanlan/：Brandmark/MarketTicker/Sparkline/Candles/
+   ResearchStep/MetricCell + Panel/Badge/Button/Toolbar/Drawer/Tooltip/Inspector）
+3. G0：THIRD_PARTY_NOTICES.md + docs/port/PORT-MANIFEST-G0.md
+4. G0：i18n/Theme 回归 + frontend build/test PASS → git checkpoint → G1
+之后：G1 AI 研究中枢（donor ui/chat/app.jsx）→ G2…G10 依总纲 §30 优先级。
+遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 
 ## Tests

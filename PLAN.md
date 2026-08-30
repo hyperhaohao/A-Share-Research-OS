@@ -2,12 +2,74 @@
 
 # A-Share Research OS — Execution Plan
 
-> 现行两层执行线：
-> 1. **产品闭环二次整改（PW0–PW3）**——依据
->    `docs/archive/A-Share-Research-OS-产品闭环二次审查与本地化整改方案.md`；
-> 2. **V2 产品与架构总纲（Phase A–J）**——依据
->    `docs/archive/A-Share-Research-OS-最终产品与架构修改方案.md`（观澜吸收 / Artifact 总线 /
->    AI 研究中枢）。PW 线与总纲 Phase A 重叠项已完成的部分直接计入。
+> 现行三层执行线：
+> 1. **Guanlan Direct Port（Track B，G0–G10）**——依据
+>    `docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md`
+>    （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）；
+> 2. **产品闭环二次整改（PW0–PW3）**——DONE；
+> 3. **V2 产品与架构总纲（Phase A–J）**——DONE。
+>
+> Donor-First 原则（总纲 §47）：后端坚持 ASRO，前端优先迁观澜；
+> 迁植模块进 main 前必须过 Track A 边界（Auth / PIT / Artifact / Handoff）。
+
+---
+
+# Track B — Guanlan Direct Port（当前执行线）
+
+> Donor：`upstreams/financial-analyst`（觀瀾，jesson-hh/financial-analyst，
+> HEAD 98f139886c9b0b9895ab6cc90e9d5fe1cc5fcc28）。
+> 迁植策略默认 PORT_AND_ADAPT：JSX→TSX、组件化、删 Mock/localStorage/no-build
+> runtime、接 ASRO API/Read Model/Artifact/Handoff（总纲 §5/§21/§22）。
+
+## G0 — Shared UI Foundation（DOING）
+- [ ] Donor token 兼容层（--paper/--ink/--zhu/--dai/--jin → ASRO 语义 token 映射，
+      light/dark 双套 + serif 字体 token；不覆盖 ASRO 语义色与涨跌红线）
+- [ ] Donor 共享组件 TSX 化（Brandmark→ASRO wordmark / MarketTicker / Sparkline /
+      Candles / ResearchStep / MetricCell，frontend/src/ui/guanlan/）
+- [ ] G0 组件集：Panel / Badge / Button / Toolbar / Drawer / Tooltip / Inspector
+- [ ] guanlan-bus 行为登记（BEHAVIOR_PORT_ONLY：handoff 行为 → ASRO HandoffEnvelope，
+      基建不迁）
+- [ ] THIRD_PARTY_NOTICES.md（donor 无 LICENSE 文件、README 标 Apache-2.0，
+      差异如实记录）+ docs/port/PORT-MANIFEST-G0.md
+- [ ] i18n（zh-CN/en-US）+ Theme（light/dark/system）回归 + build/test PASS
+
+## G1 — AI 研究中枢 / 深度研究（PENDING）
+- Donor: ui/chat/app.jsx (3442) + agent-adapter.jsx → CommandCenter 重构
+- 左计划 / 中对话+Evidence / 右真实 Artifact Workbench
+
+## G2 — 产业研究三视图（PENDING）
+- Donor: ui/industry/industry-app.jsx → IndustryResearchWorkspace
+  （产业链 + 全球产业坐标 + 环节详情共享 IndustrySnapshot）
+
+## G3 — 研究经验卡（PENDING）
+- Donor: ui/cards/validation.jsx → ExperienceWorkbench（原炼验用完整迁植）
+
+## G4 — Workflow Studio（PENDING）
+- Donor: ui/factor/workflow.jsx → WorkflowStudio（真正 Editor：Node Library/
+  Canvas/Inspector/Run/Metrics/Version，非 Run Viewer）
+
+## G5 — 智能选股（PENDING）
+- Donor: ui/screen/screen-app.jsx + screen-data.jsx → ScreeningWorkbench
+  （因子/候选/解释三面板）
+
+## G6 — 策略实验室（PENDING）
+- Donor: ui/seats/luozi-foundry.jsx + luozi-fleet.jsx + luozi-panels.jsx
+  → StrategyLab（物料装配 + 版本比较 + 失败样本）
+
+## G7 — 策略盯盘（PENDING）
+- Donor: ui/seats/luozi-app.jsx + luozi-chart.jsx + luozi-panels.jsx +
+  luozi-data.jsx → StrategyMonitor（K线+Signal+Conditions+AI研判+Decision+Replay）
+
+## G8 — 全球宏观 / 海外（PENDING）
+- Donor: ui/macro/macro-app.jsx + ui/overseas/overseas-app.jsx
+  → GlobalMacroWorkspace（与全球产业坐标分离）
+
+## G9 — 全库研究图谱整合（PENDING）
+- 全部 Workbench 注册 Artifact/Provenance/Handoff；Graph 节点带上下文跳转
+
+## G10 — Full Product Closure（PENDING）
+- §44 端到端验收（登录→中枢→研究→经验→工作流→选股→策略→盯盘→预测→复盘），
+  §45 parity 全 PASS 才宣布 COMPLETE
 
 ---
 

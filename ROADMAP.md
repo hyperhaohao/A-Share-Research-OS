@@ -45,7 +45,32 @@
 | 验收 | 总纲验收全链复查（Reviewer Pass） | DONE |
 | 深度 | 深度扩展（关系源/宏观/quant/§47 全套） | DONE |
 | 部署 | 认证 + TLS + PostgreSQL（公网部署准备） | PLANNED |
-| UI | UX Foundation（UI0–UI8，业务冻结） | DOING |
+| UI | UX Foundation（UI0–UI8，业务冻结） | DONE |
+
+---
+
+## Guanlan Direct Port（Track B，当前长期线）
+
+> 依据 `docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md`
+> （Experience Layer 唯一总任务书）。
+> Donor-First：观澜成熟 Experience Layer 直接迁植（JSX→TSX 组件化），
+> 后端坚持 ASRO（Evidence/PIT/Artifact/Provenance/Version/Auth/Scheduler）。
+> Donor：upstreams/financial-analyst @ 98f1398（觀瀾）。
+> 每模块 PORT-MANIFEST.md + 功能级对标，禁止以"页面能打开"宣布完成。
+
+| Phase | 内容 | 状态 |
+|-------|------|------|
+| G0 | Shared UI Foundation（token 映射 / 共享组件 TSX 化 / 基础组件集） | DOING |
+| G1 | AI 研究中枢 / 深度研究 | PLANNED |
+| G2 | 产业研究三视图（产业链+全球坐标+环节详情） | PLANNED |
+| G3 | 研究经验卡（原炼验用） | PLANNED |
+| G4 | Workflow Studio（真 Editor） | PLANNED |
+| G5 | 智能选股（三面板） | PLANNED |
+| G6 | 策略实验室（物料装配） | PLANNED |
+| G7 | 策略盯盘（K线/Signal/Decision/Replay） | PLANNED |
+| G8 | 全球宏观 / 海外 | PLANNED |
+| G9 | 全库研究图谱整合 | PLANNED |
+| G10 | Full Product Closure（§44 端到端 + §45 parity） | PLANNED |
 
 ---
 
