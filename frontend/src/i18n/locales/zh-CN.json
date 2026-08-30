@@ -621,5 +621,8 @@
     "password": "密码",
     "invalidCredentials": "用户名或密码错误",
     "submit": "登录"
+  },
+  "a11y": {
+    "skipToMain": "跳到主内容"
   }
 }

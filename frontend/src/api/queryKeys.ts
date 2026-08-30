@@ -1,4 +1,4 @@
-/** Query Key Factory（任务书 §34）：统一缓存键管理。 */
+/** Query Key Factory（任务书 §34）。 */
 export const queryKeys = {
   instrument: (id: string) => ["instrument", id],
   watchlistView: () => ["watchlist-view"],

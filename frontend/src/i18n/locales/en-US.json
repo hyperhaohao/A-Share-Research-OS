@@ -622,5 +622,8 @@
     "password": "Password",
     "invalidCredentials": "Invalid username or password",
     "submit": "Sign in"
+  },
+  "a11y": {
+    "skipToMain": "Skip to main content"
   }
 }

@@ -78,7 +78,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="shell-main">{children}</div>
+      <div className="shell-main">
+        <a href="#main-content" className="skip-to-main">{t("a11y.skipToMain")}</a>
+        <div id="main-content">{children}</div>
+      </div>
     </div>
   );
 }
