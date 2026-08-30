@@ -199,6 +199,29 @@ const ARTIFACT_TYPE_LABELS: Record<string, Record<UiLanguage, string>> = {
   thesis: { zh: "研究论点", en: "Thesis" },
 };
 
+// -- Source Trust（R2，T0-T4 业务信任层 ← authority 映射） --------------------
+
+const TRUST_BY_AUTHORITY: Record<string, string> = {
+  A1: "T0", A2: "T0", B1: "T1", C1: "T2", B2: "T3", C2: "T3", D: "T4",
+};
+
+const TRUST_LABELS: Record<string, Record<UiLanguage, string>> = {
+  T0: { zh: "T0 一级披露", en: "T0 primary disclosure" },
+  T1: { zh: "T1 官方机构", en: "T1 official institution" },
+  T2: { zh: "T2 专业研究", en: "T2 professional research" },
+  T3: { zh: "T3 主流媒体", en: "T3 mainstream media" },
+  T4: { zh: "T4 社交/未证实", en: "T4 social/unverified" },
+};
+
+/** authority → 来源信任业务名（未知 authority 保守按 T4）。 */
+export function formatSourceTrust(
+  authority: string | null | undefined,
+  lang: UiLanguage,
+): string {
+  const tier = TRUST_BY_AUTHORITY[String(authority ?? "").toUpperCase()] ?? "T4";
+  return lookup(TRUST_LABELS, tier, lang);
+}
+
 /** Artifact 类型 → 业务名（技术 id 不裸显，进技术详情）。 */
 export function formatArtifactType(value: string | null | undefined, lang: UiLanguage): string {
   return lookup(ARTIFACT_TYPE_LABELS, value ?? "", lang);

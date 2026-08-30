@@ -34,13 +34,18 @@
 - [x] README 定位更新 + i18n 回归（vitest 30/30）+ 视觉基线容差内（E2E 30/30）
 - [x] manifests/R1-MANIFEST.md
 
-## R2 — Source Trust + Evidence-backed Extraction（DOING，P0）
-- [ ] Source Trust T0-T4 业务层（映射 authority/fact_status/source，不建平行字段）
-- [ ] Claim 升级规则（T4 不得成 Confirmed Fact，质量门强制）
-- [ ] Extraction 契约 + CitationVerifier（抽取→原文定位→entailment→拒绝）
-- [ ] Prompt Injection 防线测试 + PIT 测试 + 真实公告 live verify
+## R2 — Source Trust + Evidence-backed Extraction（DONE，P0）
+- [x] Source Trust T0-T4 业务层（读时派生映射 authority；market_quote 持牌
+      转载=T0；未知保守 T4）
+- [x] Claim 升级规则：extraction verifier + AnalysisQualityGate
+      analysis.source_trust_escalation（FAIL）双防线
+- [x] Extraction 契约 + CitationVerifier + extraction_records 表 +
+      POST/GET /extractions + promote-to-claim（rejected 留档审计）
+- [x] Prompt Injection 防线（指令样文本=纯数据；T4 只能是 lead）+ 真实公告
+      live verify（4 场景全符合预期，manifests/R2-LIVE-VERIFY.md）
+- [x] THIRD_PARTY_NOTICES 增补 R 线 License Gate 结论
 
-## R3 — Industry Semantic Research Engine（PENDING，P0）
+## R3 — Industry Semantic Research Engine（DOING，P0）
 - [ ] IndustryFramework/Driver/Transmission/Narrative/SegmentPosition domain
 - [ ] 稀土真实框架跑通（≥真实环节/驱动/传导/叙事；五轴部分真实定位）
 - [ ] 快照版本化 + 新证据→新版 Industry Snapshot

@@ -51,3 +51,15 @@
 |---|---|---|---|
 | OpenAlpha CN providers/base.py | MIT | M3 SourceResult 契约蓝本（注释注明） | docs/adr/ADR-001-main-engine-baseline.md |
 | TideTrading（qlib158 等 factor 移植） | 见 docs/quant-audit.md | M21 量化能力审计引用 | docs/quant-audit.md |
+
+---
+
+## 3. 观澜 Research Capability Deep Port（R 线，进行中）
+
+| 项 | 值 |
+|---|---|
+| 本轮 donor commit | `98f139886c9b0b9895ab6cc90e9d5fe1cc5fcc28`（与 G 线基线一致，无 drift） |
+| License Gate 结论 | **未通过**（仓库无 LICENSE 文件，README 标 Apache-2.0）→ 本轮全部按 **REFERENCE_ONLY / BEHAVIORAL ADAPTATION** 执行 |
+| 复用方式 | 仅迁移概念、结构、行为与 schema 形态（Source Trust 分层/引用反查契约/产业语义框架结构/Memory staging 晋升等）；**不复制 donor 源码**（含 frameworks/*.yaml 语料、memories/*.md、engine 代码） |
+| 审计记录 | docs/research-deep-port/00-观澜研究能力差距矩阵.md |
+| 差异说明 | G 线（Experience Port）曾按 README 宣示的 Apache-2.0 意图做过组件级 TSX 化复用（见上节）；R 线起因缺正式 LICENSE 文本，收敛为行为适配。若版权方日后发布正式 LICENSE 或提出异议，以该条款为准并复核两轮全部迁植文件。 |

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Panel } from "../../ui/guanlan";
 import { formatWhen } from "../../presentation/format";
-import { uiLang } from "../../presentation/enumLabels";
+import { formatSourceTrust, uiLang } from "../../presentation/enumLabels";
 import type { ExperienceView } from "./experienceView";
 
 /**
@@ -53,6 +53,10 @@ export function ExperienceSourcePane({ view }: { view: ExperienceView }) {
               <div>
                 <p className="ew-claim-text">{e.summary}</p>
                 <p className="secondary mono ew-claim-meta">
+                  <span className="gl-badge" data-testid="evidence-trust">
+                    {formatSourceTrust(e.authority_level, lang)}
+                  </span>
+                  {" · "}
                   {e.source} · {formatWhen(e.available_time, lang)}
                 </p>
               </div>

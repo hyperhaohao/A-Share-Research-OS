@@ -19,6 +19,7 @@ from app.application.artifacts import ArtifactORM, ProvenanceEdgeORM  # noqa: F4
 from app.application.run_events import RunEventORM  # noqa: F401
 from app.application.handoff import HandoffORM  # noqa: F401
 from app.application.workflow import WorkflowRunORM  # noqa: F401
+from app.application.extraction import ExtractionRecordORM  # noqa: F401
 from app.application.workflow_defs import (  # noqa: F401
     WorkflowDefinitionORM,
     WorkflowDefinitionVersionORM,

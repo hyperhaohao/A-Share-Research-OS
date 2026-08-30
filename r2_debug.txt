@@ -1,0 +1,5 @@
+authority=B2
+summary[:120]=○财政部、税务总局、中国证监会发布关于规范转让上市公司限售股个人所得税政策的公告。个人转让上市公司限售股取得的所得，按照“财产转让所得”，适用20%税率缴纳个人所得税。
+excerpt[:120]=
+span in summary: False
+span in excerpt: False

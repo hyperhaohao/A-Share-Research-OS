@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from types import SimpleNamespace
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -168,8 +169,15 @@ class TestAnalysisQualityGate:
         assert any(f.code == "analysis.thin_support_high_confidence" for f in result.findings)
 
     def test_clean_claim_set_passes(self):
+        # R2 契约升级：confirmed_fact 的证据需满足 source-trust 门槛
+        # （§8.3），干净证据桩带 A1 authority；unknown-authority 证据视为
+        # T4，会在 test_r2_source_trust.py 的升级规则测试中单测。
+        evidence = {
+            "ev_a": SimpleNamespace(evidence_id="ev_a", authority_level="A1"),
+            "ev_b": SimpleNamespace(evidence_id="ev_b", authority_level="A1"),
+        }
         claim = self._claim("公司2026年上半年净利率保持稳定", ("ev_a", "ev_b"), confidence=0.6)
-        result = AnalysisQualityGate().evaluate([claim], {"ev_a": object(), "ev_b": object()})
+        result = AnalysisQualityGate().evaluate([claim], evidence)
         assert result.status is GateStatus.PASS
 
 

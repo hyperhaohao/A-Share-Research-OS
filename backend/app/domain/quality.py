@@ -22,6 +22,7 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.evidence import AuthorityLevel, FactStatus, utc_now
+from app.domain.source_trust import TrustEscalationError, check_fact_support, trust_for_evidence
 from app.domain.snapshot import EvidenceSnapshot
 
 
@@ -226,6 +227,35 @@ class AnalysisQualityGate:
                         severity=GateSeverity.WARN,
                     )
                 )
+            # 5) R2 source-trust escalation（方案 §8.3）：confirmed_fact 的证据基
+            #    必须 ≥1 条 T0/T1 或 ≥2 条独立 T2/T3；T4-only 一票 FAIL
+            if claim.fact_status is FactStatus.CONFIRMED_FACT:
+                supporting = [
+                    evidence_lookup[r]
+                    for r in claim.supporting_evidence_refs
+                    if r in evidence_lookup
+                ]
+                authorities = [
+                    trust_for_evidence(
+                        getattr(e, "authority_level", None),
+                        getattr(e, "evidence_type", None),
+                    )
+                    for e in supporting
+                ]
+                try:
+                    check_fact_support(authorities)
+                except TrustEscalationError:
+                    findings.append(
+                        GateFinding(
+                            code="analysis.source_trust_escalation",
+                            message=(
+                                f"claim {claim.claim_id} is confirmed_fact but its "
+                                f"evidence base {authorities} does not meet the "
+                                f"source-trust bar (>=1 T0/T1 or >=2 independent T2/T3)"
+                            ),
+                            severity=GateSeverity.FAIL,
+                        )
+                    )
 
         status = GateStatus.FAIL if any(f.severity is GateSeverity.FAIL for f in findings) else (
             GateStatus.WARN if findings else GateStatus.PASS
