@@ -29,6 +29,12 @@ INDICATORS: tuple[tuple[str, str], ...] = (
     ("hf_OIL", "布伦特原油"),
 )
 
+# 外汇/利率指标（wh_ 前缀，field 310 格式：price=f[3] change_pct=f[13] time=f[5]）
+FX_INDICATORS: tuple[tuple[str, str], ...] = (
+    ("whDINIW", "美元指数 DXY"),
+    ("whUSDCNY", "美元/人民币"),
+)
+
 
 class TencentGlobalMacroProvider(BaseProvider):
     """全球宏观数值：指数与商品的真实行情数值层."""
@@ -41,7 +47,7 @@ class TencentGlobalMacroProvider(BaseProvider):
 
     def fetch(self, request: SourceRequest) -> SourceResult:
         attempted_at = utc_now()
-        codes = ",".join(code for code, _name in INDICATORS)
+        codes = ",".join(code for code, _name in INDICATORS + FX_INDICATORS)
         try:
             resp = httpx.get(_QUOTE_URL, params={"q": codes}, timeout=self._timeout)
         except (httpx.TimeoutException, httpx.TransportError) as exc:
@@ -83,14 +89,27 @@ class TencentGlobalMacroProvider(BaseProvider):
         futures rows ``v_xxx="price,change,...,name"``."""
         indicators: list[dict] = []
         wanted = dict(INDICATORS)
+        fx_wanted = dict(FX_INDICATORS)
         for line in raw.split(";"):
             line = line.strip()
             if "=" not in line or "~" not in line and "," not in line:
                 continue
             head, _, body = line.partition("=")
             code = head.removeprefix("v_").strip()
-            name = wanted.get(code)
+            name = wanted.get(code) or fx_wanted.get(code)
             if name is None:
+                continue
+            if code in fx_wanted:
+                # FX shape (field 310): f3=price f5=time f12=change f13=change_pct
+                vals = body.strip().strip('"').split("~")
+                price = _to_float(vals[3]) if len(vals) > 3 else None
+                chg = _to_float(vals[13]) if len(vals) > 13 else None
+                mkt_time = vals[5] if len(vals) > 5 else ""
+                if price is not None:
+                    indicators.append({
+                        "code": code, "name": name, "value": price,
+                        "change": chg, "market_time": mkt_time,
+                    })
                 continue
             values = body.strip().strip('"').split("~" if "~" in body else ",")
             if code.startswith("hf_"):
