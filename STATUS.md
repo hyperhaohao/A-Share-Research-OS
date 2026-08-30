@@ -202,14 +202,11 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. UI0 Token 修复：统一 CSS Token、清理 hardcoded colors/undefined alias；
-2. UI1 App Shell：Sidebar 分组导航（中枢/研究/验证/策略/知识/系统）+
-   Reading/Workspace/CommandCenter/Canvas 四种 Layout（1920/1440/1280 无溢出）；
-3. UI2 剩余 Read Model：CommandCenterView/ReportLibraryView/
-   ContinuousResearchView/PredictionReviewView（消除 N+1/2N）；
-4. UI3 语义组件：Badge/Metric/Table/EntityHeader/Empty/Error/Degraded/
-   TechnicalDetails；UI4 重构基准页面（AI 中枢 + Instrument Workspace）；
-5. 全部按任务书 DoD（§41-§45）+ E2E-UI 系列；功能扩张冻结至 UI4 验收。
+1. 角色执行：middleware role gate（viewer GET only / analyst full / admin 管理）；
+2. 前端 auth-aware fetch wrapper（token 注入 + 401 → /login redirect）；
+3. Workflow Studio React Flow 编辑器（Node 库/Canvas/Inspector，§26）；
+4. UI0-UI4 响应式断言（1920/1440/1280 无溢出）；
+5. 部署准备收尾（Let's Encrypt notes、ASRO_JWT_SECRET 生成指引）。
 ```
 
 ## Tests

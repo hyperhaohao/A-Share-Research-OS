@@ -79,6 +79,11 @@ def create_app() -> FastAPI:
             from fastapi.responses import JSONResponse
             return JSONResponse(status_code=401, content={"status": "error", "error_code": "auth.token_invalid"})
         request.state.user = {"username": payload["sub"], "role": payload.get("role", "viewer")}
+        # role enforcement: viewer = GET only; analyst/admin = full access
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            if payload.get("role") == "viewer":
+                from fastapi.responses import JSONResponse
+                return JSONResponse(status_code=403, content={"status": "error", "error_code": "auth.forbidden"})
         return await call_next(request)
 
     from app.db import get_session as _get_session_dep

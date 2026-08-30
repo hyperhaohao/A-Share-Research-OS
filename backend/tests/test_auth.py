@@ -144,3 +144,47 @@ def test_me_endpoint(client_auth_on):
     assert resp.status_code == 200
     assert resp.json()["username"] == "admin"
     assert resp.json()["role"] == "admin"
+
+
+def test_role_enforcement_viewer_write_403(client_auth_on):
+    """Role gate: viewer can read but cannot write (403 on POST/DELETE)."""
+    client_auth_on.post("/api/v1/auth/register", json={"username": "admin", "password": "secret123"})
+    login = client_auth_on.post("/api/v1/auth/login", json={"username": "admin", "password": "secret123"})
+    admin_token = login.json()["access_token"]
+    # create a viewer user
+    client_auth_on.post(
+        "/api/v1/auth/register",
+        json={"username": "viewer1", "password": "viewpass1", "role": "viewer"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    viewer_login = client_auth_on.post("/api/v1/auth/login", json={"username": "viewer1", "password": "viewpass1"})
+    viewer_token = viewer_login.json()["access_token"]
+    # GET is allowed for viewer
+    resp = client_auth_on.get("/api/v1/views/watchlist", headers={"Authorization": f"Bearer {viewer_token}"})
+    assert resp.status_code == 200
+    # POST is denied for viewer
+    resp = client_auth_on.post(
+        "/api/v1/watchlist", json={"instrument": "600519"},
+        headers={"Authorization": f"Bearer {viewer_token}"},
+    )
+    assert resp.status_code == 403
+    assert resp.json()["error_code"] == "auth.forbidden"
+
+
+def test_role_enforcement_analyst_can_write(client_auth_on):
+    """Analyst role can write (full access except admin operations)."""
+    client_auth_on.post("/api/v1/auth/register", json={"username": "admin", "password": "secret123"})
+    login = client_auth_on.post("/api/v1/auth/login", json={"username": "admin", "password": "secret123"})
+    admin_token = login.json()["access_token"]
+    client_auth_on.post(
+        "/api/v1/auth/register",
+        json={"username": "analyst1", "password": "analypass1", "role": "analyst"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    analyst_login = client_auth_on.post("/api/v1/auth/login", json={"username": "analyst1", "password": "analypass1"})
+    analyst_token = analyst_login.json()["access_token"]
+    resp = client_auth_on.post(
+        "/api/v1/watchlist", json={"instrument": "600519"},
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
+    assert resp.status_code == 201
