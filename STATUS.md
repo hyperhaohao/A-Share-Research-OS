@@ -18,7 +18,7 @@ License Gate：donor 无 LICENSE → REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
 三方 commit：ASRO（见 git log）/ donor 98f1398（无 drift）。
 Quant 本轮冻结（NO NEW DEVELOPMENT，保留不删）。
 
-R0-R3 DONE：
+R0-R4 DONE：
   R0 差距矩阵 27 项（docs/research-deep-port/00-*.md）；
   R1 ADR-Research-First + 导航研究优先 + README 定位；
   R2 Source Trust T0-T4（读时派生）+ Claim 升级双防线 + Extraction 契约/
@@ -28,7 +28,7 @@ R0-R3 DONE：
     semantics 并入 + 可复算温度 + 稀土试点真实数据（广晟减持 Driver/
     Narrative，真实证据引用反查通过）+ UI 真机显示。
 
-当前 R4 — Research Commander Autonomous Loop（DOING）。
+
 黄金场景：000831 中国稀土资产整合研究 → docs/research-deep-port/R10-CLOSURE.md
 ```
 
@@ -373,13 +373,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Research Capability Deep Port（R 线）：R0-R3 DONE；当前 R4 — Commander
-Autonomous Loop（DOING）。
-R4 要点：Intent Router 扩九类（company/industry/event/earnings/policy/
-mainline/overseas_mapping/thesis_review/comparison）+ 结构化 Plan 扩展
-（objective/questions/required_sources/completion_criteria）+ Missing Data
-Loop（迭代重收集）+ Agent Profiles 白名单 + run 状态机扩展 + max iterations。
-随后 R5 Products → R6/R7 → R8 Inbox/Thesis Diff → R9 Graph → R10-CLOSURE。
+Research Capability Deep Port（R 线）：R0-R4 DONE；当前 R5 — Research
+Product System（DOING）。
+R5 要点：ResearchProduct 类型系统（复用 Report/Artifact/Version，不建平行
+报告系统）——逐类型 Contract（required sections/evidence 规则/质量门），
+P0：COMPANY_DEEP_DIVE / INDUSTRY_DEEP_DIVE / EVENT_INVESTIGATION /
+THESIS_REVIEW；P1：MAINLINE_RADAR / OVERSEAS_MAPPING / DAILY_RESEARCH_BRIEF。
+随后 R6 Experience 非量化 → R7 Memory → R8 Inbox/Thesis Diff → R9 Graph →
+R10-CLOSURE（000831 黄金场景逐项 PASS/FAIL）。
 
 ```
 
