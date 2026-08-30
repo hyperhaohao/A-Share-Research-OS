@@ -68,12 +68,17 @@
 - [x] Live Verify（黄金问题：focus=event 路由正确 + 事件链全 PRESENT +
       run_completed；manifests/R4-LIVE-VERIFY.md）
 
-## R5 — Research Product System（DOING，P0/P1）
-- [ ] ResearchProduct 类型契约（复用 Report/Artifact/Version；逐类型 Contract）
-- [ ] P0：COMPANY_DEEP_DIVE / INDUSTRY_DEEP_DIVE / EVENT_INVESTIGATION / THESIS_REVIEW
-- [ ] P1：MAINLINE_RADAR / OVERSEAS_MAPPING / DAILY_RESEARCH_BRIEF
+## R5 — Research Product System（DONE，P0/P1）
+- [x] 7 类产品契约（app/domain/research_products.py：required_sections/
+      intent/missing_data_behavior=disclose/market_wide/notes 显式）
+- [x] reports.product_type 列（migration e5f6a7b8c9d1）+ pipeline 契约校验
+      （缺失 Section 显形不编造）+ Artifact 标题类型化
+- [x] commander 焦点→产品类型映射（黄金问题落 EVENT_INVESTIGATION）
+- [x] 市场级三类（雷达/映射/简报）编译器在 R8 Inbox 数据就绪后落地
+      （契约已定义，顺序依赖在 manifest 如实登记）
+- [x] 验证：tests/test_r5 4/4 + 全量 backend exit 0 + 真机核验
 
-## R6 — Experience 非量化改造（PENDING，P1）
+## R6 — Experience 非量化改造（DOING，P1）
 - [ ] LLM Refinement 结构化（九字段；原文+炼果双存；无 KEY 422 显形）
 - [ ] 非量化验证方法（case/historical/counterexample/cross-company/cross-cycle/review）
 - [ ] Playbook（批准后可检索；Memory≠Evidence 边界测试）

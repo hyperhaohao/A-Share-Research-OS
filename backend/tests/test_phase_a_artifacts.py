@@ -211,7 +211,7 @@ def test_artifact_by_domain_route(client, monkeypatch):
     assert artifact["domain_type"] == "Report"
     assert artifact["domain_id"] == report_id
     # pipeline registered the business title — never a generic handle
-    assert "完整研究报告" in artifact["title"]
+    assert "公司深度研究" in artifact["title"]  # R5: typed product title
 
     missing = client.get("/api/v1/artifacts/by-domain/Report/rpt_missing000")
     assert missing.status_code == 404

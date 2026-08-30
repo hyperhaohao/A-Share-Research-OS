@@ -124,10 +124,13 @@ class ResearchPipeline:
         report_id: str,
         version_id: str,
         version_no: int,
+        product_type: str | None = None,
     ) -> None:
         """Register this run's outputs on the Artifact Registry (V2 §85)."""
         from app.application.artifacts import ArtifactService, RelationType
+        from app.domain.research_products import get_contract as _get_contract
 
+        contract = _get_contract(product_type)
         name = self._instrument_name(instrument_id)
         service = ArtifactService(self._session)
         run_artifact = service.register(
@@ -144,7 +147,7 @@ class ResearchPipeline:
             artifact_type="report",
             domain_type="Report",
             domain_id=report_id,
-            title=f"{name} · 完整研究报告",
+            title=f"{name} · {contract.title_zh}",
             instrument_ids=(instrument_id,),
             as_of_time=snapshot_as_of,
             created_by="pipeline",
@@ -216,6 +219,7 @@ class ResearchPipeline:
         run_id: str | None = None,
         profile: str | None = None,
         max_collection_passes: int = 1,
+        product_type: str | None = None,
     ) -> PipelineOutcome:
         """R4（方案 §10.4/§10.6）：profile 过滤采集面与分析师面（Agent Profiles
         白名单）；max_collection_passes ≥ 2 时启用 Missing Data Loop 的有界
@@ -230,6 +234,14 @@ class ResearchPipeline:
         events: list[dict] = []
         now = utc_now()
         prof = get_profile(profile)
+        # R5（方案 §11）：产品类型契约 —— 未知类型回退公司深度（不猜）
+        from app.domain.research_products import (
+            get_contract,
+            validate_product,
+            ProductType,
+        )
+
+        contract = get_contract(product_type)
         capabilities = filter_capabilities(list(_COLLECT_CAPABILITIES), profile)
 
         run = self._runs.create(
@@ -529,6 +541,15 @@ class ResearchPipeline:
                 events,
             )
 
+            # R5（方案 §11.2）：契约校验 —— 缺 Required Section 显形（不阻断，
+            # 阻断由既有 FinalReportQualityGate 决定）
+            missing_sections = validate_product(contract, structured.sections)
+            if missing_sections:
+                structured.data_quality_notes.append(
+                    f"product contract {contract.product_type}: required sections "
+                    f"missing {missing_sections}（缺失显形，不编造）"
+                )
+
             report_id = self._reports.save(
                 instrument_id=instrument_id,
                 snapshot_id=snapshot.snapshot_id,
@@ -538,6 +559,7 @@ class ResearchPipeline:
                 markdown=rendered["markdown"],
                 html=rendered["html"],
                 content={"citations": sorted(set(structured.citations))},
+                product_type=contract.product_type,
             )
             version_id = self._versions.save(
                 ReportVersion(
@@ -556,6 +578,7 @@ class ResearchPipeline:
                 report_id=report_id,
                 version_id=version_id,
                 version_no=1,
+                product_type=contract.product_type,
             )
             self._emit(run_id, "report_ready", {"report_id": report_id}, events)
 

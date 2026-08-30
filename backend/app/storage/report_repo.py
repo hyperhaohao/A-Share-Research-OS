@@ -24,6 +24,7 @@ class ReportORM(Base):
 
     gate_status: Mapped[str] = mapped_column(String(16), default="not_run")
     published: Mapped[bool] = mapped_column(default=False)
+    product_type: Mapped[str] = mapped_column(String(32), default="COMPANY_DEEP_DIVE", index=True)
 
     markdown: Mapped[str] = mapped_column(default="")
     html: Mapped[str] = mapped_column(default="")
@@ -46,6 +47,7 @@ class ReportRepository:
         markdown: str,
         html: str,
         content: dict,
+        product_type: str = "COMPANY_DEEP_DIVE",
     ) -> str:
         row = ReportORM(
             report_id=f"rpt_{uuid4().hex[:16]}",
@@ -57,6 +59,7 @@ class ReportRepository:
             markdown=markdown,
             html=html,
             content_json=content,
+            product_type=product_type,
             created_at=datetime.now(timezone.utc),
         )
         self._session.add(row)

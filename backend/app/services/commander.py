@@ -65,6 +65,19 @@ _FOCUS_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
 ]
 
 # 焦点 → Agent Profile（方案 §10.4）；未列出的焦点 → general
+# R5 §11.1：焦点 → 研究产品类型（P0 四类；其余焦点走公司深度/通用）
+_FOCUS_PRODUCT: dict[str, str] = {
+    "company": "COMPANY_DEEP_DIVE",
+    "industry": "INDUSTRY_DEEP_DIVE",
+    "event": "EVENT_INVESTIGATION",
+    "thesis_review": "THESIS_REVIEW",
+    "general": "COMPANY_DEEP_DIVE",
+    "earnings": "COMPANY_DEEP_DIVE",
+    "policy": "EVENT_INVESTIGATION",
+    "mainline": "COMPANY_DEEP_DIVE",
+    "overseas_mapping": "COMPANY_DEEP_DIVE",
+}
+
 _FOCUS_PROFILE: dict[str, str] = {
     "company": "company",
     "industry": "industry",
@@ -256,6 +269,7 @@ def build_plan_meta(interp: CommandInterpretation) -> dict:
         "objective": f"{interp.focus} 研究：{interp.instrument_hint or '未定标的'}",
         "focus": interp.focus,
         "profile": interp.profile,
+        "product_type": _FOCUS_PRODUCT[interp.focus],
         "questions": list(focus_meta["questions"]),
         "required_sources": list(focus_meta["required_sources"]),
         "completion_criteria": list(focus_meta["completion_criteria"]),
@@ -372,6 +386,7 @@ class ResearchCommander:
                 instrument_id,
                 profile=meta.get("profile"),
                 max_collection_passes=int(meta.get("max_collection_passes") or 1),
+                product_type=meta.get("product_type"),
             )
             report_artifact = ArtifactService(self._session).by_domain(
                 "Report", outcome.report_id
