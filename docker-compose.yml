@@ -5,6 +5,9 @@ services:
       # Production target is PostgreSQL; see .env.example
       ASRO_DATABASE_URL: ${ASRO_DATABASE_URL:-sqlite:///./data/asro.db}
       ASRO_CORS_ORIGINS: ${ASRO_CORS_ORIGINS:-["http://localhost:8080"]}
+      ASRO_LLM_API_KEY: ${ASRO_LLM_API_KEY:-}
+      ASRO_LLM_BASE_URL: ${ASRO_LLM_BASE_URL:-https://api.openai.com/v1}
+      ASRO_LLM_MODEL: ${ASRO_LLM_MODEL:-gpt-4o-mini}
     volumes:
       - backend_data:/app/data
     ports:
@@ -20,6 +23,9 @@ services:
     environment:
       - ASRO_DATABASE_URL=${ASRO_DATABASE_URL:-sqlite:////app/data/asro.db}
       - ASRO_SCHEDULER_INTERVAL=60
+      - ASRO_LLM_API_KEY=${ASRO_LLM_API_KEY:-}
+      - ASRO_LLM_BASE_URL=${ASRO_LLM_BASE_URL:-https://api.openai.com/v1}
+      - ASRO_LLM_MODEL=${ASRO_LLM_MODEL:-gpt-4o-mini}
     volumes:
       - backend_data:/app/data
     depends_on:
