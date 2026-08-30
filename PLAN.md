@@ -66,11 +66,21 @@
       （E2E-09/10/11 全链）+ 真机截图核验（11 主张 cite + 事实状态本地化）
 - [x] PORT-MANIFEST-G3
 
-## G4 — Workflow Studio（DOING）
-- Donor: ui/factor/workflow.jsx → WorkflowStudio（真正 Editor：Node Library/
-  Canvas/Inspector/Run/Metrics/Version，非 Run Viewer）
+## G4 — Workflow Studio（DONE）
+- [x] backend：workflow_definitions + append-only 版本表（migration a9b8c7d6e5f4）
+      + 图校验（kinds/必须有 data/恰一 output/无环/可达）+ run_definition 拓扑展开
+      + 执行器节点级参数泛化（card 运行向后兼容）
+- [x] frontend：features/workflow-studio/（Node Library 分组目录 + Canvas
+      增删/连线 + Inspector 按 schema 编辑 + Toolbar 命名/存版本/运行 +
+      运行逐节点点灯 + 指标区）—— 不再是 Run Viewer
+- [x] 目录与执行器强对应：donor 25 类中 ASRO 能执行的 5 类进目录，
+      未接引擎的 20 类不伪造（方案 §25）
+- [x] 验证：backend 367 passed（+3 G4）+ vitest 27/27（+4）+ build PASS +
+      Playwright 30/30 + 真机全链（保存被图校验拦截显形 → 载入定义 → Run →
+      逐节点状态 + 诚实失败）
+- [x] PORT-MANIFEST-G4
 
-## G5 — 智能选股（PENDING）
+## G5 — 智能选股（DOING）
 - Donor: ui/screen/screen-app.jsx + screen-data.jsx → ScreeningWorkbench
   （因子/候选/解释三面板）
 

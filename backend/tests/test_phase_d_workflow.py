@@ -244,3 +244,136 @@ def test_quant_expression_parse_failure_refuses_up_front(client, monkeypatch):
     )
     assert resp.status_code == 422
     assert resp.json()["error_code"] == "workflow.expression_invalid"
+
+
+# ── Guanlan Direct Port G4 — WorkflowDefinition 编辑器后端（方案 §15/§35）────────
+
+
+def _g4_graph(*, horizon: int = 10, with_expression: bool = False, instrument: str = "SZSE:000831"):
+    nodes = [
+        {"key": "src", "kind": "data", "title": "日线源", "params": {"instrument_id": instrument}},
+        {"key": "rule1", "kind": "rule", "title": "前向收益", "params": {"horizon_days": horizon, "threshold_pct": 0.0}},
+    ]
+    edges = [{"from": "src", "to": "rule1"}]
+    # ASRO 语义：表达式节点评估「指标评估」产出的 metrics → 置于 val 之后
+    # （与 build_nodes 的卡路 DAG data→rule→validation→[expression]→output 同构）
+    nodes.append({"key": "val1", "kind": "validation", "title": "指标", "params": {}})
+    edges.append({"from": "rule1", "to": "val1"})
+    if with_expression:
+        nodes.append({"key": "expr1", "kind": "expression", "title": "表达式", "params": {"expr": "hit_rate >= 50"}})
+        edges.append({"from": "val1", "to": "expr1"})
+    nodes.append({"key": "out1", "kind": "output", "title": "落库", "params": {}})
+    edges.append({"from": nodes[-2]["key"] if with_expression else "val1", "to": "out1"})
+    return nodes, edges
+
+
+def test_g4_definition_crud_version_chain_and_graph_validation(client):
+    nodes, edges = _g4_graph()
+    created = client.post(
+        "/api/v1/workflow-definitions",
+        json={"name": "稀土前向验证", "instrument_id": "SZSE:000831", "nodes": nodes, "edges": edges},
+    )
+    assert created.status_code == 201, created.text
+    definition = created.json()["definition"]
+    assert definition["def_id"].startswith("wfdef_")
+    assert definition["current_version"] == 1
+
+    got = client.get(f"/api/v1/workflow-definitions/{definition['def_id']}").json()["definition"]
+    assert [n["key"] for n in got["nodes"]] == ["src", "rule1", "val1", "out1"]
+    assert got["versions"][0]["version_no"] == 1
+
+    # v2: 参数修订（horizon 10 → 30），append-only
+    v2_nodes, v2_edges = _g4_graph(horizon=30)
+    saved = client.post(
+        f"/api/v1/workflow-definitions/{definition['def_id']}/versions",
+        json={"nodes": v2_nodes, "edges": v2_edges, "note": "horizon 30"},
+    )
+    assert saved.status_code == 201, saved.text
+    assert saved.json()["version"]["version_no"] == 2
+    got2 = client.get(f"/api/v1/workflow-definitions/{definition['def_id']}").json()["definition"]
+    assert got2["current_version"] == 2
+    assert got2["nodes"][1]["params"]["horizon_days"] == 30
+    assert len(got2["versions"]) == 2
+
+    # 图校验：环 / 缺 data / 双 output / 未知 kind → 422 显式拒绝
+    bad_cases = [
+        ("cycle", [
+            {"key": "a", "kind": "data", "params": {}},
+            {"key": "b", "kind": "validation", "params": {}},
+        ], [{"from": "a", "to": "b"}, {"from": "b", "to": "a"}]),
+        ("no_data", [
+            {"key": "r", "kind": "rule", "params": {}},
+            {"key": "o", "kind": "output", "params": {}},
+        ], [{"from": "r", "to": "o"}]),
+        ("two_outputs", [
+            {"key": "d", "kind": "data", "params": {}},
+            {"key": "o1", "kind": "output", "params": {}},
+            {"key": "o2", "kind": "output", "params": {}},
+        ], [{"from": "d", "to": "o1"}]),
+        ("unknown_kind", [
+            {"key": "d", "kind": "data", "params": {}},
+            {"key": "x", "kind": "xgboost", "params": {}},
+            {"key": "o", "kind": "output", "params": {}},
+        ], [{"from": "d", "to": "x"}, {"from": "x", "to": "o"}]),
+    ]
+    for name, bnodes, bedges in bad_cases:
+        bad = client.post(
+            "/api/v1/workflow-definitions",
+            json={"name": f"bad-{name}", "nodes": bnodes, "edges": bedges},
+        )
+        assert bad.status_code == 422, (name, bad.text)
+        assert bad.json()["error_code"] == "workflow.graph_invalid"
+
+    missing = client.get("/api/v1/workflow-definitions/wfdef_nope")
+    assert missing.status_code == 404
+
+
+def test_g4_run_definition_executes_topologically(client, monkeypatch):
+    _mock_sources(monkeypatch, kline_ok=True)
+    horizon = 10
+    nodes, edges = _g4_graph(horizon=horizon)
+    definition = client.post(
+        "/api/v1/workflow-definitions",
+        json={"name": "G4 运行", "instrument_id": "SZSE:000831", "nodes": nodes, "edges": edges},
+    ).json()["definition"]
+
+    launched = client.post(f"/api/v1/workflow-definitions/{definition['def_id']}/run")
+    assert launched.status_code == 202, launched.text
+    run = _await_run(client, launched.json()["run"]["run_id"])
+    assert run["status"] == "completed", run
+    assert run["kind"] == "definition"
+    assert run["instrument_id"] == "SZSE:000831"
+    # 拓扑序 = src → rule1 → val1 → out1
+    assert [n["node_id"] for n in run["nodes"]] == ["n_src", "n_rule1", "n_val1", "n_out1"]
+    assert all(n["status"] == "ok" for n in run["nodes"])
+    metrics = run["metrics"]
+    assert metrics["samples"] == BAR_COUNT - horizon
+    assert metrics["hit_rate_pct"] == 100.0
+    # 无关联卡片 → output 诚实记录（指标仅存于运行，不伪造卡片验证）
+    assert "无关联卡片" in run["nodes"][-1]["detail"]
+
+    # per-node params 生效：v2 horizon=30 → samples = BAR_COUNT - 30
+    v2_nodes, v2_edges = _g4_graph(horizon=30)
+    client.post(
+        f"/api/v1/workflow-definitions/{definition['def_id']}/versions",
+        json={"nodes": v2_nodes, "edges": v2_edges},
+    )
+    launched2 = client.post(f"/api/v1/workflow-definitions/{definition['def_id']}/run")
+    run2 = _await_run(client, launched2.json()["run"]["run_id"])
+    assert run2["metrics"]["samples"] == BAR_COUNT - 30
+
+
+def test_g4_definition_expression_node_verdict(client, monkeypatch):
+    _mock_sources(monkeypatch, kline_ok=True)
+    nodes, edges = _g4_graph(horizon=10, with_expression=True)
+    definition = client.post(
+        "/api/v1/workflow-definitions",
+        json={"name": "G4 表达式", "instrument_id": "SZSE:000831", "nodes": nodes, "edges": edges},
+    ).json()["definition"]
+    launched = client.post(f"/api/v1/workflow-definitions/{definition['def_id']}/run")
+    run = _await_run(client, launched.json()["run"]["run_id"])
+    assert run["status"] == "completed"
+    assert run["metrics"]["expression"] == "hit_rate >= 50"
+    assert run["metrics"]["expression_verdict"] is True
+    expr_node = next(n for n in run["nodes"] if n["kind"] == "expression")
+    assert "成立" in (expr_node["detail"] or "")

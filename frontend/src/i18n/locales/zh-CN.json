@@ -745,5 +745,73 @@
       "analyst_inference": "分析师推断",
       "rumor": "传闻"
     }
+  },
+  "studio": {
+    "title": "工作流 Studio",
+    "namePlaceholder": "工作流名称（如：稀土前向收益验证）",
+    "defaultName": "未命名工作流",
+    "save": "保存定义",
+    "saveVersion": "存为新版本",
+    "versionBadge": "版本",
+    "run": "运行",
+    "libraryTitle": "节点库",
+    "libraryHint": "点击节点类型加入画布；在画布上拖拽端口连线；选中后 Delete 删除。",
+    "definitionsTitle": "已保存定义",
+    "noDefinitions": "暂无已保存定义 —— 编辑后点「保存定义」",
+    "inspectorTitle": "Inspector",
+    "inspectorEmpty": "选中一个节点后在此编辑参数",
+    "deleteNode": "删除节点",
+    "noParams": "该节点无可配参数",
+    "optional": "留空 = 默认",
+    "canvasEmpty": "画布为空 —— 从左侧节点库添加节点",
+    "canvasHint": "连线拖拽端口；节点参数在右侧 Inspector 编辑。",
+    "runsTitle": "运行",
+    "noRuns": "暂无运行 —— 保存定义后点「运行」",
+    "runKindDefinition": "定义运行",
+    "runKindCard": "卡片验证",
+    "exprVerdict": "表达式裁决",
+    "exprTrue": "成立",
+    "exprFalse": "不成立",
+    "err": {
+      "empty": "画布为空",
+      "noData": "至少需要一个数据源节点",
+      "outputCount": "恰好需要一个落库节点",
+      "danglingEdge": "存在未连接节点的连线",
+      "saveFirst": "先保存定义再运行"
+    },
+    "group": {
+      "input": "01 · 数据",
+      "rule": "02 · 规则",
+      "evaluate": "03 · 评估",
+      "persist": "04 · 落库"
+    },
+    "kind": {
+      "data": "采集历史日线",
+      "rule": "前向收益规则",
+      "expression": "量化规则表达式",
+      "validation": "指标评估",
+      "output": "落库与注册"
+    },
+    "kindDesc": {
+      "data": "经 historical_data 能力采集真实日线（PIT 可见证据层）",
+      "rule": "按持有期计算前向收益序列（强类型规则）",
+      "expression": "受约束 DSL 评估指标（无 eval；裁决=输出）",
+      "validation": "样本/命中率/收益分布等确定性指标",
+      "output": "写回经验卡验证记录并注册 Artifact（未绑卡则仅存运行）"
+    },
+    "param": {
+      "title": "节点标题",
+      "instrument": "标的",
+      "bars": "日线条数",
+      "horizon": "持有期（交易日）",
+      "threshold": "命中阈值 %",
+      "expr": "表达式",
+      "card": "绑定经验卡 ID"
+    },
+    "hint": {
+      "instrument": "留空 = 定义项；填 instrument id（如 SZSE:000831）",
+      "expr": "如 hit_rate >= 55 AND avg_return > 0（指标: hit_rate/avg_return/best_return/worst_return）",
+      "card": "留空 = 指标仅存于工作流运行（诚实记录）"
+    }
   }
 }

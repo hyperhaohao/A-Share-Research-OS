@@ -64,8 +64,8 @@
 | G1 | AI 研究中枢 / 深度研究 | DONE |
 | G2 | 产业研究三视图（产业链+全球坐标+环节详情） | DONE |
 | G3 | 研究经验卡（原炼验用） | DONE |
-| G4 | Workflow Studio（真 Editor） | DOING |
-| G5 | 智能选股（三面板） | PLANNED |
+| G4 | Workflow Studio（真 Editor） | DONE |
+| G5 | 智能选股（三面板） | DOING |
 | G6 | 策略实验室（物料装配） | PLANNED |
 | G7 | 策略盯盘（K线/Signal/Decision/Replay） | PLANNED |
 | G8 | 全球宏观 / 海外 | PLANNED |

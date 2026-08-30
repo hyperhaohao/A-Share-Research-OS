@@ -166,7 +166,7 @@ class WorkflowService:
                 continue
             run = self._mark(run["run_id"], node["node_id"], status=NodeStatus.RUNNING)
             try:
-                detail = self._run_node(node["kind"], run)
+                detail = self._run_node(node["kind"], run, node)
             except Exception as exc:  # noqa: BLE001 — node failure is run state
                 failed = node["title"]
                 run = self._mark(
@@ -210,32 +210,47 @@ class WorkflowService:
 
     # -- nodes -------------------------------------------------------------------------
 
-    def _run_node(self, kind: str, run: dict) -> str:
+    def _run_node(self, kind: str, run: dict, node: dict | None = None) -> str:
+        params = self._node_params(run, node)
         if kind == "data":
-            return self._node_data(run)
+            return self._node_data(run, params)
         if kind == "rule":
-            return self._node_rule(run)
+            return self._node_rule(run, params)
         if kind == "expression":
-            return self._node_expression(run)
+            return self._node_expression(run, params)
         if kind == "validation":
             return self._node_validation(run)
         if kind == "output":
             return self._node_output(run)
         raise ValueError(f"unknown node kind: {kind}")
 
-    def _node_data(self, run: dict) -> str:
+    def _node_params(self, run: dict, node: dict | None) -> dict:
+        """G4（方案 §15）：definition 运行按节点取参数；card 运行回退全局参数。"""
+        if node is None:
+            return {}
+        key = str(node.get("node_id") or "")
+        if key.startswith("n_"):
+            key = key[2:]
+        return dict((run["params"].get("node_params") or {}).get(key) or {})
+
+    def _node_data(self, run: dict, params: dict | None = None) -> str:
         """Collect REAL daily bars through the historical_data capability."""
-        bars = collect_daily_bars(self._session, run["instrument_id"])
-        return f"{len(bars)} 根日线（{bars[0]['date']} → {bars[-1]['date']}）"
+        params = params or {}
+        instrument_id = str(params.get("instrument_id") or run["instrument_id"])
+        limit = int(params.get("limit") or 1200)
+        bars = collect_daily_bars(self._session, instrument_id, limit=limit)
+        return f"{instrument_id} {len(bars)} 根日线（{bars[0]['date']} → {bars[-1]['date']}）"
 
     def _load_bars(self, instrument_id: str) -> list[dict]:
         return load_daily_bars(self._session, instrument_id)
 
-    def _node_rule(self, run: dict) -> str:
+    def _node_rule(self, run: dict, params: dict | None = None) -> str:
         """Apply the typed forward-return rule over the bar series."""
-        bars = load_daily_bars(self._session, run["instrument_id"])
-        horizon = int(run["params"].get("horizon_days", 20))
-        threshold = float(run["params"].get("threshold_pct", 0.0))
+        params = params or {}
+        instrument_id = str(params.get("instrument_id") or run["instrument_id"])
+        bars = load_daily_bars(self._session, instrument_id)
+        horizon = int(params.get("horizon_days", run["params"].get("horizon_days", 20)))
+        threshold = float(params.get("threshold_pct", run["params"].get("threshold_pct", 0.0)))
         returns = forward_returns(bars, horizon, threshold)
         metrics = {
             "samples": len(returns),
@@ -248,13 +263,14 @@ class WorkflowService:
         self._repo.update_run(run["run_id"], merge)
         return f"horizon={horizon} 交易日，样本 {len(returns)}"
 
-    def _node_expression(self, run: dict) -> str:
+    def _node_expression(self, run: dict, params: dict | None = None) -> str:
         """Evaluate the card's quant expression against the computed metrics.
         The node always succeeds when the DAG ran — the VERDICT is the output
         (a failed rule is information, not a workflow failure)."""
         from app.quant.expression import parse_quant_expression
 
-        expression = (run["params"].get("expression") or "").strip()
+        params = params or {}
+        expression = str(params.get("expr") or run["params"].get("expression") or "").strip()
         if not expression:
             raise ValueError("expression node without an expression")
         parsed = parse_quant_expression(expression)

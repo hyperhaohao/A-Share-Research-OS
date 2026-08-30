@@ -746,5 +746,73 @@
       "analyst_inference": "Analyst inference",
       "rumor": "Rumor"
     }
+  },
+  "studio": {
+    "title": "Workflow Studio",
+    "namePlaceholder": "Workflow name (e.g. Rare-earth forward return validation)",
+    "defaultName": "Untitled workflow",
+    "save": "Save definition",
+    "saveVersion": "Save as new version",
+    "versionBadge": "Version",
+    "run": "Run",
+    "libraryTitle": "Node library",
+    "libraryHint": "Click a node type to add it; drag ports to connect; select + Delete to remove.",
+    "definitionsTitle": "Saved definitions",
+    "noDefinitions": "No saved definitions yet — edit and click Save",
+    "inspectorTitle": "Inspector",
+    "inspectorEmpty": "Select a node to edit its parameters",
+    "deleteNode": "Delete node",
+    "noParams": "This node has no parameters",
+    "optional": "Empty = default",
+    "canvasEmpty": "Canvas is empty — add nodes from the library",
+    "canvasHint": "Drag between ports to connect; edit node params in the Inspector.",
+    "runsTitle": "Runs",
+    "noRuns": "No runs yet — save a definition and click Run",
+    "runKindDefinition": "Definition run",
+    "runKindCard": "Card validation",
+    "exprVerdict": "Expression verdict",
+    "exprTrue": "True",
+    "exprFalse": "False",
+    "err": {
+      "empty": "Canvas is empty",
+      "noData": "At least one data node is required",
+      "outputCount": "Exactly one output node is required",
+      "danglingEdge": "An edge references a missing node",
+      "saveFirst": "Save the definition before running"
+    },
+    "group": {
+      "input": "01 · Data",
+      "rule": "02 · Rules",
+      "evaluate": "03 · Evaluate",
+      "persist": "04 · Persist"
+    },
+    "kind": {
+      "data": "Collect daily bars",
+      "rule": "Forward return rule",
+      "expression": "Quant expression",
+      "validation": "Metrics evaluation",
+      "output": "Persist & register"
+    },
+    "kindDesc": {
+      "data": "Collects REAL daily bars via historical_data (PIT-visible evidence layer)",
+      "rule": "Forward return series over the holding period (typed rule)",
+      "expression": "Constrained DSL over metrics (no eval; verdict = output)",
+      "validation": "Deterministic metrics: samples / hit rate / return distribution",
+      "output": "Writes card validation + registers Artifact (metrics stay on the run if unbound)"
+    },
+    "param": {
+      "title": "Node title",
+      "instrument": "Instrument",
+      "bars": "Bar count",
+      "horizon": "Holding period (trading days)",
+      "threshold": "Hit threshold %",
+      "expr": "Expression",
+      "card": "Bound experience card ID"
+    },
+    "hint": {
+      "instrument": "Empty = run instrument; or an instrument id (e.g. SZSE:000831)",
+      "expr": "e.g. hit_rate >= 55 AND avg_return > 0 (metrics: hit_rate/avg_return/best_return/worst_return)",
+      "card": "Empty = metrics stay on the workflow run (honestly recorded)"
+    }
   }
 }

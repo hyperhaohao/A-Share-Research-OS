@@ -26,6 +26,7 @@ import "./ui/guanlan/guanlan.css"; /* Guanlan port 基础组件样式（G0） */
 import "./features/command-center/command-center.css"; /* AI 研究中枢三栏工作台（G1） */
 import "./features/industry-research/industry-research.css"; /* 产业研究三视图（G2） */
 import "./features/experience-workbench/experience-workbench.css"; /* 经验卡原炼验用工作台（G3） */
+import "./features/workflow-studio/workflow-studio.css"; /* 工作流 Editor（G4） */
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
