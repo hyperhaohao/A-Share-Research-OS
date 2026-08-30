@@ -202,7 +202,7 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-1. LLM 润色：配置 ASRO_LLM_API_KEY 后 refine_with_llm 自动生效（代码就绪）；
+1. [就绪待 KEY] LLM 润色：在 .env 设 ASRO_LLM_API_KEY + rebuild 即生效（管道已通）；
 2. 关系源扩展：上下游关系（当前为同业板块成员+证据共现）；
 3. 宏观数值层：已含美元指数/USDCNY，利率需官方源；
 4. 部署实际执行：域名 + Let's Encrypt + ASRO_JWT_SECRET 设置；
