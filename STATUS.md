@@ -9,27 +9,27 @@
 ## Current Phase
 
 ```text
-V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域）+ E2E 17/17 + UX Foundation ✅
-+ P1-01/02/05/06/07 全部完成。
-新执行线：Guanlan Direct Port（Track B）启动 —— 依据
-docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
-（Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
-Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
-README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
 历史事实（保留）：Guanlan Direct Port G0–G10 全部 DONE —— PORT COMPLETE
-（docs/port/G10-CLOSURE.md；G10 完成 = 既定 Experience Port 清单完成，
-**不等于研究能力/方法/细节吸收完成**）。
+（G10 完成 = Experience Port 清单完成，不等于研究能力吸收完成）。
 
 Current Execution Line: **Guanlan Research Capability Deep Port（R0–R9）**
-依据 docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md（正式任务书）。
-License Gate：donor 无 LICENSE → 全程 REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
-三方 commit：ASRO 89b4f6c / donor 98f1398（无 drift）/ 基线一致。
+依据 docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md。
+License Gate：donor 无 LICENSE → REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
+三方 commit：ASRO（见 git log）/ donor 98f1398（无 drift）。
 Quant 本轮冻结（NO NEW DEVELOPMENT，保留不删）。
 
-R0 差距矩阵完成：docs/research-deep-port/00-观澜研究能力差距矩阵.md（27 项：
-Source Trust 5 / 产业语义 7 / Commander 7 / Products 7 / Experience-Memory 5 /
-Console 3 + REJECT_QUANT 清单）。当前 R1 — Research Domain Boundary（DOING）。
-黄金场景：000831 中国稀土资产整合研究 → R10-CLOSURE.md。
+R0-R3 DONE：
+  R0 差距矩阵 27 项（docs/research-deep-port/00-*.md）；
+  R1 ADR-Research-First + 导航研究优先 + README 定位；
+  R2 Source Trust T0-T4（读时派生）+ Claim 升级双防线 + Extraction 契约/
+    CitationVerifier/extraction_records + 注入防线 + 真实公告 live verify 4/4；
+  R3 industry_semantic_objects 四类语义对象（append-only 版本化）+
+    引用反查强制（422 显形）+ /industry-semantics API + /views/industry
+    semantics 并入 + 可复算温度 + 稀土试点真实数据（广晟减持 Driver/
+    Narrative，真实证据引用反查通过）+ UI 真机显示。
+
+当前 R4 — Research Commander Autonomous Loop（DOING）。
+黄金场景：000831 中国稀土资产整合研究 → docs/research-deep-port/R10-CLOSURE.md
 ```
 
 ## Completed
@@ -373,15 +373,14 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Research Capability Deep Port（R 线）：R0+R1 DONE；当前 R2 — Source Trust +
-Evidence-backed Extraction（P0，本轮最重要底层增强）。
-R2 要点：T0-T4 业务信任层（映射 authority/fact_status/source，不建平行字段）
-+ Claim 升级规则（T4 不得成 Confirmed Fact，质量门强制）+ Extraction 契约
-（statement/source_evidence_id/support_span/fact_status/extractor/
-prompt_version）+ CitationVerifier（locate support→entailment→reject）+
-Prompt Injection 防线测试 + PIT 测试 + 真实公告 live verify。
-随后 R3 产业语义 → R4 Commander 循环 → R5 Products → R6/R7 → R8 → R9 →
-R10-CLOSURE（000831 黄金场景逐项 PASS/FAIL）。
+Research Capability Deep Port（R 线）：R0-R3 DONE；当前 R4 — Commander
+Autonomous Loop（DOING）。
+R4 要点：Intent Router 扩九类（company/industry/event/earnings/policy/
+mainline/overseas_mapping/thesis_review/comparison）+ 结构化 Plan 扩展
+（objective/questions/required_sources/completion_criteria）+ Missing Data
+Loop（迭代重收集）+ Agent Profiles 白名单 + run 状态机扩展 + max iterations。
+随后 R5 Products → R6/R7 → R8 Inbox/Thesis Diff → R9 Graph → R10-CLOSURE。
+
 ```
 
 ## Tests
