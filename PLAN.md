@@ -28,12 +28,13 @@
 - [x] 基线测试全绿（backend 368 exit 0 / vitest 30 + build PASS / Playwright 30）
 - [x] Git checkpoint
 
-## R1 — Research Domain Boundary & Product Repositioning（DOING）
-- [ ] ADR-Research-First-Product-Boundary
-- [ ] 一级导航研究优先（研究核心 vs 实验 分组；Quant 不删不占核心）
-- [ ] README 产品定位更新 + i18n/theme 回归
+## R1 — Research Domain Boundary & Product Repositioning（DONE）
+- [x] ADR-Research-First-Product-Boundary（docs/adr/）
+- [x] 一级导航研究优先（研究 9 / 实验·冻结 6；修复工作流双入口同 label）
+- [x] README 定位更新 + i18n 回归（vitest 30/30）+ 视觉基线容差内（E2E 30/30）
+- [x] manifests/R1-MANIFEST.md
 
-## R2 — Source Trust + Evidence-backed Extraction（PENDING，P0）
+## R2 — Source Trust + Evidence-backed Extraction（DOING，P0）
 - [ ] Source Trust T0-T4 业务层（映射 authority/fact_status/source，不建平行字段）
 - [ ] Claim 升级规则（T4 不得成 Confirmed Fact，质量门强制）
 - [ ] Extraction 契约 + CitationVerifier（抽取→原文定位→entailment→拒绝）

@@ -19,43 +19,28 @@ export const NAV_GROUPS: NavGroup[] = [
     key: "research",
     labelKey: "nav.group.research",
     items: [
-      { to: "/watchlist", labelKey: "nav.watchlist" },
+      { to: "/", labelKey: "nav.commander" },
+      { to: "/watchlist", labelKey: "nav.company" },
       { to: "/reports", labelKey: "nav.reports" },
       { to: "/industry-map", labelKey: "nav.industryMap" },
       { to: "/global-context", labelKey: "nav.industryGlobal" },
       { to: "/global-macro", labelKey: "nav.globalMacro" },
-    ],
-  },
-  {
-    key: "validation",
-    labelKey: "nav.group.validation",
-    items: [
       { to: "/experience", labelKey: "nav.experience" },
-      { to: "/workflows", labelKey: "nav.workflows" },
-      { to: "/screening", labelKey: "nav.screening" },
-      { to: "/workflow-studio", labelKey: "nav.workflows" },
+      { to: "/tasks", labelKey: "nav.tasks" },
+      { to: "/research-graph", labelKey: "nav.researchGraph" },
     ],
   },
   {
-    key: "strategy",
-    labelKey: "nav.group.strategy",
+    // 实验分组（ADR-Research-First）：量化面保留但冻结，降为 Experimental
+    key: "experimental",
+    labelKey: "nav.group.experimental",
     items: [
+      { to: "/screening", labelKey: "nav.screening" },
+      { to: "/workflows", labelKey: "nav.workflows" },
+      { to: "/workflow-studio", labelKey: "nav.workflowStudio" },
       { to: "/strategy", labelKey: "nav.strategy" },
       { to: "/monitoring", labelKey: "nav.monitoring" },
       { to: "/predictions", labelKey: "nav.predictions" },
     ],
   },
-  {
-    key: "knowledge",
-    labelKey: "nav.group.knowledge",
-    items: [{ to: "/research-graph", labelKey: "nav.researchGraph" }],
-  },
-  {
-    key: "system",
-    labelKey: "nav.group.system",
-    items: [
-      { to: "/tasks", labelKey: "nav.tasks" },
-      { to: "/source-health", labelKey: "nav.sourceHealth" },
-    ],
-  },
-];
+]

@@ -1,16 +1,34 @@
 # A-Share Research OS
 
-面向 A 股研究的长期 Research OS。系统维护每个研究标的持续演化的
-**Research State**（Evidence → Claim → Thesis → Valuation → Report →
-Prediction → Validation），而非一次性生成的互不关联的报告。
+**面向 A 股的长期 AI Research OS**（研究优先，ADR-Research-First）。系统持续
+维护每个标的/行业/事件/宏观的 **Research State**（Source → Evidence → PIT
+Snapshot → Claim → Thesis → Scenario/Valuation/Risk → Research Product →
+Monitor → Materiality → Thesis Diff → Version/Validation → Experience/Memory），
+而非一次性生成的互不关联的报告，也非选股器或量化交易框架。
+
+- **研究核心**：AI 研究中枢 / 公司研究 / 产业研究（Driver · Transmission ·
+  Narrative · 全球坐标）/ 全球宏观 / 研究报告 / 研究经验 / 持续研究 / 研究图谱
+- **实验（保留但冻结）**：筛选 / Workflow / Strategy Lab / Monitor / 预测 ——
+  现有量化能力完整保留（ADR-Research-First：不再扩展，不占核心资源）
 
 ## 当前状态
 
-**Research OS Beta — Final Integrity Pass 完成。**
+**Guanlan Experience Port 完成（G0–G10，PORT COMPLETE）；当前执行线 =
+Research Capability Deep Port（R0–R9）** —— 将观澜非量化研究能力（Source
+Trust / 引用反查 / 产业 Driver-Transmission-Narrative / 自主研究循环 /
+类型化研究产品 / 研究记忆）深度融合 ASRO 内核。
+依据：`docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md`；
+差距矩阵：`docs/research-deep-port/00-观澜研究能力差距矩阵.md`。
 
-已完成：多源真实数据（公告/财务/新闻/资金/行业/宏观）、完整研究管线（8 分析师 → Claim → Thesis → Debate → Scenario → Valuation → Risk → Report）、LLM Provider + Copilot + Narrative Layer、确定性 Quant 引擎（Kline → 因子 → 回测 → 指标）、后台调度器（Monitor/Materiality/Delta/Full 三分支）、九 Tab Workspace + React Flow 图谱 + Copilot 侧栏 + Revision Diff、Live Research E2E（4 板块）。
+已完成基座：多源真实数据（公告/财务/新闻/资金/行业/宏观）、完整研究管线
+（8 分析师 → Claim → Thesis → Debate → Scenario → Valuation → Risk →
+Report）、Evidence/PIT/Artifact/Provenance、三栏 AI 研究中枢、产业研究三
+视图、经验卡原炼验用、Workflow Studio、筛选/策略/盯盘/预测（实验）、全球
+宏观、研究图谱、后台调度器。
 
-进行中/增强项：基准指数数据源、节假日历、公网认证/TLS。
+进行中/增强项：Source Trust 分层、Citation Verification、产业语义引擎、
+自主研究循环、Research Products、Research Memory、Research Inbox、
+基准指数数据源、节假日历、公网认证/TLS。
 
 - 状态文件：[STATUS.md](STATUS.md)
 - 整改历史：[REMEDIATION.md](REMEDIATION.md)
