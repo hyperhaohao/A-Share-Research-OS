@@ -12,7 +12,7 @@
 V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
 E2E 17/17 于 compose 栈；全部已推送 GitHub main（13f7346..360b532 48 提交）。
 总纲 Phase A–J v1 + 验收复查 + 深度扩展 a–e 完成。
-当前执行线：部署准备 ✅ + UX Foundation ✅ + Workflow Studio ✅（全部已推送 GitHub main）
+当前执行线：P0 blockers all fixed ✅ + UX Foundation ✅ + 部署准备 ✅（GitHub main = 3d17d7b）
 唯一遗留为 Workflow Studio 编辑器 Canvas 增强项；报告 docs/ux-foundation-self-review.md）。
 GitHub main 已同步至最新（全部产品 E2E + 视觉回归通过）。
 下一候选：LLM 润色（需 ASRO_LLM_API_KEY）+ 关系源扩展 + 宏观数值层扩指标
