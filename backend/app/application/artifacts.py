@@ -34,6 +34,7 @@ class ArtifactType(str, Enum):
     SCREENING_RUN = "screening_run"
     STRATEGY_VERSION = "strategy_version"
     STRATEGY_BACKTEST = "strategy_backtest"
+    STRATEGY_MONITOR = "strategy_monitor"  # G9：盯盘进入全库图谱（方案 §40）
     INDUSTRY_MAP = "industry_map"
     GLOBAL_CONTEXT = "global_context"
     REVIEW = "review"

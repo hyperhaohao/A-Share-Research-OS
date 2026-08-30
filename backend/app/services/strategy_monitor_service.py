@@ -81,6 +81,27 @@ class StrategyMonitorService:
             now=now,
         )
         monitor = self._repo.add_monitor(row)
+        # G9（方案 §40）：盯盘注册 Artifact 并 generated_from 策略版本
+        from app.application.artifacts import ArtifactService, RelationType
+
+        service = ArtifactService(self._session)
+        monitor_artifact = service.register(
+            artifact_type="strategy_monitor",
+            domain_type="StrategyMonitor",
+            domain_id=monitor["monitor_id"],
+            title=monitor["name"],
+            summary=f"策略盯盘 · universe {len(monitor.get('universe') or [])} 标的",
+            instrument_ids=(),
+            created_by="strategy_monitor",
+            route="/monitoring/" + monitor["monitor_id"],
+        )
+        strategy_artifact = service.by_domain("StrategyVersion", version_id)
+        if strategy_artifact is not None:
+            service.link(
+                from_artifact_id=monitor_artifact,
+                to_artifact_id=strategy_artifact["artifact_id"],
+                relation=RelationType.GENERATED_FROM,
+            )
         return monitor
 
     @staticmethod

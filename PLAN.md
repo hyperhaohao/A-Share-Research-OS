@@ -116,10 +116,16 @@
 - [x] 验证：backend 367 passed + vitest 30/30 + build PASS + Playwright 30/30
       + 真机核验（四区 6 指标全真实 + 10 主题）
 
-## G9 — 全库研究图谱整合（DOING）
-- 全部 Workbench 注册 Artifact/Provenance/Handoff；Graph 节点带上下文跳转
+## G9 — 全库研究图谱整合（DONE）
+- [x] 审计：research_run/report/prediction/experience_card/screening_run/
+      strategy_version/industry_map/global_context 已在册；缺口=定义运行与盯盘
+- [x] 补齐：定义运行注册 workflow_run Artifact（route=/workflows/{run_id}）+
+      盯盘注册 strategy_monitor Artifact generated_from 策略版本 +
+      ArtifactType/前端业务名扩展
+- [x] 验证：backend 368 passed（+1）+ vitest 30/30 + build PASS +
+      Playwright 30/30（E2E-15 PASS）+ 真机核验（定义运行入图谱）
 
-## G10 — Full Product Closure（PENDING）
+## G10 — Full Product Closure（DOING）
 - §44 端到端验收（登录→中枢→研究→经验→工作流→选股→策略→盯盘→预测→复盘），
   §45 parity 全 PASS 才宣布 COMPLETE
 

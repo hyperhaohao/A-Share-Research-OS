@@ -187,5 +187,18 @@ class WorkflowDefinitionService:
             nodes=run_nodes,
             card_id=None,
         )
+        # G9（方案 §40）：定义运行注册 workflow_run Artifact —— 全库图谱覆盖
+        from app.application.artifacts import ArtifactService
+
+        ArtifactService(self._session).register(
+            artifact_type="workflow_run",
+            domain_type="WorkflowRun",
+            domain_id=run["run_id"],
+            title=f"{definition['name']} · v{version['version_no']} 运行",
+            summary=None,
+            instrument_ids=(),
+            created_by="workflow_studio",
+            route="/workflows/" + run["run_id"],
+        )
         self._repo.touch(def_id)
         return run

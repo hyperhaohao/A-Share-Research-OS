@@ -188,6 +188,7 @@ export function uiLang(language: string): UiLanguage {
 // -- Artifact Registry / lineage（V2 Phase A） --------------------------------
 
 const ARTIFACT_TYPE_LABELS: Record<string, Record<UiLanguage, string>> = {
+  strategy_monitor: { zh: "策略盯盘", en: "Strategy monitor" },
   research_run: { zh: "研究运行", en: "Research run" },
   report: { zh: "研究报告", en: "Report" },
   report_version: { zh: "报告版本", en: "Report version" },

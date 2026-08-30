@@ -377,3 +377,23 @@ def test_g4_definition_expression_node_verdict(client, monkeypatch):
     assert run["metrics"]["expression_verdict"] is True
     expr_node = next(n for n in run["nodes"] if n["kind"] == "expression")
     assert "成立" in (expr_node["detail"] or "")
+
+
+def test_g9_definition_run_registers_workflow_artifact(client, monkeypatch):
+    """G9（方案 §40）：定义运行注册 workflow_run Artifact（全库图谱覆盖）。"""
+    _mock_sources(monkeypatch, kline_ok=True)
+    nodes, edges = _g4_graph(horizon=10)
+    definition = client.post(
+        "/api/v1/workflow-definitions",
+        json={"name": "G9 图谱覆盖", "instrument_id": "SZSE:000831", "nodes": nodes, "edges": edges},
+    ).json()["definition"]
+    launched = client.post(f"/api/v1/workflow-definitions/{definition['def_id']}/run")
+    run = _await_run(client, launched.json()["run"]["run_id"])
+    assert run["status"] == "completed"
+
+    found = client.get(
+        f"/api/v1/artifacts/by-domain/WorkflowRun/{run['run_id']}"
+    ).json()["artifact"]
+    assert found["artifact_type"] == "workflow_run"
+    assert "G9 图谱覆盖" in found["title"]
+    assert found["route"].startswith("/workflows/")

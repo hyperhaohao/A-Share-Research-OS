@@ -69,8 +69,8 @@
 | G6 | 策略实验室（物料装配） | DONE |
 | G7 | 策略盯盘（K线/Signal/Decision/Replay） | DONE |
 | G8 | 全球宏观 / 海外 | DONE |
-| G9 | 全库研究图谱整合 | DOING |
-| G10 | Full Product Closure（§44 端到端 + §45 parity） | PLANNED |
+| G9 | 全库研究图谱整合 | DONE |
+| G10 | Full Product Closure（§44 端到端 + §45 parity） | DOING |
 
 ---
 

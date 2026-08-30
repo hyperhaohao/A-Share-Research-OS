@@ -16,13 +16,24 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0–G7 DONE（…/bc81d92/bfd4fb8）+ G8 DONE（7dd2b47）：全球宏观工作台
-（与产业全球坐标分离）迁植完成，当前 G9 — 全库研究图谱整合（DOING）。
+G0–G8 DONE（…/bfd4fb8/7dd2b47）+ G9 DONE（本轮）：全库图谱整合审计与
+缺口补齐完成，当前 G10 — Full Product Closure（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G9 — 全库研究图谱整合（本轮，DONE）：
+  - 审计：八类产物已在册（research_run/report/prediction/experience_card/
+    workflow_run[卡路径]/screening_run/strategy_version/industry_map/
+    global_context）；两缺口：定义运行不注册、盯盘无 Artifact
+  - 补齐：run_definition 注册 workflow_run Artifact（route=/workflows/{id}）+
+    create_monitor 注册 strategy_monitor Artifact generated_from 策略版本
+    + ArtifactType.STRATEGY_MONITOR + 前端业务名（策略盯盘）
+  - 验证：backend 368 passed（+1 G9）+ vitest 30/30 + build PASS +
+    Playwright 30/30（E2E-15 PASS）+ 真机核验（定义运行 wr_* 入图谱
+    153 节点/157 边）
+  - PORT-MANIFEST-G9
 Guanlan Direct Port G8 — 全球宏观 / 海外（本轮，DONE）：
   - backend：industry_view_service.global_macro_view + GET /views/global-macro
     （市场级视图：最新 GlobalContextSnapshot 的 6 指标真实数值 + 宏观主题；
@@ -340,10 +351,11 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G8 DONE；当前 G9 — 全库研究图谱整合。
-G9 要点（方案 §19/§40）：审计全部 Workbench 的 Artifact/Provenance/Handoff
-注册（G1-G8 新页面与既有 ResearchGraph Canvas/Lineage 的节点覆盖与跳转），
-补缺失注册与上下文跳转；Graph 点击任意节点带 ResearchContext 回原模块。
+Guanlan Direct Port（Track B）：G0–G9 DONE；当前 G10 — Full Product Closure。
+G10 要点（方案 §44/§45/§41）：000831 端到端验收链（登录→中枢→研究→产业→
+经验→工作流→选股→策略→盯盘→预测→复盘→Experience v2→图谱）+ §45 parity
+清单逐项核对 + 最终 Reviewer Pass；全 PASS 才宣布 Guanlan Experience Port
+COMPLETE。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 
