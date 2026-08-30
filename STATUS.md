@@ -16,13 +16,26 @@ docs/A-Share-Research-OS-Guanlan-Direct-Port-最终迁植与集成方案.md
 （Experience Layer 唯一总任务书，Donor-First：观澜 UI 直接迁植 + ASRO 后端）。
 Donor：upstreams/financial-analyst @ 98f1398（觀瀾；注意：GitHub 无 LICENSE 文件，
 README 标 Apache-2.0，差异记录于 THIRD_PARTY_NOTICES.md）。
-G0–G5 DONE（…/27c84fe/c6f933a）+ G6 DONE（本轮）：策略实验室配方+版本比较
-迁植完成，当前 G7 — 策略盯盘（DOING）。
+G0–G6 DONE（…/c6f933a/bc81d92）+ G7 DONE（本轮）：策略盯盘 K线+Replay
+迁植完成，当前 G8 — 全球宏观 / 海外（DOING）。
 ```
 
 ## Completed
 
 ```text
+Guanlan Direct Port G7 — 策略盯盘（本轮，DONE）：
+  - backend：GET /market-data/daily-bars（证据层真实日线 PIT 可见；
+    无 K 线证据 → has_data=false 显形，不回退假图）
+  - frontend：features/strategy-monitor/：MonitorCandles（G0 Candles 复用 +
+    信号日期对位标记条）+ MonitorReplay（观察→信号→决策合并时序滑块回放，
+    回放真实落库记录）—— 装配进 StrategyMonitorDetailPage（K线区置顶）
+  - 诚实边界：donor AI 研判 prompt/条件单编辑/盘口不迁（决策为确定性规则
+    §25；LLM 研判待 ASRO_LLM_API_KEY）；信号标记仅对位 K 线范围内日期
+  - E2E 契约全保留（三分离面板/复盘回灌/replay-feedback）；E2E-13 诚实
+    双路径 + E2E-16 PASS
+  - 验证：backend 367 passed（exit 0）+ vitest 30/30（+3）+ build PASS +
+    Playwright 30/30
+  - PORT-MANIFEST-G7
 Guanlan Direct Port G6 — 策略实验室（本轮，DONE）：
   - features/strategy-lab/：StrategyCompositionPanel（策略配方：物料溯源
     chips 来源筛选运行/来源经验卡 + 政策三件套 entry/exit/risk（exit/risk
@@ -313,11 +326,12 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Guanlan Direct Port（Track B）：G0–G6 DONE；当前 G7 — 策略盯盘。
-G7 要点（方案 §18/§38）：donor ui/seats/luozi-app.jsx + luozi-chart.jsx（372）
-+ luozi-panels.jsx → StrategyMonitor 升级（股票+K线+策略+条件+AI研判+
-Decision Timeline+Replay；G0 Candles 组件复用），接 ASRO monitors/
-observations/signals/decisions（三分离已有），E2E-13/16 契约保留。
+Guanlan Direct Port（Track B）：G0–G7 DONE；当前 G8 — 全球宏观 / 海外。
+G8 要点（方案 §12/§13/§39）：donor ui/macro/macro-app.jsx + macro-data.jsx +
+ui/overseas/overseas-app.jsx → GlobalMacroWorkspace（市场状态 中/美/港/海外 +
+宏观 利率汇率美元流动性 + 商品 金油铜 + 风险偏好波动率全球事件；
+GlobalContextSnapshot PIT；与全球产业坐标分离），接 ASRO global_context
+快照（6 指标真实数值层已有），E2E-14 契约保留。
 遗留候选（Track B 间隙处理）：LLM 润色（需 ASRO_LLM_API_KEY）；部署执行（域名+TLS）。
 ```
 

@@ -1,0 +1,73 @@
+/*
+ * 策略盯盘（Guanlan Direct Port G7，方案 §18）。sm- 前缀类。
+ */
+
+.sm-signal-strip {
+  position: relative;
+  height: 16px;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  background: var(--color-surface);
+}
+
+.sm-signal-mark {
+  position: absolute;
+  top: 1px;
+  font-size: 9px;
+  transform: translateX(-50%);
+}
+
+.sm-dates {
+  font-size: 9.5px;
+  margin: 6px 0 0;
+}
+
+.sm-replay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sm-replay-slider {
+  width: 100%;
+  accent-color: var(--yin);
+}
+
+.sm-replay-counter {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+
+.sm-replay-list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.sm-replay-kind {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  flex: none;
+  border: 1px solid var(--color-border);
+  padding: 1px 6px;
+}
+
+.sm-kind-observation {
+  color: var(--color-info);
+  border-color: var(--color-info);
+}
+
+.sm-kind-signal {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.sm-kind-decision {
+  color: var(--yin);
+  border-color: var(--yin);
+}
+
+.sm-replay-text {
+  font-size: 12px;
+  min-width: 0;
+}

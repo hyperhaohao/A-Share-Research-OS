@@ -845,5 +845,20 @@
     "compareNoSibling": "暂无同名其他版本",
     "compareAgainst": "对照版本",
     "verdictBadge": "已验证"
+  },
+  "monitorWs": {
+    "candlesTitle": "K 线",
+    "candlesHint": "证据层真实日线",
+    "noBars": "暂无 K 线数据 —— 日线源恢复采集后在此显示（不画假图）",
+    "barsUnit": "根",
+    "replayTitle": "回放",
+    "replayHint": "观察 → 信号 → 决策 时序回放",
+    "replayEmpty": "暂无记录可回放",
+    "replayStart": "拖动滑块推进时间线",
+    "kind": {
+      "observation": "观察",
+      "signal": "信号",
+      "decision": "决策"
+    }
   }
 }

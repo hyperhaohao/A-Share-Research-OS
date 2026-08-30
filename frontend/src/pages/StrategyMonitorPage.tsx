@@ -4,6 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatWhen, formatPct } from "../presentation/format";
 import { uiLang } from "../presentation/enumLabels";
+import { MonitorCandles } from "../features/strategy-monitor/MonitorCandles";
+import { MonitorReplay, type ReplayRecord } from "../features/strategy-monitor/MonitorReplay";
 
 interface Monitor {
   monitor_id: string;
@@ -190,6 +192,15 @@ export function StrategyMonitorDetailPage() {
         </button>
       </div>
 
+      <MonitorCandles
+        instrumentId={monitor.universe[0]?.instrument_id ?? ''}
+        signals={signals.map((sg) => ({
+          label: sg.text,
+          at: observations.find((o) => sg.observation_ids.includes(o.observation_id))?.observed_at ?? null,
+          positive: sg.strength >= 0,
+        }))}
+      />
+
       <section className="card" data-testid="monitor-observations">
         <h2>{t("monitor.observationsTitle")}</h2>
         {observations.length === 0 && <p className="secondary">{t("monitor.noRecords")}</p>}
@@ -235,6 +246,30 @@ export function StrategyMonitorDetailPage() {
         )}
         {latest && <ReplayFeedbackBlock decisionId={latest.decision_id} />}
       </section>
+      <MonitorReplay
+        records={[
+          ...observations.map<ReplayRecord>((o) => ({
+            id: o.observation_id,
+            kind: "observation",
+            at: o.observed_at,
+            text: o.text,
+          })),
+          ...signals.map<ReplayRecord>((sg) => ({
+            id: sg.signal_id,
+            kind: "signal",
+            at:
+              observations.find((o) => sg.observation_ids.includes(o.observation_id))
+                ?.observed_at ?? null,
+            text: sg.text,
+          })),
+          ...decisions.map<ReplayRecord>((d) => ({
+            id: d.decision_id,
+            kind: "decision",
+            at: d.as_of,
+            text: `${d.decision} · ${d.rationale}`,
+          })),
+        ]}
+      />
     </main>
   );
 }

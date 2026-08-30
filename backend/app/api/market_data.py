@@ -53,3 +53,28 @@ def quote(
         "as_of": result.as_of.isoformat(),
         "from_cache": bool(result.metadata.get("from_cache", False)),
     }
+
+@router.get("/market-data/daily-bars")
+def daily_bars(
+    instrument: str = Query(default="", max_length=32),
+    limit: int = Query(default=60, ge=10, le=500),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Evidence-backed daily bars (PIT-visible kline evidence, G7 K线区数据源).
+
+    Honest contract: no kline evidence collected yet -> empty bars + has_data
+    false (前端显形「暂无K线数据」，不回退假图，方案 §25)."""
+    from app.services.workflow_service import load_daily_bars
+
+    resolved = resolve_instrument_id(instrument, session, allow_remote=False)
+    if resolved is None:
+        raise AppError("instrument.not_found", status_code=404)
+    bars = load_daily_bars(session, resolved)
+    shown = bars[-limit:] if limit and len(bars) > limit else bars
+    return {
+        "instrument_id": resolved,
+        "count": len(shown),
+        "total_collected": len(bars),
+        "has_data": len(shown) > 0,
+        "bars": shown,
+    }

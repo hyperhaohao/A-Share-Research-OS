@@ -846,5 +846,20 @@
     "compareNoSibling": "No sibling versions yet",
     "compareAgainst": "Compare against",
     "verdictBadge": "Validated"
+  },
+  "monitorWs": {
+    "candlesTitle": "Candles",
+    "candlesHint": "evidence-backed daily bars",
+    "noBars": "No candle data yet — shown once the daily-bar source collects (never faked)",
+    "barsUnit": "bars",
+    "replayTitle": "Replay",
+    "replayHint": "observation → signal → decision timeline",
+    "replayEmpty": "Nothing to replay yet",
+    "replayStart": "Drag the slider to advance the timeline",
+    "kind": {
+      "observation": "OBS",
+      "signal": "SIG",
+      "decision": "DEC"
+    }
   }
 }

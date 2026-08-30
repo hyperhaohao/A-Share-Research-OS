@@ -98,11 +98,16 @@
 - [x] 验证：backend 367 passed + vitest 27/27 + build PASS + Playwright 30/30
       （E2E-12/13 契约保留）+ 真机核验（配方面板全真实溯源）
 
-## G7 — 策略盯盘（DOING）
-- Donor: ui/seats/luozi-app.jsx + luozi-chart.jsx + luozi-panels.jsx +
-  luozi-data.jsx → StrategyMonitor（K线+Signal+Conditions+AI研判+Decision+Replay）
+## G7 — 策略盯盘（DONE）
+- [x] backend：GET /market-data/daily-bars（证据层真实日线，无数据显形）
+- [x] frontend：features/strategy-monitor/（K线区 G0 Candles 复用 + 信号
+      对位标记 + 观察→信号→决策合并时序 Replay 滑块回放）
+- [x] donor AI 研判 prompt/条件单编辑/盘口不迁（决策为确定性规则 §25；
+      LLM 研判待 KEY）—— PORT-MANIFEST-G7 登记
+- [x] 验证：backend 367 passed（+bars 端点）+ vitest 30/30（+3）+ build PASS +
+      Playwright 30/30（E2E-13 诚实双路径/E2E-16 契约保留）
 
-## G8 — 全球宏观 / 海外（PENDING）
+## G8 — 全球宏观 / 海外（DOING）
 - Donor: ui/macro/macro-app.jsx + ui/overseas/overseas-app.jsx
   → GlobalMacroWorkspace（与全球产业坐标分离）
 
