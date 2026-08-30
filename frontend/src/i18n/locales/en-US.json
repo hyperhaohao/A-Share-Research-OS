@@ -548,7 +548,10 @@
     "noRelated": "No co-occurring companies yet — evidence accumulates with research",
     "openWorkspace": "Open workspace with context",
     "disclosure": "Related companies are derived from evidence co-occurrence; no relationship source yet",
-    "noInstrument": "Watchlist is empty — follow an instrument first"
+    "noInstrument": "Watchlist is empty — follow an instrument first",
+    "canvasTitle": "Industry relations canvas",
+    "subject": "Current instrument",
+    "canvasId": "snapshot {id}"
   },
   "globalContext": {
     "title": "Global context",

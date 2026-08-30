@@ -547,7 +547,10 @@
     "noRelated": "暂无共现公司 —— 继续研究积累证据后更新",
     "openWorkspace": "带上下文打开工作台",
     "disclosure": "相关公司由证据文本共现推导，关系源未接入",
-    "noInstrument": "关注池为空 —— 先关注一只标的再查看产业地图"
+    "noInstrument": "关注池为空 —— 先关注一只标的再查看产业地图",
+    "canvasTitle": "产业关系画布",
+    "subject": "当前标的",
+    "canvasId": "快照 {id}"
   },
   "globalContext": {
     "title": "全球宏观坐标",

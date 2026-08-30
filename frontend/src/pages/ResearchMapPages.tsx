@@ -1,5 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { Background, Controls, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { useTranslation } from "react-i18next";
 import { newResearchContext } from "../shared/context";
 import { artifactByDomain, handoffPath, recordHandoff } from "../shared/handoff";
@@ -163,6 +165,7 @@ export function IndustryMapPage() {
           </>
         )}
       </section>
+      <IndustryMapCanvas mapId={data.map_id} instrumentId={instrumentId} related={data.related_instruments} disclosure={data.disclosures.note} />
       <section className="card">
         <h2>{t("industryMap.relatedTitle")}</h2>
         {data.related_instruments.length === 0 ? (
@@ -291,5 +294,68 @@ export function GlobalContextPage() {
         label={t("globalContext.openWorkspace")}
       />
     </main>
+  );
+}
+
+function IndustryMapCanvas({
+  mapId,
+  instrumentId,
+  related,
+  disclosure,
+}: {
+  mapId: string;
+  instrumentId: string;
+  related: Array<{ instrument_id: string; name: string; code: string; basis: string }>;
+  disclosure: string;
+}) {
+  const { t } = useTranslation();
+  if (related.length === 0) return null;
+
+  const nodes: Node[] = [
+    {
+      id: instrumentId,
+      position: { x: 400, y: 120 },
+      data: { label: t("industryMap.subject") },
+      style: { background: "#8a6f3f", color: "#fff", padding: 8, borderRadius: 8, width: 160 },
+    },
+    ...related.map((r, i) => ({
+      id: r.instrument_id,
+      position: { x: 60 + (i % 6) * 220, y: 300 + Math.floor(i / 6) * 110 },
+      data: { label: `${r.name} · ${r.code}` },
+      style: { background: "#2f6fa3", color: "#fff", padding: 6, borderRadius: 6, width: 150, fontSize: 10 },
+    })),
+  ];
+  const edges: Edge[] = related.map((r) => ({
+    id: `e-${r.instrument_id}`,
+    source: instrumentId,
+    target: r.instrument_id,
+    label: r.basis,
+    style: { stroke: "#98917f", width: 1 },
+    labelStyle: { fontSize: 8 },
+  }));
+
+  return (
+    <section className="card" data-testid="industry-map-canvas">
+      <h2>{t("industryMap.canvasTitle")}</h2>
+      <p className="secondary">{disclosure}</p>
+      <div
+        style={{ height: 420, border: "1px solid var(--color-border)", borderRadius: 8 }}
+      >
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          fitView
+          minZoom={0.2}
+          maxZoom={2}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </div>
+      <p className="secondary" style={{ marginTop: 4 }}>
+        {t("industryMap.canvasId", { id: mapId })}
+      </p>
+    </section>
   );
 }
