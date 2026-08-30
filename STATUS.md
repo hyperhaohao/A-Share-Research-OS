@@ -12,12 +12,10 @@
 V2 总纲 Phase A–J(v1) 全部 DONE（§11-§52 全域：基础协议/中枢/经验卡/工作流/选股/策略实验室/盯盘/产业宏观/全库图谱/复盘回灌），
 E2E 17/17 于 compose 栈；全部已推送 GitHub main（13f7346..360b532 48 提交）。
 总纲 Phase A–J v1 + 验收复查 + 深度扩展 a–e 完成。
-当前执行线：UI Foundation（任务书 docs/A-Share-Research-OS-UI信息架构与全产品
-体验重构任务说明书.md，业务冻结）。进度：UI0 Token/PASS、UI1 AppShell+Sidebar+
-Layout/PASS、UI2 Read Model 六端点全落地并接入五页、UI3 语义组件首批、
-UI4 基准页重构（中枢 layout-command / Workspace Overview 网格+Tab 收敛）。
-全面自查报告：docs/ux-foundation-self-review.md（§66 总表 29 PASS/4 部分/1 待做）。
-下一步：UI5 经验卡/持续研究深化 → UI6 策略面 → UI7 画布 → UI8 视觉回归
+当前执行线：UX Foundation — UI0–UI8 全部完成（全面自查 §66 总表 33/34 PASS，
+唯一遗留为 Workflow Studio 编辑器 Canvas 增强项；报告 docs/ux-foundation-self-review.md）。
+GitHub main 已同步至最新（全部产品 E2E + 视觉回归通过）。
+下一候选：部署准备（认证/TLS/PostgreSQL）与 Workflow Studio 编辑器（UI7 增强）
 ```
 
 ## Completed
@@ -28,6 +26,15 @@ UI4 基准页重构（中枢 layout-command / Workspace Overview 网格+Tab 收�
 二轮 Final Integrity Pass F0–F3（历史，git 5a0cec7–b96d3ab）
 三轮 Repository Integrity Closure P0–P3（历史，git b96d3ab–13f7346）
 四轮产品整改（首页去 demo/动态解析/Pipeline 中英阶段名，git 13f7346）
+UI5–UI8（本轮，DONE）：
+  - UI5：经验卡 Library 数据表格（§25）+ 生命周期条（原→炼→验→用）+
+    视图 /views/experience-cards
+  - UI6：筛选候选表（§27）+ Monitor Ops KPI 头 + Strategy layout-workspace
+  - UI7：研究图谱 React Flow 画布（150 节点/类型着色/关系边标/过滤/Inspector）
+    + 产业地图画布（主体→板块成员，basis 边标）；Lineage 列表保留
+  - UI8：视觉回归 12 基线（10 页 zh light + 2 dark），活数据 mask + 0.35 容差，
+    连续 3 轮稳定
+  - 全面自查报告 docs/ux-foundation-self-review.md：§66 总表 33/34 PASS
 UX Foundation 全面自查（本轮，DONE）：
   - §66 验收总表 34 项逐项核查：29 PASS / 4 部分（UI5-UI7 深化项）/ 1 待做（UI8 截图）
   - 自查过程修复 8 项（详见 docs/ux-foundation-self-review.md 第二节），
