@@ -255,10 +255,11 @@ class SignalLadder:
                 if rule.required_source_trust:
                     if obs_trust not in rule.required_source_trust:
                         continue
-                # 4) required evidence types
+                # 4) evidence type gate（整改 P0-B2：不再 pass）
                 if rule.required_evidence_types:
-                    # 检查 evidence 类型是否匹配（由调用方通过 evidence_trust 传入）
-                    pass
+                    obs_ev_types = set(obs.get("evidence_types") or [])
+                    if not obs_ev_types & set(rule.required_evidence_types):
+                        continue
                 # 5) required entities
                 if rule.required_entities:
                     if not any(ent in text for ent in rule.required_entities):

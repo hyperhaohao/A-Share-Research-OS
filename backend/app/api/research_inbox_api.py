@@ -539,26 +539,38 @@ def evaluate_evidence_signals(
     observations = []
     trust_map = {}
     entity_map = {}
+    type_map = {}
+    # 动态实体提取：instrument name + 证据文本中的专有名词（非硬编码）
+    from app.services.instrument_service import InstrumentService
+
+    instrument_name = ""
+    profile = InstrumentService(session).get_profile(instrument_id, allow_remote=False)
+    if profile:
+        instrument_name = profile.get("name") or ""
+
     for eid in evidence_ids:
         row = session.scalars(
-            select(EvidenceORM).where(EvidenceORM.evidence_id == eid)
+            select(EvidenceORM).where(
+                EvidenceORM.evidence_id == eid,
+                EvidenceORM.instrument_id == instrument_id,  # P0-B：跨标的校验
+            )
         ).first()
         if row is None:
             continue
         trust = trust_for_evidence(row.authority_level, row.evidence_type)
         trust_map[eid] = trust.value
-        # entity extraction: instrument name + key phrases from summary
+        type_map[eid] = row.evidence_type
+        # entity extraction: instrument name + 证据来源 + 摘要中的组织名
         entities = []
-        if row.summary:
-            for ent in ("中国稀土", "广晟控股", "稀土集团", "国资委", "工信部",
-                        "证监会", "发改委", "北方稀土"):
-                if ent in row.summary:
-                    entities.append(ent)
+        if instrument_name and instrument_name in (row.summary or ""):
+            entities.append(instrument_name)
+        entities.append(row.source or "")
         entity_map[eid] = entities
         observations.append({
             "observation_id": eid,
             "text": row.summary or "",
             "evidence_ids": [eid],
+            "evidence_types": [row.evidence_type],
         })
 
     results = SignalLadder.evaluate_rules(
