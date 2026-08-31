@@ -148,6 +148,8 @@ def thesis_diff(
 
 
 
+
+
 class ThesisDiffApplyIn(BaseModel):
     instrument_id: str = Field(min_length=4, max_length=32)
     since: str | None = Field(default=None, max_length=40)
@@ -156,14 +158,16 @@ class ThesisDiffApplyIn(BaseModel):
 
 @router.post("/thesis-diff/apply", status_code=201)
 def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get_session)) -> dict:
-    """F2/F3（P0-A）：New Evidence → New Snapshot → New/Revised Claim → New Thesis.
+    """F3-REVIEW（P0-A）：New Evidence → New Snapshot → Carry Forward + Revise Claims → New Thesis.
 
-    链路：
-      1. Build new PIT snapshot（pins all currently visible evidence）
+    正确链路（方案第二轮 §4.2）：
+      1. Build new PIT snapshot（pins ALL currently visible evidence）
       2. ClaimImpact 分析
-      3. For impacted claims: create revised claim pinned to new snapshot
-      4. Create new thesis on new snapshot with revised claims
-      5. Set new thesis is_current=true, demote old
+      3. Carry Forward ALL old claims → 新快照上新建同文 Claim 行
+      4. For impacted claims: 按 relation 修订（追加 evidence / opposing）
+      5. Separate into supporting vs opposing（按 relation 方向）
+      6. Create new thesis on new snapshot
+      7. Set new thesis is_current=true, demote old
     """
     from datetime import timedelta
 
@@ -213,7 +217,7 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
             detail="new snapshot identical to old — no new evidence to revise",
         ) from None
 
-    # ---- 3) ClaimImpact → New/Revised Claims pinned to NEW snapshot ----------
+    # ---- 3) ClaimImpact -------------------------------------------------------
     impact_svc = ClaimImpactService(session)
     new_ev_view = [
         {
@@ -225,31 +229,122 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     ]
     impact_result = impact_svc.analyze(payload.instrument_id, new_ev_view)
 
+    # Build impact lookup: claim_id → list of impacts
+    impacts_by_claim: dict[str, list[dict]] = {}
+    for imp in impact_result["impacts"]:
+        impacts_by_claim.setdefault(imp["claim_id"], []).append(imp)
+
     research_repo = ResearchRepository(session)
 
-    new_claim_ids: list[str] = []
+    # ---- 4) Carry Forward ALL old claims to NEW snapshot ----------------------
+    # 每条旧 Claim 在新快照上新建同文行（statement/evidence_refs 不变，
+    # snapshot_id = new_snap_id）。然后根据 impact 修订。
+    old_claim_ids = sorted(
+        set(old_thesis.supporting_claims_json or [])
+        | set(old_thesis.opposing_claims_json or [])
+    )
+    old_claims = session.scalars(
+        select(ClaimORM).where(ClaimORM.claim_id.in_(old_claim_ids))
+    ).all() if old_claim_ids else []
+    old_claim_by_id = {c.claim_id: c for c in old_claims}
+
+    # new snapshot 上 claim_id → 新 claim_id 的映射
+    carried_forward: dict[str, str] = {}  # old_claim_id → new_claim_id
+    supporting_ids: list[str] = []
+    opposing_ids: list[str] = []
     added_evidence_ids: list[str] = []
     revised_claim_ids: list[str] = []
 
-    for impact in impact_result["impacts"]:
-        if impact["relation"] in ("irrelevant",):
+    for oc in old_claims:
+        # 确定 old claim 属于 supporting 还是 opposing
+        was_supporting = oc.claim_id in (old_thesis.supporting_claims_json or [])
+        # 复制到新快照
+        new_claim = Claim(
+            instrument_id=oc.instrument_id,
+            snapshot_id=new_snap_id,
+            statement=oc.statement,
+            claim_type=oc.claim_type,
+            supporting_evidence_refs=tuple(oc.supporting_evidence_refs_json or []),
+            opposing_evidence_refs=tuple(oc.opposing_evidence_refs_json or []),
+            fact_status=oc.fact_status,
+            confidence=oc.confidence,
+            status=ClaimStatus.PROPOSED,
+        )
+        try:
+            new_cid = research_repo.save_claim(new_claim)
+            carried_forward[oc.claim_id] = new_cid
+            if was_supporting:
+                supporting_ids.append(new_cid)
+            else:
+                opposing_ids.append(new_cid)
+        except Exception:
             continue
-        ev_id = impact["new_evidence_id"]
+
+    # ---- 5) Apply ClaimImpact relations to carried-forward claims -------------
+    for old_cid, impacts in impacts_by_claim.items():
+        new_cid = carried_forward.get(old_cid)
+        if new_cid is None:
+            continue
+        # 找到 carried-forward claim 的行
+        cf_row = session.scalars(
+            select(ClaimORM).where(ClaimORM.claim_id == new_cid)
+        ).first()
+        if cf_row is None:
+            continue
+
+        for imp in impacts:
+            relation = imp["relation"]
+            ev_id = imp["new_evidence_id"]
+            if relation == "irrelevant":
+                continue
+
+            if relation in ("supports", "strengthens"):
+                # 追加 supporting evidence
+                refs = list(cf_row.supporting_evidence_refs_json or [])
+                if ev_id not in refs:
+                    refs.append(ev_id)
+                    cf_row.supporting_evidence_refs_json = refs
+                if ev_id not in added_evidence_ids:
+                    added_evidence_ids.append(ev_id)
+
+            elif relation in ("weakens", "contradicts"):
+                # 追加 opposing evidence
+                refs = list(cf_row.opposing_evidence_refs_json or [])
+                if ev_id not in refs:
+                    refs.append(ev_id)
+                    cf_row.opposing_evidence_refs_json = refs
+                # 移到 opposing 列表
+                if new_cid in supporting_ids:
+                    supporting_ids.remove(new_cid)
+                if new_cid not in opposing_ids:
+                    opposing_ids.append(new_cid)
+                if ev_id not in added_evidence_ids:
+                    added_evidence_ids.append(ev_id)
+
+            elif relation == "supersedes":
+                # 标记旧 claim superseded，创建新 claim
+                cf_row.status = "superseded"
+                revised_claim_ids.append(new_cid)
+                # 新 claim 会在下面通过 new evidence 创建
+                if ev_id not in added_evidence_ids:
+                    added_evidence_ids.append(ev_id)
+
+            elif relation == "updates":
+                revised_claim_ids.append(new_cid)
+                if ev_id not in added_evidence_ids:
+                    added_evidence_ids.append(ev_id)
+
+    # ---- 6) Create NEW claims for new evidence not covered by old claims ------
+    covered_evs = {imp["new_evidence_id"] for imp in impact_result["impacts"]}
+    for ev in new_ev_view:
+        ev_id = ev["evidence_id"]
         if ev_id in added_evidence_ids:
             continue
-        added_evidence_ids.append(ev_id)
-
-        ev_row = session.scalars(
-            select(EvidenceORM).where(EvidenceORM.evidence_id == ev_id)
-        ).first()
-        if ev_row is None:
-            continue
-
-        statement = f"[修订] {impact['relation']}: {(ev_row.summary or '')[:300]}"
-        claim = Claim(
+        # 新证据未被任何旧 claim 覆盖 → 创建新 claim
+        new_claim = Claim(
             instrument_id=payload.instrument_id,
             snapshot_id=new_snap_id,
-            statement=statement,
+            statement=f"[新发现] {(ev.get('summary') or '')[:300]}",
             claim_type="fundamental_fact",
             supporting_evidence_refs=(ev_id,),
             opposing_evidence_refs=(),
@@ -258,42 +353,41 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
             status=ClaimStatus.PROPOSED,
         )
         try:
-            cid = research_repo.save_claim(claim)
-            new_claim_ids.append(cid)
-            revised_claim_ids.append(cid)
+            new_cid = research_repo.save_claim(new_claim)
+            supporting_ids.append(new_cid)
+            if ev_id not in added_evidence_ids:
+                added_evidence_ids.append(ev_id)
         except Exception:
             pass
 
-    # ---- 4) Assemble New Thesis on NEW snapshot ------------------------------
-    # Claims pinned to the NEW snapshot only (old claims stay on old thesis)
-    all_support = sorted(set(new_claim_ids))
-
-    thesis = InvestmentThesis(
+    # ---- 7) Create New Thesis on NEW snapshot ---------------------------------
+    old_meta = dict(old_thesis.meta_json or {})
+    new_thesis = InvestmentThesis(
         instrument_id=payload.instrument_id,
         snapshot_id=new_snap_id,
         title=f"{old_thesis.title} · 修订 {uuid4().hex[:8]}"[:200],
         description=payload.revised_statement,
-        supporting_claims=tuple(all_support),
-        opposing_claims=(),
+        supporting_claims=tuple(supporting_ids),
+        opposing_claims=tuple(opposing_ids),
         confidence=old_thesis.confidence,
     )
-    new_thesis_id = research_repo.save_thesis(thesis)
+    new_thesis_id = research_repo.save_thesis(new_thesis)
 
-    # ---- 5) Set Current: new=true, old=false ---------------------------------
+    # ---- 8) Set Current: new=true, old=false -----------------------------------
     new_row = session.scalars(
         select(ThesisORM).where(ThesisORM.thesis_id == new_thesis_id)
     ).first()
     if new_row is not None:
         new_row.meta_json = {
             "parent_thesis_id": old_thesis.thesis_id,
-            "root_thesis_id": (old_thesis.meta_json or {}).get("root_thesis_id", old_thesis.thesis_id),
+            "root_thesis_id": old_meta.get("root_thesis_id", old_thesis.thesis_id),
             "is_current": True,
             "revision_reason": payload.revised_statement[:300],
             "revision_at": now.isoformat(),
             "old_snapshot_id": old_snap_id,
             "new_snapshot_id": new_snap_id,
             "added_evidence_ids": added_evidence_ids,
-            "added_claim_ids": new_claim_ids,
+            "carried_forward_claims": list(carried_forward.values()),
             "revised_claim_ids": revised_claim_ids,
             "affected_claim_count": len(impact_result["affected_claims"]),
             "irrelevant_count": impact_result["irrelevant_count"],
@@ -308,7 +402,7 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
         om["is_current"] = False
         old_row.meta_json = om
 
-    # ---- 6) Artifact + Provenance ---------------------------------------------
+    # ---- 9) Artifact + Provenance ----------------------------------------------
     service = ArtifactService(session)
     new_artifact = service.register(
         artifact_type="thesis",
@@ -335,7 +429,9 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
             "new_snapshot": new_snap_id,
             "old_snapshot": old_snap_id,
             "added_evidence": added_evidence_ids,
-            "new_claims": new_claim_ids,
+            "carried_forward": list(carried_forward.values()),
+            "supporting_count": len(supporting_ids),
+            "opposing_count": len(opposing_ids),
         },
     )
     session.commit()
@@ -346,12 +442,12 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
         "new_snapshot_id": new_snap_id,
         "old_snapshot_id": old_snap_id,
         "added_evidence_ids": added_evidence_ids,
-        "new_claim_ids": new_claim_ids,
+        "carried_forward_claims": list(carried_forward.values()),
+        "supporting_count": len(supporting_ids),
+        "opposing_count": len(opposing_ids),
         "affected_claim_count": len(impact_result["affected_claims"]),
         "irrelevant_count": impact_result["irrelevant_count"],
     }
-
-
 @router.get("/theses/current/{instrument_id}")
 def get_current_thesis_api(instrument_id: str, session: Session = Depends(get_session)) -> dict:
     """F1（P0-A1）：Current Thesis 唯一选择器。"""
