@@ -98,50 +98,21 @@ def _thesis_diff(session: Session, instrument_id: str, since_dt: datetime | None
         .order_by(EvidenceORM.available_time.desc())
         .limit(20)
     ).all()
-    new_ids = {e.evidence_id for e in new_ev}
+    # R8-C1（P0-01）：Claim Impact 分析替代「旧∉新=stale」错误算法
+    from app.services.claim_impact import ClaimImpactService
 
-    claims = session.scalars(
-        select(ClaimORM).where(ClaimORM.instrument_id == instrument_id)
-    ).all()
-    affected_claims = []
-    for c in claims:
-        refs = list(c.supporting_evidence_refs_json or []) + list(
-            c.opposing_evidence_refs_json or []
-        )
-        stale = [r for r in refs if r not in new_ids and r]
-        touched = [r for r in refs if r in new_ids]
-        if stale or touched:
-            affected_claims.append(
-                {
-                    "claim_id": c.claim_id,
-                    "statement": c.statement[:160],
-                    "new_support": touched,
-                    "possibly_stale": stale,
-                }
-            )
-
-    theses = session.scalars(
-        select(ThesisORM).where(ThesisORM.instrument_id == instrument_id)
-    ).all()
-    affected_theses = []
-    for t in theses:
-        sup = set(t.supporting_claims_json or [])
-        opp = set(t.opposing_claims_json or [])
-        hit = [
-            c for c in affected_claims
-            if c["claim_id"] in sup or c["claim_id"] in opp
-        ]
-        if hit:
-            affected_theses.append(
-                {
-                    "thesis_id": t.thesis_id,
-                    "title": t.title,
-                    "affected_claims": [h["claim_id"] for h in hit],
-                    "support_touched": sorted(
-                        {r for h in hit for r in h["new_support"]}
-                    ),
-                }
-            )
+    impact_svc = ClaimImpactService(session)
+    evidence_view = [
+        {
+            "evidence_id": e.evidence_id,
+            "kind": e.evidence_type,
+            "title": e.title,
+            "summary": e.summary,
+            "at": e.available_time.isoformat(),
+        }
+        for e in new_ev
+    ]
+    impact_result = impact_svc.analyze(instrument_id, evidence_view)
 
     suggested_action = "none"
     if new_ev:
@@ -151,17 +122,11 @@ def _thesis_diff(session: Session, instrument_id: str, since_dt: datetime | None
     return {
         "instrument_id": instrument_id,
         "since": since_dt.isoformat(),
-        "new_evidence": [
-            {
-                "evidence_id": e.evidence_id,
-                "kind": e.evidence_type,
-                "title": e.title[:120],
-                "at": e.available_time.isoformat(),
-            }
-            for e in new_ev
-        ],
-        "affected_claims": affected_claims,
-        "affected_theses": affected_theses,
+        "new_evidence": evidence_view,
+        "affected_claims": impact_result["affected_claims"],
+        "affected_theses": impact_result["affected_theses"],
+        "impacts": impact_result["impacts"],
+        "irrelevant_count": impact_result["irrelevant_count"],
         "suggested_action": suggested_action,
     }
 
