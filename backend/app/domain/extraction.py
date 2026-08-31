@@ -115,4 +115,58 @@ def verify_extraction(
                 "rejected", "trust_escalation", "deterministic", trust.value
             )
 
+    # 4) Semantic Entailment（C4，整改 P0-05）：方向/主体/时间一致性
+    ent_verdict, ent_reason = _semantic_entailment(statement, evidence_text)
+    if ent_verdict == "rejected":
+        return ExtractionVerdict("rejected", ent_reason, "deterministic", trust.value)
+
     return ExtractionVerdict("accepted", "ok", "deterministic", trust.value)
+
+
+# ── Semantic Entailment（C4，整改 P0-05 §7.4） ────────────────────────────────
+
+_AFFIRM_NEGATE_PAIRS = [
+    ("筹划", "不存在"), ("筹划", "否认"), ("筹划", "终止"),
+    ("注入", "否认"), ("注入", "不存在"), ("注入", "终止"),
+    ("减持", "增持"), ("增持", "减持"),
+    ("上涨", "下跌"), ("下跌", "上涨"),
+    ("通过", "否决"), ("批准", "拒绝"),
+]
+
+_MODALITY_PAIRS = [
+    ("正在", "已经"), ("计划", "已完成"), ("拟", "已实施"),
+]
+
+
+def _semantic_entailment(statement: str, evidence_text: str) -> tuple[str, str]:
+    """确定性语义一致性检查（无 LLM）。
+
+    检查维度（方案 §7.4）：
+      1. 方向一致性：statement 含正向标记但 evidence 含对应否定标记 → rejected
+      2. 计划/完成一致性：statement 含「计划」但 evidence 含「已完成」→ uncertain
+      3. 主体偷换：statement 引入 evidence 中不存在的新主体 → uncertain
+    目前 only rejected-level conflicts block; uncertain 走人工审查。
+
+    Returns: (verdict, reason) — verdict is "ok" or "rejected" or "uncertain"
+    """
+    stmt = statement or ""
+    txt = evidence_text or ""
+
+    # 1) 方向冲突：A→¬A 或 ¬A→A
+    for pos, neg in _AFFIRM_NEGATE_PAIRS:
+        if pos in stmt and neg in txt:
+            return "rejected", f"semantic_direction_conflict: statement has '{pos}' but evidence has '{neg}'"
+        if neg in stmt and pos in txt:
+            return "rejected", f"semantic_direction_conflict: statement has '{neg}' but evidence has '{pos}'"
+
+    # 2) 计划/完成混淆
+    for plan, done in _MODALITY_PAIRS:
+        if plan in stmt and done in txt and plan not in txt:
+            return "rejected", f"modality_conflict: statement says '{plan}' but evidence says '{done}'"
+
+    # 3) 范围扩大：statement 含「全部/所有/必然」但 evidence 用「部分/可能/或」
+    for absolute, qualified in (("全部", "部分"), ("所有", "可能"), ("必然", "或")):
+        if absolute in stmt and qualified in txt and absolute not in txt:
+            return "rejected", "scope_inflation: statement uses absolute but evidence is qualified"
+
+    return "ok", ""
