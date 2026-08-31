@@ -411,3 +411,64 @@ def thesis_diff_detail(thesis_id: str, other_id: str, session: Session = Depends
         "t1": {"thesis_id": t1.thesis_id, "title": t1.title, "snapshot_id": t1.snapshot_id},
         "t2": {"thesis_id": t2.thesis_id, "title": t2.title, "snapshot_id": t2.snapshot_id},
     }
+
+
+@router.post("/signal-ladder/evaluate-evidence")
+def evaluate_evidence_signals(
+    instrument_id: str = Query(min_length=4, max_length=32),
+    evidence_ids: list[str] = Query(default=None),
+    session: Session = Depends(get_session),
+) -> dict:
+    """F4（P0-B）：正式 Signal 评估 — BUILTIN_SIGNAL_RULES + 自动加载。
+
+    后端自动：Load Evidence → Load Source Trust → Load Evidence Type →
+    Extract Entities → Load BUILTIN_SIGNAL_RULES → Evaluate。
+    调用方只传 instrument_id + evidence_ids，不能自定义 A/B 规则。
+    """
+    from app.domain.evidence import EvidenceType
+    from app.domain.signal_rules import BUILTIN_SIGNAL_RULES, SignalResult
+    from app.domain.source_trust import trust_for_evidence
+    from app.services.research_inbox import SignalLadder
+
+    if not evidence_ids:
+        # default: latest evidence for instrument
+        rows = session.scalars(
+            select(EvidenceORM)
+            .where(EvidenceORM.instrument_id == instrument_id)
+            .order_by(EvidenceORM.available_time.desc())
+            .limit(20)
+        ).all()
+        evidence_ids = [r.evidence_id for r in rows]
+
+    observations = []
+    trust_map = {}
+    entity_map = {}
+    for eid in evidence_ids:
+        row = session.scalars(
+            select(EvidenceORM).where(EvidenceORM.evidence_id == eid)
+        ).first()
+        if row is None:
+            continue
+        trust = trust_for_evidence(row.authority_level, row.evidence_type)
+        trust_map[eid] = trust.value
+        # entity extraction: instrument name + key phrases from summary
+        entities = []
+        if row.summary:
+            for ent in ("中国稀土", "广晟控股", "稀土集团", "国资委", "工信部",
+                        "证监会", "发改委", "北方稀土"):
+                if ent in row.summary:
+                    entities.append(ent)
+        entity_map[eid] = entities
+        observations.append({
+            "observation_id": eid,
+            "text": row.summary or "",
+            "evidence_ids": [eid],
+        })
+
+    results = SignalLadder.evaluate_rules(
+        observations,
+        BUILTIN_SIGNAL_RULES,
+        evidence_trust=trust_map,
+        evidence_entities=entity_map,
+    )
+    return {"count": len(results), "results": results}
