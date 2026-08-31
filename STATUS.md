@@ -9,30 +9,22 @@
 ## Current Phase
 
 ```text
-历史事实：Guanlan Direct Port G0–G10 DONE；Research Deep Port R0–R9 主体实现完成。
+Research Deep Port — Correctness & Product Closure Remediation
+Status: PARTIAL / REOPEN（第二轮验收整改 2026-08-31）
+依据：docs/A-Share-Research-OS-第二轮验收整改任务书.md
 
-**Current Phase: Research Deep Port — Correctness Remediation COMPLETE**
-R10 Closure: **VERIFIED**（docs/research-deep-port/R10-CLOSURE.md 重生成）。
-R10-EVIDENCE.md: 26/26 PASS（黄金场景 000831 真实栈全程 API）。
-C0–C11 整改全部完成：
-  C1 Thesis Diff → ClaimImpact 七关系模型（2289→61 精准标记）；
-  C2 Current Thesis 规则 + parent 链 + thesis-history API；
-  C3 Signal Ladder 正/负 patterns + trust gates + 完整输出（SEM-01…04 PASS）；
-  C4 Semantic Entailment（方向/计划/范围冲突 → rejected）；
-  C5 Golden 26/26（含 SEM 断言）；
-  C6 Transmission: BLOCKED_REAL_EVIDENCE；
-  C7 三市场级编译器（mainline/overseas/brief）真实栈验证；
-  C8 Research Inbox UI + Research Memory UI + Thesis Center（三页 + nav）；
-  C9 LLM: BLOCKED_EXTERNAL；confidence_level 四级定性函数；
-  C10 Full Regression：backend exit 0 / vitest PASS / build PASS / E2E 29/30
-    （E2E-12 flaky：kline 环境限制）/ visual 12/12；
-  C11 R10-CLOSURE.md 重生成（VERIFIED，非 PASS — E2E-12 flaky）。
+P0 Blockers:
+1. Thesis Revision Research State correctness（New Evidence → New Snapshot → New Claims → New Thesis）
+2. Current Thesis selection correctness（select().first() 禁用）
+3. SignalRule production API integration（正式 API 不接受自定义 A/B）
+4. Golden Scenario semantic consistency（减持≠整合）
+5. Closure evidence mismatch（DIFF-02…05 与代码不一致）
 
-后续候选：
-1. LLM 精炼实跑（设 ASRO_LLM_API_KEY 即生效）
-2. Transmission 真实证据（随语料积累自动补全）
-3. E2E-12 稳定性（kline 源恢复后自动通过）
-4. 部署执行（域名+TLS）
+整改 Phase: F0 REOPEN（本 commit）→ F1 Current Thesis → F2 New Snapshot Revision
+→ F3 Claim Revision Apply → F4 Signal Production → F5 Golden Rewrite
+→ F6 Semantic Entailment + Confidence + Source Independence
+→ F7-F9 Product Closure → F10 Full Regression → F11 Golden Verify
+→ F12 Final Closure (R10-CLOSURE-V2.md)
 ```
 
 ## Completed

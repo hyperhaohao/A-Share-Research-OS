@@ -1,4 +1,10 @@
-# R10-CLOSURE — Research Capability Deep Port（整改后重验收）
+# R10-CLOSURE
+
+> **STATUS: REOPENED（第二轮验收整改 2026-08-31）**
+> 依据 docs/A-Share-Research-OS-第二轮验收整改任务书.md
+> Thesis Revision 仍未形成 New Evidence → New Snapshot → New Claims → New Thesis
+> SignalRule 未接通正式 API；Golden 语义矛盾；Closure Evidence 与实现不一致
+ — Research Capability Deep Port（整改后重验收）
 
 > STATUS: **VERIFIED — Correctness Remediation Complete**
 > 验收日：2026-08-31 | 上一版：R10-CLOSURE-REOPENED.md（已驳回）

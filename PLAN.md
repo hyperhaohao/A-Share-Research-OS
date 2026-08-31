@@ -20,7 +20,26 @@
 
 # Research Capability Deep Port（R 线，当前执行线）
 
-## 整改线 — Correctness & Closure Remediation（C0–C11，当前 DOING）
+## 整改线 — Correctness & Product Closure Remediation（F0–F12，当前 DOING）
+
+> 依据第二轮验收整改任务书（R10 REOPEN 第二次）。
+> P0：Thesis Revision Research State / Current Thesis / Signal Production / Golden 语义。
+
+- [x] F0 Reopen Closure
+- [ ] F1 Current Thesis Correctness（get_current_thesis 唯一选择器）
+- [ ] F2 New Snapshot Revision（apply 建新快照，禁旧快照）
+- [ ] F3 Claim Revision Apply（新证据 → 新/修订 Claim → 新 Thesis）
+- [ ] F4 Signal Production Integration（BUILTIN_RULES 正式 API）
+- [ ] F5 Golden Semantic Rewrite（减持≠整合；builtin rules）
+- [ ] F6 Semantic Entailment + Confidence + Source Independence
+- [ ] F7 Thesis Center Full Product
+- [ ] F8 Inbox / Memory Closure
+- [ ] F9 Research Product Depth + UI
+- [ ] F10 Full Regression
+- [ ] F11 Golden Real Verify
+- [ ] F12 Final Closure（R10-CLOSURE-V2.md）
+
+## 前整改线 — Correctness & Closure Remediation（C0–C11，部分 DONE）
 
 > 依据验收整改任务书 docs/A-Share-Research-OS（ASRO）.md（R10 REOPENED）。
 > Correctness > Research Integrity > Traceability > Product Completeness >
@@ -32,10 +51,10 @@
 - [ ] C3 Signal Ladder 重构（正/负 patterns + entities + source trust + 完整输出）
 - [ ] C4 Citation Semantic Entailment（主体/方向/时间/计划一致性 → uncertain）
 - [ ] C5 000831 Semantic Golden Test（SEM-01…04 + DIFF-01…05）
-- [x] C6 Transmission Real Verification — **BLOCKED_REAL_EVIDENCE**（语料无稀土链级传导证据句）
-- [x] C7 三市场级产品编译器（Mainline 2/Overseas 6/Daily Brief 3 sections，真实栈验证）
-- [x] C8 Research Inbox UI + Research Memory UI + Thesis Center（三页 + nav + i18n + 视觉基线重生成）
-- [x] C9 LLM Real Verification — **BLOCKED_EXTERNAL** + confidence_level 四级定性函数
+- [x] (C6 ↑已被 F 线覆盖) Transmission Real Verification — **BLOCKED_REAL_EVIDENCE**（语料无稀土链级传导证据句）
+- [x] (C7 ↑已被 F 线覆盖) 三市场级产品编译器（Mainline 2/Overseas 6/Daily Brief 3 sections，真实栈验证）
+- [x] (C8 ↑已被 F 线覆盖) Research Inbox UI + Research Memory UI + Thesis Center（三页 + nav + i18n + 视觉基线重生成）
+- [x] (C9 ↑已被 F 线覆盖) LLM Real Verification — **BLOCKED_EXTERNAL** + confidence_level 四级定性函数
 - [ ] C10 Full Regression（backend/frontend/E2E 全量）
 - [ ] C11 Final R10 Closure（R10-EVIDENCE/CLOSURE 重生成）
 
