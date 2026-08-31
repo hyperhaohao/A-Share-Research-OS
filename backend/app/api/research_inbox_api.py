@@ -192,6 +192,8 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     if since_dt is None:
         since_dt = now - timedelta(days=7)
 
+    session.rollback()  # clear any pending state from prior operations
+
     # ---- 1) ClaimImpact 分析 ------------------------------------------------
     diff_data = _thesis_diff(session, payload.instrument_id, since_dt)
     new_ev_rows = diff_data["new_evidence"]
@@ -239,6 +241,7 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     # ---- 4) Carry Forward ALL old claims to NEW snapshot ----------------------
     # 每条旧 Claim 在新快照上新建同文行（statement/evidence_refs 不变，
     # snapshot_id = new_snap_id）。然后根据 impact 修订。
+    session.rollback()  # clear pending state before bulk operations
     old_claim_ids = sorted(
         set(old_thesis.supporting_claims_json or [])
         | set(old_thesis.opposing_claims_json or [])
@@ -352,13 +355,20 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
             confidence=0.6,  # P2-01: legacy — confidence_level used for display
             status=ClaimStatus.PROPOSED,
         )
-        try:
+        existing = session.scalars(
+            select(ClaimORM).where(
+                ClaimORM.snapshot_id == new_snap_id,
+                ClaimORM.statement == new_claim.statement,
+            )
+        ).first()
+        if existing is not None:
+            new_cid = existing.claim_id
+        else:
             new_cid = research_repo.save_claim(new_claim)
+        if new_cid and new_cid not in supporting_ids:
             supporting_ids.append(new_cid)
-            if ev_id not in added_evidence_ids:
-                added_evidence_ids.append(ev_id)
-        except Exception:
-            pass
+        if ev_id not in added_evidence_ids:
+            added_evidence_ids.append(ev_id)
 
     # ---- 7) Create New Thesis on NEW snapshot ---------------------------------
     old_meta = dict(old_thesis.meta_json or {})
