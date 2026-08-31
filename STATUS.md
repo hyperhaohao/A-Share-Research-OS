@@ -9,22 +9,29 @@
 ## Current Phase
 
 ```text
-Research Deep Port — Correctness & Product Closure Remediation
-Status: PARTIAL / REOPEN（第二轮验收整改 2026-08-31）
-依据：docs/A-Share-Research-OS-第二轮验收整改任务书.md
+历史事实：Guanlan Direct Port G0–G10 DONE（PORT COMPLETE）。
+Research Deep Port R0–R9 主体实现完成。
 
-P0 Blockers:
-1. Thesis Revision Research State correctness（New Evidence → New Snapshot → New Claims → New Thesis）
-2. Current Thesis selection correctness（select().first() 禁用）
-3. SignalRule production API integration（正式 API 不接受自定义 A/B）
-4. Golden Scenario semantic consistency（减持≠整合）
-5. Closure evidence mismatch（DIFF-02…05 与代码不一致）
+**Current Phase: Research Deep Port — Correctness & Product Closure Remediation COMPLETE**
+R10-CLOSURE-V2: **VERIFIED**（docs/research-deep-port/R10-CLOSURE-V2.md）
+R10-EVIDENCE-V2: 26/26 PASS（黄金场景 000831 真实栈全程 API）
 
-整改 Phase: F0 REOPEN（本 commit）→ F1 Current Thesis → F2 New Snapshot Revision
-→ F3 Claim Revision Apply → F4 Signal Production → F5 Golden Rewrite
-→ F6 Semantic Entailment + Confidence + Source Independence
-→ F7-F9 Product Closure → F10 Full Regression → F11 Golden Verify
-→ F12 Final Closure (R10-CLOSURE-V2.md)
+第二轮验收整改 F0–F12 全部完成：
+  F0 Reopen + F1-F3 Research State Correctness（Current Thesis 选择器/
+    New Snapshot Revision/Carry Forward Claims/Relation Consumption）+
+  F4 Signal Production API（BUILTIN_RULES + Trust/Type/Entity 三重门）+
+  F5 Golden Rewrite（production API，SEM-01/02 PASS）+
+  F6 Semantic Entailment + Confidence level 函数 + F7-F9 Product/UI +
+  F10 Full Regression（backend exit 0/vitest 30/build PASS/visual 12/12）+
+  F11 Golden Real Verify 26/26 + F12 R10-CLOSURE-V2 生成。
+
+外部阻塞：
+  Transmission = BLOCKED_REAL_EVIDENCE（语料无稀土传导证据句）
+  LLM Structured Refinement = BLOCKED_EXTERNAL（ASRO_LLM_API_KEY 缺失）
+  Source Independence = PARTIAL（需 origin_url/publisher 字段）
+  Subject Swap Detection = PARTIAL（需 Entity Dictionary）
+
+非外部阻塞项全部满足 §50 Definition of Done。
 ```
 
 ## Completed

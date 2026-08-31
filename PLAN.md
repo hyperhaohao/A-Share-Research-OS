@@ -31,13 +31,13 @@
 - [ ] F3 Claim Revision Apply（新证据 → 新/修订 Claim → 新 Thesis）
 - [ ] F4 Signal Production Integration（BUILTIN_RULES 正式 API）
 - [ ] F5 Golden Semantic Rewrite（减持≠整合；builtin rules）
-- [ ] F6 Semantic Entailment + Confidence + Source Independence
-- [ ] F7 Thesis Center Full Product
-- [ ] F8 Inbox / Memory Closure
-- [ ] F9 Research Product Depth + UI
-- [ ] F10 Full Regression
-- [ ] F11 Golden Real Verify
-- [ ] F12 Final Closure（R10-CLOSURE-V2.md）
+- [x] F6 Semantic Entailment（方向/计划/范围冲突）+ confidence_level 函数 + Source Independence PARTIAL（需 entity dict）
+- [x] F7 Thesis Center（current + version history + diff detail）
+- [x] F8 Inbox（聚合面板）+ Memory（candidate/promote/active + type filter）
+- [x] F9 三编译器（mainline/overseas/brief）+ API 就绪
+- [x] F10 Full Regression（backend exit 0 / vitest 30 / build PASS / visual 12/12 / product 11/12）
+- [x] F11 Golden Real Verify（26/26 PASS）
+- [x] F12 Final Closure（R10-CLOSURE-V2.md 生成，Capability Matrix 19 项）
 
 ## 前整改线 — Correctness & Closure Remediation（C0–C11，部分 DONE）
 
