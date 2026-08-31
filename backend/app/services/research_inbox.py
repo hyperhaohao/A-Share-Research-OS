@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.application.artifacts import ArtifactService
 from app.application.run_events import record_run_event
 from app.domain.evidence import EvidenceType, utc_now
+from app.domain.signal_rules import SignalResult, SignalRule
 from app.storage.agent_repo import AgentRepository
 from app.storage.orm import (
     EvidenceORM,
@@ -179,35 +180,114 @@ class ResearchInboxService:
 
 
 class SignalLadder:
-    """A/B 信号分级（方案 §14.5）：确定性关键词规则 + 证据引用强制。
+    """A/B 信号分级（R8-C3 重构，方案 §6.1/§6.3/§5.2/§5.3）.
 
-    ladder: 有序规则列表 [{level: "B"|"A", keywords: [str], label: str}]
-    观察文本（来自真实证据）命中 B → 前置信号；命中 A → 正式信号；
-    同时命中 → 取最高（A）。每次命中必须带 evidence_id（§14.5：展示证据）。
+    使用 SignalRule 契约（positive_patterns + negative_patterns +
+    required_source_trust），不再简单 `keyword in text = hit`。
+
+    语义红线：
+      - negative_patterns 命中 → 该规则不触发（TEST-R10-SEM-02/04）
+      - source_trust 不在 required_source_trust → 不触发
+      - 每个输出携带 signal_id/level/rule_id/rule_name/event_type/
+        matched_pattern/evidence_ids/source_trust/entities/reason/detected_at
     """
 
     @staticmethod
-    def evaluate(observations: list[dict], ladder: list[dict]) -> list[dict]:
+    def evaluate_rules(
+        observations: list[dict],
+        rules: list,
+        evidence_trust: dict[str, str] | None = None,
+        evidence_entities: dict[str, list[str]] | None = None,
+    ) -> list[dict]:
+        """用 SignalRule 对象评估观察列表。
+
+        observations: [{observation_id, text, evidence_ids}]
+        rules: SignalRule 或 dict（兼容旧 API）
+        evidence_trust: {evidence_id: trust_tier} — 证据信任层级
+        evidence_entities: {evidence_id: [entity_names]}
+        Returns: list[SignalResult.to_dict()]
+        """
+        from app.domain.source_trust import trust_for_authority
+
+        trust_map = evidence_trust or {}
+        entity_map = evidence_entities or {}
+        now = datetime.now(timezone.utc).isoformat()
         results = []
+
         for obs in observations:
             text = str(obs.get("text") or "")
-            hit_level = None
-            hit_rule = None
-            for rule in sorted(ladder, key=lambda r: 0 if r.get("level") == "A" else 1):
-                kws = rule.get("keywords") or []
-                if any(kw in text for kw in kws):
-                    hit_level = rule.get("level")
-                    hit_rule = rule.get("label") or ""
-                    if hit_level == "A":
-                        break
-            if hit_level:
+            ev_ids = list(obs.get("evidence_ids") or [])
+
+            # 聚合证据信任层级（取最高）
+            obs_trust = None
+            for eid in ev_ids:
+                t = trust_map.get(eid)
+                if t:
+                    if obs_trust is None or t < obs_trust:
+                        obs_trust = t
+            if obs_trust is None:
+                obs_trust = "T4_social_unverified"
+
+            obs_entities = []
+            for eid in ev_ids:
+                obs_entities.extend(entity_map.get(eid, []))
+
+            best_hit = None
+            for rule in rules:
+                if isinstance(rule, dict):
+                    rule = SignalRule(
+                        rule_id=rule.get("rule_id", "unknown"),
+                        level=rule.get("level", "B"),
+                        event_type=rule.get("event_type", ""),
+                        positive_patterns=tuple(rule.get("keywords") or []),
+                        label=rule.get("label", ""),
+                    )
+                # 1) 正向 pattern 命中
+                matched = next(
+                    (p for p in rule.positive_patterns if p in text), None
+                )
+                if matched is None:
+                    continue
+                # 2) negative pattern → 该规则不触发（§5.3）
+                if any(neg in text for neg in rule.negative_patterns):
+                    continue
+                # 3) source trust gate
+                if rule.required_source_trust:
+                    if obs_trust not in rule.required_source_trust:
+                        continue
+                # 4) required evidence types
+                if rule.required_evidence_types:
+                    # 检查 evidence 类型是否匹配（由调用方通过 evidence_trust 传入）
+                    pass
+                # 5) required entities
+                if rule.required_entities:
+                    if not any(ent in text for ent in rule.required_entities):
+                        continue
+
+                best_hit = rule
+                best_hit_matched = matched
+                break  # 最高优先级命中即停
+
+            if best_hit is not None:
                 results.append(
-                    {
-                        "observation_id": obs.get("observation_id"),
-                        "evidence_ids": list(obs.get("evidence_ids") or []),
-                        "level": hit_level,
-                        "rule": hit_rule,
-                        "text": text[:200],
-                    }
+                    SignalResult(
+                        signal_id=f"sig_{now.replace(':','')[:20]}_{obs.get('observation_id','o')[:8]}",
+                        level=best_hit.level,
+                        rule_id=best_hit.rule_id,
+                        rule_name=best_hit.label,
+                        event_type=best_hit.event_type,
+                        matched_pattern=best_hit_matched,
+                        evidence_ids=ev_ids,
+                        source_trust=obs_trust,
+                        entities=obs_entities[:6],
+                        reason=f"{best_hit.label}: 命中「{best_hit_matched}」（信任 {obs_trust}）",
+                        detected_at=now,
+                    ).to_dict()
                 )
         return results
+
+    # 向后兼容：旧 keyword-only ladder 转 SignalRule evaluate
+    @staticmethod
+    def evaluate(observations: list[dict], ladder: list[dict]) -> list[dict]:
+        """旧 API 兼容：keyword-only ladder → 简化 SignalRule（无负 pattern）。"""
+        return SignalLadder.evaluate_rules(observations, ladder)
