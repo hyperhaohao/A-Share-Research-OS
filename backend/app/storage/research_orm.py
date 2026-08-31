@@ -66,6 +66,7 @@ class ThesisORM(Base):
     supporting_claims_json: Mapped[list] = mapped_column(JSON, default=list)
     opposing_claims_json: Mapped[list] = mapped_column(JSON, default=list)
     confidence: Mapped[float] = mapped_column(Float)
+    meta_json: Mapped[dict] = mapped_column(JSON, default=dict)
 
     catalysts_json: Mapped[list] = mapped_column(JSON, default=list)
     risks_json: Mapped[list] = mapped_column(JSON, default=list)

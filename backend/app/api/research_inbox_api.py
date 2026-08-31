@@ -180,7 +180,11 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
         raise AppError("thesis.not_found", status_code=404) from None
 
     # 新 Thesis 钉在旧 Thesis 的快照上（claims 引用完整性：claim 属于旧
-    # 快照）—— 新证据留给下一研究周期的新快照（PIT 纪律）
+    # 快照）—— 新证据留给下一研究周期的新快照（PIT 纪律）。
+    # C2（P0-02）：meta_json 记录 parent/revision/new_evidence 供追踪。
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    new_evidence_ids = [e["evidence_id"] for e in diff["new_evidence"]]
+    old_meta = dict(old_thesis.meta_json or {})
     thesis = InvestmentThesis(
         instrument_id=payload.instrument_id,
         snapshot_id=old_thesis.snapshot_id,
@@ -192,6 +196,30 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     )
     try:
         thesis_id = ResearchRepository(session).save_thesis(thesis)
+        # C2: set revision metadata + is_current chain
+        from app.storage.research_orm import ThesisORM as _TO
+
+        new_row = session.scalars(
+            select(_TO).where(_TO.thesis_id == thesis_id)
+        ).first()
+        if new_row is not None:
+            new_row.meta_json = {
+                "parent_thesis_id": old_thesis.thesis_id,
+                "is_current": True,
+                "revision_reason": payload.revised_statement[:300],
+                "revision_at": now_str,
+                "new_evidence_ids": new_evidence_ids,
+                "affected_claim_count": len(diff["affected_claims"]),
+                "suggested_action": diff["suggested_action"],
+            }
+        # demote old thesis (no longer current)
+        old_row = session.scalars(
+            select(_TO).where(_TO.thesis_id == old_thesis.thesis_id)
+        ).first()
+        if old_row is not None:
+            om = dict(old_row.meta_json or {})
+            om["is_current"] = False
+            old_row.meta_json = om
     except ReferenceNotFoundError as exc:
         raise AppError("thesis.claims_not_found", status_code=422, detail=str(exc)) from None
 
@@ -221,3 +249,37 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
     session.commit()
     return {"thesis_id": thesis_id, "diff": diff}
 # [removed stray heredoc marker]
+
+
+@router.get("/thesis-history/{instrument_id}")
+def thesis_history(instrument_id: str, session: Session = Depends(get_session)) -> dict:
+    """C2（P0-02）：Thesis 版本链（当前/上一版/parent/reason）。
+
+    Current Thesis 规则：meta_json.is_current == true 的最新行；
+    无 meta 时回退到 created_at 最新（兼容旧数据）。
+    """
+    rows = session.scalars(
+        select(ThesisORM)
+        .where(ThesisORM.instrument_id == instrument_id)
+        .order_by(ThesisORM.created_at.desc())
+        .limit(30)
+    ).all()
+    current = next(
+        (r for r in rows if (r.meta_json or {}).get("is_current")),
+        rows[0] if rows else None,
+    )
+    return {
+        "current_thesis_id": current.thesis_id if current else None,
+        "versions": [
+            {
+                "thesis_id": r.thesis_id,
+                "title": r.title,
+                "snapshot_id": r.snapshot_id,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "meta": dict(r.meta_json or {}),
+                "is_current": (r.meta_json or {}).get("is_current", False)
+                or r == current,
+            }
+            for r in rows
+        ],
+    }
