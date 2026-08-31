@@ -146,6 +146,8 @@ def thesis_diff(
     return {"diff": _thesis_diff(session, instrument_id, since_dt)}
 
 
+
+
 class ThesisDiffApplyIn(BaseModel):
     instrument_id: str = Field(min_length=4, max_length=32)
     since: str | None = Field(default=None, max_length=40)
@@ -154,84 +156,167 @@ class ThesisDiffApplyIn(BaseModel):
 
 @router.post("/thesis-diff/apply", status_code=201)
 def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get_session)) -> dict:
-    """应用 diff → 新 Thesis 行（append-only：旧 Thesis 永不覆盖）。
+    """F2/F3（P0-A）：New Evidence → New Snapshot → New/Revised Claim → New Thesis.
 
-    新 Thesis 继承旧 Thesis 的 claims + 追加窗口内新证据引用；
-    注册 Artifact（generated_from 旧 Thesis）+ RunEvent 落库。
+    链路：
+      1. Build new PIT snapshot（pins all currently visible evidence）
+      2. ClaimImpact 分析
+      3. For impacted claims: create revised claim pinned to new snapshot
+      4. Create new thesis on new snapshot with revised claims
+      5. Set new thesis is_current=true, demote old
     """
-    from app.application.artifacts import ArtifactService, RelationType
-    from app.domain.research import InvestmentThesis
-    from app.storage.research_repo import (
-        ReferenceNotFoundError,
-        ResearchRepository,
-    )
+    from datetime import timedelta
 
-    diff = _thesis_diff(session, payload.instrument_id, payload.since)
-    if not diff["new_evidence"]:
+    from app.application.artifacts import ArtifactService, RelationType
+    from app.application.run_events import record_run_event
+    from app.domain.evidence import FactStatus
+    from app.domain.research import Claim, ClaimStatus, InvestmentThesis
+    from app.domain.source_trust import confidence_level
+    from app.services.claim_impact import ClaimImpactService
+    from app.services.current_thesis import demote_other_currents, get_current_thesis
+    from app.storage.research_repo import ResearchRepository
+    from app.storage.repository import EvidenceRepository
+    from app.storage.snapshot_repo import SnapshotRepository
+
+    now = datetime.now(timezone.utc)
+    since_dt = None
+    if payload.since:
+        try:
+            since_dt = datetime.fromisoformat(payload.since.replace("Z", "+00:00"))
+        except ValueError:
+            raise AppError("inbox.bad_since", status_code=422) from None
+    if since_dt is None:
+        since_dt = now - timedelta(days=7)
+
+    # ---- 1) ClaimImpact 分析 ------------------------------------------------
+    diff_data = _thesis_diff(session, payload.instrument_id, since_dt)
+    new_ev_rows = diff_data["new_evidence"]
+    if not new_ev_rows:
         raise AppError(
             "inbox.no_new_evidence", status_code=422,
             detail="no new evidence since the window — nothing to apply",
         ) from None
 
-    old_thesis = session.scalars(
-        select(ThesisORM).where(ThesisORM.instrument_id == payload.instrument_id)
-    ).first()
+    old_thesis = get_current_thesis(session, payload.instrument_id)
     if old_thesis is None:
         raise AppError("thesis.not_found", status_code=404) from None
 
-    # 新 Thesis 钉在旧 Thesis 的快照上（claims 引用完整性：claim 属于旧
-    # 快照）—— 新证据留给下一研究周期的新快照（PIT 纪律）。
-    # C2（P0-02）：meta_json 记录 parent/revision/new_evidence 供追踪。
-    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    new_evidence_ids = [e["evidence_id"] for e in diff["new_evidence"]]
-    old_meta = dict(old_thesis.meta_json or {})
+    # ---- 2) Build NEW PIT snapshot ------------------------------------------
+    new_snapshot = SnapshotRepository(session).build(
+        payload.instrument_id, now, evidence_repo=EvidenceRepository(session)
+    )
+    new_snap_id = new_snapshot.snapshot_id
+    old_snap_id = old_thesis.snapshot_id
+    if new_snap_id == old_snap_id:
+        raise AppError(
+            "inbox.no_new_evidence", status_code=422,
+            detail="new snapshot identical to old — no new evidence to revise",
+        ) from None
+
+    # ---- 3) ClaimImpact → New/Revised Claims pinned to NEW snapshot ----------
+    impact_svc = ClaimImpactService(session)
+    new_ev_view = [
+        {
+            "evidence_id": e["evidence_id"], "kind": e["kind"],
+            "title": e["title"], "summary": e.get("summary", ""),
+            "at": e.get("at", ""),
+        }
+        for e in diff_data["new_evidence"]
+    ]
+    impact_result = impact_svc.analyze(payload.instrument_id, new_ev_view)
+
+    research_repo = ResearchRepository(session)
+
+    new_claim_ids: list[str] = []
+    added_evidence_ids: list[str] = []
+    revised_claim_ids: list[str] = []
+
+    for impact in impact_result["impacts"]:
+        if impact["relation"] in ("irrelevant",):
+            continue
+        ev_id = impact["new_evidence_id"]
+        if ev_id in added_evidence_ids:
+            continue
+        added_evidence_ids.append(ev_id)
+
+        ev_row = session.scalars(
+            select(EvidenceORM).where(EvidenceORM.evidence_id == ev_id)
+        ).first()
+        if ev_row is None:
+            continue
+
+        statement = f"[修订] {impact['relation']}: {(ev_row.summary or '')[:300]}"
+        claim = Claim(
+            instrument_id=payload.instrument_id,
+            snapshot_id=new_snap_id,
+            statement=statement,
+            claim_type="fundamental_fact",
+            supporting_evidence_refs=(ev_id,),
+            opposing_evidence_refs=(),
+            fact_status=FactStatus.ANALYST_INFERENCE,
+            confidence=0.6,
+            status=ClaimStatus.PROPOSED,
+        )
+        try:
+            cid = research_repo.save_claim(claim)
+            new_claim_ids.append(cid)
+            revised_claim_ids.append(cid)
+        except Exception:
+            pass
+
+    # ---- 4) Assemble New Thesis on NEW snapshot ------------------------------
+    # Claims pinned to the NEW snapshot only (old claims stay on old thesis)
+    all_support = sorted(set(new_claim_ids))
+
     thesis = InvestmentThesis(
         instrument_id=payload.instrument_id,
-        snapshot_id=old_thesis.snapshot_id,
-        title=(old_thesis.title + " · 修订 " + datetime.now(timezone.utc).strftime("%m-%d %H:%M"))[:200],
+        snapshot_id=new_snap_id,
+        title=f"{old_thesis.title} · 修订 {now.strftime('%m-%d %H:%M')}"[:200],
         description=payload.revised_statement,
-        supporting_claims=tuple(old_thesis.supporting_claims_json or []),
-        opposing_claims=tuple(old_thesis.opposing_claims_json or []),
+        supporting_claims=tuple(all_support),
+        opposing_claims=(),
         confidence=old_thesis.confidence,
     )
-    try:
-        thesis_id = ResearchRepository(session).save_thesis(thesis)
-        # C2: set revision metadata + is_current chain
-        from app.storage.research_orm import ThesisORM as _TO
+    new_thesis_id = research_repo.save_thesis(thesis)
 
-        new_row = session.scalars(
-            select(_TO).where(_TO.thesis_id == thesis_id)
-        ).first()
-        if new_row is not None:
-            new_row.meta_json = {
-                "parent_thesis_id": old_thesis.thesis_id,
-                "is_current": True,
-                "revision_reason": payload.revised_statement[:300],
-                "revision_at": now_str,
-                "new_evidence_ids": new_evidence_ids,
-                "affected_claim_count": len(diff["affected_claims"]),
-                "suggested_action": diff["suggested_action"],
-            }
-        # demote old thesis (no longer current)
-        old_row = session.scalars(
-            select(_TO).where(_TO.thesis_id == old_thesis.thesis_id)
-        ).first()
-        if old_row is not None:
-            om = dict(old_row.meta_json or {})
-            om["is_current"] = False
-            old_row.meta_json = om
-    except ReferenceNotFoundError as exc:
-        raise AppError("thesis.claims_not_found", status_code=422, detail=str(exc)) from None
+    # ---- 5) Set Current: new=true, old=false ---------------------------------
+    new_row = session.scalars(
+        select(ThesisORM).where(ThesisORM.thesis_id == new_thesis_id)
+    ).first()
+    if new_row is not None:
+        new_row.meta_json = {
+            "parent_thesis_id": old_thesis.thesis_id,
+            "root_thesis_id": (old_thesis.meta_json or {}).get("root_thesis_id", old_thesis.thesis_id),
+            "is_current": True,
+            "revision_reason": payload.revised_statement[:300],
+            "revision_at": now.isoformat(),
+            "old_snapshot_id": old_snap_id,
+            "new_snapshot_id": new_snap_id,
+            "added_evidence_ids": added_evidence_ids,
+            "added_claim_ids": new_claim_ids,
+            "revised_claim_ids": revised_claim_ids,
+            "affected_claim_count": len(impact_result["affected_claims"]),
+            "irrelevant_count": impact_result["irrelevant_count"],
+            "suggested_action": diff_data["suggested_action"],
+        }
+    demote_other_currents(session, payload.instrument_id, new_thesis_id)
+    old_row = session.scalars(
+        select(ThesisORM).where(ThesisORM.thesis_id == old_thesis.thesis_id)
+    ).first()
+    if old_row is not None:
+        om = dict(old_row.meta_json or {})
+        om["is_current"] = False
+        old_row.meta_json = om
 
-    # artifact + provenance（generated_from 旧 Thesis）
+    # ---- 6) Artifact + Provenance ---------------------------------------------
     service = ArtifactService(session)
     new_artifact = service.register(
         artifact_type="thesis",
         domain_type="Thesis",
-        domain_id=thesis_id,
-        title=f"{old_thesis.title} · Thesis Diff 修订",
+        domain_id=new_thesis_id,
+        title=f"{old_thesis.title} · Thesis Revision",
         instrument_ids=(payload.instrument_id,),
-        created_by="thesis_diff",
+        created_by="thesis_revision",
         route=f"/instrument/{payload.instrument_id}",
     )
     old_artifact = service.by_domain("Thesis", old_thesis.thesis_id)
@@ -241,33 +326,59 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
             to_artifact_id=old_artifact["artifact_id"],
             relation=RelationType.GENERATED_FROM,
         )
+
     record_run_event(
-        session, f"run_thesisdiff_{uuid4().hex[:8]}", "thesis_diff_applied",
-        {"old_thesis": old_thesis.thesis_id, "new_thesis": thesis_id,
-         "new_evidence": [e["evidence_id"] for e in diff["new_evidence"]]},
+        session, f"run_revision_{uuid4().hex[:8]}", "thesis_revision_applied",
+        {
+            "old_thesis": old_thesis.thesis_id,
+            "new_thesis": new_thesis_id,
+            "new_snapshot": new_snap_id,
+            "old_snapshot": old_snap_id,
+            "added_evidence": added_evidence_ids,
+            "new_claims": new_claim_ids,
+        },
     )
     session.commit()
-    return {"thesis_id": thesis_id, "diff": diff}
-# [removed stray heredoc marker]
+
+    return {
+        "thesis_id": new_thesis_id,
+        "old_thesis_id": old_thesis.thesis_id,
+        "new_snapshot_id": new_snap_id,
+        "old_snapshot_id": old_snap_id,
+        "added_evidence_ids": added_evidence_ids,
+        "new_claim_ids": new_claim_ids,
+        "affected_claim_count": len(impact_result["affected_claims"]),
+        "irrelevant_count": impact_result["irrelevant_count"],
+    }
 
 
-@router.get("/thesis-history/{instrument_id}")
+@router.get("/theses/current/{instrument_id}")
+def get_current_thesis_api(instrument_id: str, session: Session = Depends(get_session)) -> dict:
+    """F1（P0-A1）：Current Thesis 唯一选择器。"""
+    from app.services.current_thesis import get_current_thesis
+
+    thesis = get_current_thesis(session, instrument_id)
+    if thesis is None:
+        raise AppError("thesis.not_found", status_code=404) from None
+    return {
+        "thesis_id": thesis.thesis_id,
+        "title": thesis.title,
+        "snapshot_id": thesis.snapshot_id,
+        "meta": dict(thesis.meta_json or {}),
+        "created_at": thesis.created_at.isoformat() if thesis.created_at else None,
+    }
+
+
+@router.get("/theses/history/{instrument_id}")
 def thesis_history(instrument_id: str, session: Session = Depends(get_session)) -> dict:
-    """C2（P0-02）：Thesis 版本链（当前/上一版/parent/reason）。
-
-    Current Thesis 规则：meta_json.is_current == true 的最新行；
-    无 meta 时回退到 created_at 最新（兼容旧数据）。
-    """
+    """F1：Thesis 版本链（parent/reason/revision_at）。"""
     rows = session.scalars(
         select(ThesisORM)
         .where(ThesisORM.instrument_id == instrument_id)
         .order_by(ThesisORM.created_at.desc())
         .limit(30)
     ).all()
-    current = next(
-        (r for r in rows if (r.meta_json or {}).get("is_current")),
-        rows[0] if rows else None,
-    )
+    current = get_current_thesis(session, instrument_id)
     return {
         "current_thesis_id": current.thesis_id if current else None,
         "versions": [
@@ -277,9 +388,26 @@ def thesis_history(instrument_id: str, session: Session = Depends(get_session)) 
                 "snapshot_id": r.snapshot_id,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
                 "meta": dict(r.meta_json or {}),
-                "is_current": (r.meta_json or {}).get("is_current", False)
-                or r == current,
+                "is_current": r.thesis_id == (current.thesis_id if current else None),
             }
             for r in rows
         ],
+    }
+
+
+@router.get("/theses/{thesis_id}/diff/{other_id}")
+def thesis_diff_detail(thesis_id: str, other_id: str, session: Session = Depends(get_session)) -> dict:
+    """两版 Thesis 差异对比。"""
+    t1 = session.scalars(select(ThesisORM).where(ThesisORM.thesis_id == thesis_id)).first()
+    t2 = session.scalars(select(ThesisORM).where(ThesisORM.thesis_id == other_id)).first()
+    if t1 is None or t2 is None:
+        raise AppError("thesis.not_found", status_code=404) from None
+    sup1 = set(t1.supporting_claims_json or [])
+    sup2 = set(t2.supporting_claims_json or [])
+    return {
+        "added_claims": sorted(sup2 - sup1),
+        "removed_claims": sorted(sup1 - sup2),
+        "unchanged_claims": sorted(sup1 & sup2),
+        "t1": {"thesis_id": t1.thesis_id, "title": t1.title, "snapshot_id": t1.snapshot_id},
+        "t2": {"thesis_id": t2.thesis_id, "title": t2.title, "snapshot_id": t2.snapshot_id},
     }
