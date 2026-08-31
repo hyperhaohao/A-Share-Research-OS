@@ -169,4 +169,7 @@ def _semantic_entailment(statement: str, evidence_text: str) -> tuple[str, str]:
         if absolute in stmt and qualified in txt and absolute not in txt:
             return "rejected", "scope_inflation: statement uses absolute but evidence is qualified"
 
+    # 4) 主体偷换：需要 Entity Dictionary（Instrument Registry + Corporate Entity）
+    #    第一阶段确定性实现误报率高 → 留待 LLM entailment 或 entity dict 接入后启用
+    #    （方案第二轮 §22.1：第一阶段可采用 Organization Token Extraction）
     return "ok", ""

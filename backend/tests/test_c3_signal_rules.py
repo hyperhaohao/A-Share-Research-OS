@@ -17,9 +17,9 @@ from app.domain.signal_rules import (
 from app.services.research_inbox import SignalLadder
 
 
-def _eval(text: str, trust: str = "T0_primary_disclosure", **kw):
+def _eval(text: str, trust: str = "T0_primary_disclosure", evidence_type: str = "announcement", **kw):
     return SignalLadder.evaluate_rules(
-        observations=[{"observation_id": "o1", "text": text, "evidence_ids": ["ev_test01"]}],
+        observations=[{"observation_id": "o1", "text": text, "evidence_ids": ["ev_test01"], "evidence_types": [evidence_type]}],
         rules=BUILTIN_SIGNAL_RULES,
         evidence_trust={"ev_test01": trust},
         **kw,

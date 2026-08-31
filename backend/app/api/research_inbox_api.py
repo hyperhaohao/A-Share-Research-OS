@@ -349,7 +349,7 @@ def apply_thesis_diff(payload: ThesisDiffApplyIn, session: Session = Depends(get
             supporting_evidence_refs=(ev_id,),
             opposing_evidence_refs=(),
             fact_status=FactStatus.ANALYST_INFERENCE,
-            confidence=0.6,
+            confidence=0.6,  # P2-01: legacy — confidence_level used for display
             status=ClaimStatus.PROPOSED,
         )
         try:
