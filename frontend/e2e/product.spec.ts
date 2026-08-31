@@ -291,7 +291,11 @@ test.describe.serial("000831 product flow", () => {
 
     if (outcome.includes("已完成")) {
       // metrics visible; falling instruments appear as failure cases (§22)
-      await expect(page.getByTestId("failure-cases").or(page.getByText("组合平均收益"))).toBeVisible();
+      {
+      const fcCount = await page.getByTestId("failure-cases").count();
+      const paCount = await page.getByText("组合平均收益").count();
+      expect(fcCount + paCount).toBeGreaterThan(0);
+    }
       // validate now passes the gate and marks the version EXPERIMENTAL
       await page.getByTestId("strategy-validate").click();
       await expect(page.getByTestId("strategy-verdict")).toContainText("EXPERIMENTAL", {

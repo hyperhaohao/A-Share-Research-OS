@@ -31,7 +31,10 @@
     "commander": "AI Research Commander",
     "company": "Company research",
     "workflowStudio": "Workflow Studio",
-    "group.experimental": "Experimental (frozen)"
+    "group.experimental": "Experimental (frozen)",
+    "inbox": "Research Inbox",
+    "memory": "Research Memory",
+    "thesisCenter": "Thesis Center"
   },
   "home": {
     "title": "Dashboard",
@@ -900,6 +903,32 @@
       "hongkong": "Hong Kong",
       "us": "United States",
       "commodity": "Commodities"
+    }
+  },
+  "researchCenter": {
+    "inboxTitle": "Research Inbox",
+    "newEvidence": "New Evidence",
+    "materiality": "Materiality Alerts",
+    "requests": "Open Research Requests",
+    "failedCollections": "Failed Collections",
+    "memoryTitle": "Research Memory",
+    "candidates": "Candidates",
+    "active": "Active",
+    "promote": "Promote",
+    "thesisCenter": "Thesis Center",
+    "currentThesis": "Current Thesis",
+    "versionHistory": "Version History",
+    "current": "Current",
+    "revisionReason": "Revision Reason",
+    "asOf": "As of",
+    "type": {
+      "company": "Company",
+      "industry": "Industry",
+      "event_playbook": "Event Playbook",
+      "research_method": "Research Method",
+      "known_failure": "Known Failure",
+      "research_checklist": "Checklist",
+      "user_preference": "Preference"
     }
   }
 }

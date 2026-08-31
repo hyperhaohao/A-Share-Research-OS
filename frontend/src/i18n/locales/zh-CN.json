@@ -31,7 +31,10 @@
     "commander": "AI 研究中枢",
     "company": "公司研究",
     "workflowStudio": "Workflow Studio",
-    "group.experimental": "实验（冻结）"
+    "group.experimental": "实验（冻结）",
+    "inbox": "研究收件箱",
+    "memory": "研究记忆",
+    "thesisCenter": "Thesis Center"
   },
   "home": {
     "title": "研究总览",
@@ -899,6 +902,32 @@
       "hongkong": "香港",
       "us": "美国",
       "commodity": "商品"
+    }
+  },
+  "researchCenter": {
+    "inboxTitle": "研究收件箱",
+    "newEvidence": "新证据",
+    "materiality": "重要性预警",
+    "requests": "待补研究请求",
+    "failedCollections": "采集失败",
+    "memoryTitle": "研究记忆",
+    "candidates": "候选（待审）",
+    "active": "正式",
+    "promote": "晋升",
+    "thesisCenter": "Thesis Center",
+    "currentThesis": "当前 Thesis",
+    "versionHistory": "版本历史",
+    "current": "当前",
+    "revisionReason": "修订原因",
+    "asOf": "截至",
+    "type": {
+      "company": "公司",
+      "industry": "产业",
+      "event_playbook": "事件手册",
+      "research_method": "研究方法",
+      "known_failure": "已知失效",
+      "research_checklist": "核查清单",
+      "user_preference": "研究偏好"
     }
   }
 }
