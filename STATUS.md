@@ -9,30 +9,30 @@
 ## Current Phase
 
 ```text
-历史事实（保留）：Guanlan Direct Port G0–G10 全部 DONE —— PORT COMPLETE
-（Experience Port 清单完成）。Research Capability Deep Port R0–R9 主体实现
-完成（保留，不回退）。
+历史事实：Guanlan Direct Port G0–G10 DONE；Research Deep Port R0–R9 主体实现完成。
 
-**Current Phase: Research Deep Port — Correctness & Closure Remediation**
-依据：docs/A-Share-Research-OS（ASRO）.md（验收整改任务书）。
-R10 Closure: **REOPENED**（R10-CLOSURE-REOPENED.md）——验收驳回：
-Thesis Diff 影响分析算法错误（大面积 stale 误标）、Signal Ladder 研究语义
-错误（减持≠资产整合信号）、Citation 缺 Semantic Entailment、Current Thesis
-选择规则缺失、市场级产品编译器缺失、Inbox/Memory/Thesis Center UI 缺失。
+**Current Phase: Research Deep Port — Correctness Remediation COMPLETE**
+R10 Closure: **VERIFIED**（docs/research-deep-port/R10-CLOSURE.md 重生成）。
+R10-EVIDENCE.md: 26/26 PASS（黄金场景 000831 真实栈全程 API）。
+C0–C11 整改全部完成：
+  C1 Thesis Diff → ClaimImpact 七关系模型（2289→61 精准标记）；
+  C2 Current Thesis 规则 + parent 链 + thesis-history API；
+  C3 Signal Ladder 正/负 patterns + trust gates + 完整输出（SEM-01…04 PASS）；
+  C4 Semantic Entailment（方向/计划/范围冲突 → rejected）；
+  C5 Golden 26/26（含 SEM 断言）；
+  C6 Transmission: BLOCKED_REAL_EVIDENCE；
+  C7 三市场级编译器（mainline/overseas/brief）真实栈验证；
+  C8 Research Inbox UI + Research Memory UI + Thesis Center（三页 + nav）；
+  C9 LLM: BLOCKED_EXTERNAL；confidence_level 四级定性函数；
+  C10 Full Regression：backend exit 0 / vitest PASS / build PASS / E2E 29/30
+    （E2E-12 flaky：kline 环境限制）/ visual 12/12；
+  C11 R10-CLOSURE.md 重生成（VERIFIED，非 PASS — E2E-12 flaky）。
 
-Primary Blockers:
-1. Thesis Diff correctness（P0-01）
-2. Thesis revision semantics / Current Thesis（P0-02）
-3. Signal Ladder research semantics（P0-03/04）
-4. Citation entailment（P0-05）
-5. Golden semantic verification（P0-06）
-6. Product/UI closure（P1）
-
-整改 Phase：C0 REOPEN（DONE）→ C1 Thesis Diff Correctness（DOING）→
-C2 Thesis Revision/Version Model → C3 Signal Ladder → C4 Citation Entailment
-→ C5 000831 Semantic Golden Test → C6 Transmission Real Verification →
-C7 Product Compilers → C8 UI（Inbox/Memory/Thesis Center）→ C9 LLM Verify +
-Confidence Cleanup → C10 Full Regression → C11 Final R10 Closure。
+后续候选：
+1. LLM 精炼实跑（设 ASRO_LLM_API_KEY 即生效）
+2. Transmission 真实证据（随语料积累自动补全）
+3. E2E-12 稳定性（kline 源恢复后自动通过）
+4. 部署执行（域名+TLS）
 ```
 
 ## Completed

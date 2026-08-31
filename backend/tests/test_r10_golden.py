@@ -178,7 +178,7 @@ def main() -> int:
         results = ladder[1].get("results", [])
         (_ok if ladder[0] == 200 and results else _fail)(
             "6 Signal Ladder A/B 分级",
-            f"level={results[0]['level'] if results else None} rule={results[0]['rule'] if results else None}",
+            f"level={results[0]['level'] if results else None} rule={results[0]['rule_name'] if results else None}",
         )
 
     # ---- 6b) R10 Semantic Assertions（§9 SEM-01…04 + DIFF-01） ----------------
@@ -290,7 +290,7 @@ def main() -> int:
     (_ok if no_ev_fields else _fail)("11c Memory≠Evidence（结构锁死）", "无 authority/fact_status 字段")
 
     # ---- 12) Research Graph（全对象在册） ------------------------------------
-    _, graph = _call("GET", "/artifacts/graph")
+    _, graph = _call("GET", "/artifacts/graph?limit=500")
     types = {}
     for n in graph.get("nodes", []):
         types[n.get("artifact_type")] = types.get(n.get("artifact_type"), 0) + 1
