@@ -32,10 +32,10 @@
 - [ ] C3 Signal Ladder 重构（正/负 patterns + entities + source trust + 完整输出）
 - [ ] C4 Citation Semantic Entailment（主体/方向/时间/计划一致性 → uncertain）
 - [ ] C5 000831 Semantic Golden Test（SEM-01…04 + DIFF-01…05）
-- [ ] C6 Transmission Real Verification（BLOCKED_REAL_EVIDENCE 或真实证据）
-- [ ] C7 三市场级产品编译器（Mainline/Overseas/Daily Brief）
-- [ ] C8 Research Inbox UI + Research Memory UI + Thesis Center
-- [ ] C9 LLM Real Verification（BLOCKED_EXTERNAL 无 KEY）+ Confidence Cleanup
+- [x] C6 Transmission Real Verification — **BLOCKED_REAL_EVIDENCE**（语料无稀土链级传导证据句）
+- [x] C7 三市场级产品编译器（Mainline 2/Overseas 6/Daily Brief 3 sections，真实栈验证）
+- [x] C8 Research Inbox UI + Research Memory UI + Thesis Center（三页 + nav + i18n + 视觉基线重生成）
+- [x] C9 LLM Real Verification — **BLOCKED_EXTERNAL** + confidence_level 四级定性函数
 - [ ] C10 Full Regression（backend/frontend/E2E 全量）
 - [ ] C11 Final R10 Closure（R10-EVIDENCE/CLOSURE 重生成）
 

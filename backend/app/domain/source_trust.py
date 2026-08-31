@@ -97,3 +97,35 @@ def check_fact_support(
         "confirmed_fact requires >=1 T0/T1 evidence or >=2 independent T2/T3 "
         f"evidence; got trust levels {[lv.value for lv in levels]}"
     )
+
+
+def confidence_level(
+    supporting_trusts: list[str],
+    *,
+    contrary_count: int = 0,
+    missing_data: bool = False,
+) -> str:
+    """定性置信度等级（C9，整改 P2-01）—— 替代伪精确小数.
+
+    规则：
+      - contrary_evidence > 0 → low
+      - missing_data → low
+      - ≥1 T0/T1 且 contrary=0 → high
+      - ≥2 独立 T2/T3 且 contrary=0 → medium
+      - 其余 → low
+      - 无任何证据 → insufficient
+    """
+    from app.domain.evidence import FactStatus  # noqa: F401 — re-export convenience
+
+    if not supporting_trusts:
+        return "insufficient"
+    levels = [trust_for_authority(a) for a in supporting_trusts]
+    if contrary_count > 0:
+        return "low"
+    has_primary = any(lv in FACT_SUPPORTING_TRUST for lv in levels)
+    corrob = [lv for lv in levels if lv in CORROBORATING_TRUST]
+    if has_primary:
+        return "high"
+    if len(corrob) >= 2:
+        return "medium"
+    return "low"
