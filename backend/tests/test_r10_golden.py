@@ -181,6 +181,42 @@ def main() -> int:
             f"level={results[0]['level'] if results else None} rule={results[0]['rule'] if results else None}",
         )
 
+    # ---- 6b) R10 Semantic Assertions（§9 SEM-01…04 + DIFF-01） ----------------
+    # SEM-01: 减持 ≠ 资产整合 A/B 信号
+    sem01 = _call("POST", "/research-inbox/signal-ladder/evaluate", {
+        "ladder": [
+            {"level": "B", "keywords": ["资产整合", "资产注入", "重组"], "label": "整合信号"},
+            {"level": "A", "keywords": ["筹划重大资产重组", "重组预案"], "label": "重组正式"},
+        ],
+        "observations": [
+            {"observation_id": "sem01", "text": "广晟控股集团披露减持计划 不超过1061.22万股",
+             "evidence_ids": [claim_rows[0]["supporting_evidence_refs"][0] if claim_rows else "ev_test"]},
+        ],
+    })
+    sem01_results = sem01[1].get("results", [])
+    sem01_pass = not any(
+        r.get("event_type") in ("restructuring", "asset_injection")
+        for r in sem01_results
+    )
+    (_ok if sem01_pass else _fail)(
+        "6b SEM-01 减持≠资产整合",
+        f"integration_signals={len([r for r in sem01_results if r.get('event_type') in ('restructuring','asset_injection')])}",
+    )
+
+    # SEM-02: 否定重组 → A Signal = false
+    sem02 = _call("POST", "/research-inbox/signal-ladder/evaluate", {
+        "ladder": [
+            {"level": "A", "keywords": ["筹划重大资产重组", "重组预案"], "label": "重组正式"},
+        ],
+        "observations": [
+            {"observation_id": "sem02", "text": "公司不存在重大资产重组计划。",
+             "evidence_ids": [claim_rows[0]["supporting_evidence_refs"][0] if claim_rows else "ev_test"]},
+        ],
+    })
+    (_ok if not sem02[1].get("results") else _fail)(
+        "6c SEM-02 否定重组→A=false", f"results={len(sem02[1].get('results', []))}",
+    )
+
     # ---- 7) Thesis Diff（新证据 → 影响分析 → 修订 append-only） --------------
     _, diff = _call("GET", "/research-inbox/thesis-diff?instrument_id=SZSE%3A000831")
     d = diff["diff"]
