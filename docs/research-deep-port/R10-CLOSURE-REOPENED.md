@@ -1,5 +1,15 @@
 # R10-CLOSURE — 观澜研究能力深迁植 · 最终验收
 
+> **STATUS: REOPENED（2026-08-31）**
+> 验收整改任务书 `docs/A-Share-Research-OS（ASRO）.md` 驳回本轮 Closure：
+> Thesis Diff 影响分析存在大面积错误标记（旧证据∉新证据=stale 的错误算法）、
+> Signal Ladder 研究语义错误（减持≠资产整合信号）、Citation 缺 Semantic
+> Entailment、Current Thesis 选择规则缺失。重新验收以
+> `docs/research-deep-port/R10-CLOSURE-REMEDIATED.md` 为准（整改完成后生成）。
+> 以下内容保留为历史实现记录，**不再作为最终 Closure**。
+
+
+
 > 依据 `docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md` §24 完成定义、
 > §20.2 十四问、§19 测试战略。
 > 黄金场景：**000831 中国稀土资产整合研究**（真实栈 compose backend，全程 API 驱动，无 Mock）。

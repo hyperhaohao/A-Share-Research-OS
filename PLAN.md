@@ -20,6 +20,27 @@
 
 # Research Capability Deep Port（R 线，当前执行线）
 
+## 整改线 — Correctness & Closure Remediation（C0–C11，当前 DOING）
+
+> 依据验收整改任务书 docs/A-Share-Research-OS（ASRO）.md（R10 REOPENED）。
+> Correctness > Research Integrity > Traceability > Product Completeness >
+> Test Pass > Documentation。
+
+- [x] C0 验收状态回退（R10 REOPENED）
+- [ ] C1 Thesis Diff Correctness（ClaimImpact relation 模型，禁 stale 误标）
+- [ ] C2 Thesis Revision / Version Model（Current Thesis 规则 + parent 链）
+- [ ] C3 Signal Ladder 重构（正/负 patterns + entities + source trust + 完整输出）
+- [ ] C4 Citation Semantic Entailment（主体/方向/时间/计划一致性 → uncertain）
+- [ ] C5 000831 Semantic Golden Test（SEM-01…04 + DIFF-01…05）
+- [ ] C6 Transmission Real Verification（BLOCKED_REAL_EVIDENCE 或真实证据）
+- [ ] C7 三市场级产品编译器（Mainline/Overseas/Daily Brief）
+- [ ] C8 Research Inbox UI + Research Memory UI + Thesis Center
+- [ ] C9 LLM Real Verification（BLOCKED_EXTERNAL 无 KEY）+ Confidence Cleanup
+- [ ] C10 Full Regression（backend/frontend/E2E 全量）
+- [ ] C11 Final R10 Closure（R10-EVIDENCE/CLOSURE 重生成）
+
+---
+
 ## R0 — Donor Delta Audit + Bootstrap（DONE）
 - [x] 三方 commit 固定（ASRO 89b4f6c / donor 98f1398 / 无 drift）
 - [x] License Gate：无 LICENSE → REFERENCE_ONLY / BEHAVIORAL ADAPTATION

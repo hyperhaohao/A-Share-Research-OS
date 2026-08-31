@@ -10,41 +10,29 @@
 
 ```text
 历史事实（保留）：Guanlan Direct Port G0–G10 全部 DONE —— PORT COMPLETE
-（G10 完成 = Experience Port 清单完成，不等于研究能力吸收完成）。
+（Experience Port 清单完成）。Research Capability Deep Port R0–R9 主体实现
+完成（保留，不回退）。
 
-Current Execution Line: **Guanlan Research Capability Deep Port（R0–R9）**
-依据 docs/A-Share-Research-OS-观澜研究能力深迁植执行方案.md。
-License Gate：donor 无 LICENSE → REFERENCE_ONLY / BEHAVIORAL ADAPTATION。
-Quant 本轮冻结（NO NEW DEVELOPMENT，保留不删）。
+**Current Phase: Research Deep Port — Correctness & Closure Remediation**
+依据：docs/A-Share-Research-OS（ASRO）.md（验收整改任务书）。
+R10 Closure: **REOPENED**（R10-CLOSURE-REOPENED.md）——验收驳回：
+Thesis Diff 影响分析算法错误（大面积 stale 误标）、Signal Ladder 研究语义
+错误（减持≠资产整合信号）、Citation 缺 Semantic Entailment、Current Thesis
+选择规则缺失、市场级产品编译器缺失、Inbox/Memory/Thesis Center UI 缺失。
 
-R0-R3 DONE：R0 差距矩阵 27 项；R1 ADR-Research-First + 导航研究优先；
-R2 Source Trust T0-T4 + Claim 升级双防线 + Extraction/CitationVerifier +
-真实公告 live verify；R3 industry_semantic_objects 四类语义对象 +
-引用反查强制 + 稀土试点真实数据（广晟减持 Driver/Narrative）。
+Primary Blockers:
+1. Thesis Diff correctness（P0-01）
+2. Thesis revision semantics / Current Thesis（P0-02）
+3. Signal Ladder research semantics（P0-03/04）
+4. Citation entailment（P0-05）
+5. Golden semantic verification（P0-06）
+6. Product/UI closure（P1）
 
-R4-R7 DONE：
-  R4 Intent Router 九类焦点 + Agent Profiles 白名单 + 结构化 Plan（meta_json）
-    + Missing Data Loop（有界补采 + waiting_data/missing_data_summary）
-    + reviewing 事件 + 黄金问题 live verify（focus=event 全事件链 PRESENT）；
-  R5 Research Product 契约（7 类 product_type + reports.product_type 列 +
-    编译期校验缺失显形 + Artifact 标题类型化；黄金问题落 EVENT_INVESTIGATION）；
-  R6 Experience 非量化：LLM 九字段结构化精炼（refined_json，无 KEY 422）+
-    非量化验证四方法（反例搜索/历史证据/跨公司/人工复核）+ Playbook 检索
-    （Playbook≠Evidence 结构锁死）；
-  R7 Research Memory：research_memories 表 + 七类 + 晋升门（candidate→active
-    →retired 禁跳级）+ from_experience（仅 APPROVED）+ /memories API +
-    Memory≠Evidence 结构断言。
-
-R8/R9/R10 DONE：Research Inbox + Thesis Diff（append-only apply）+
-    Signal Ladder + 语义对象入图谱 + Handoff 动作扩展 —— 全部完成。
-
-**Research Capability Deep Port R0–R10 全部 DONE —— R10-CLOSURE PASS**
-（docs/research-deep-port/R10-CLOSURE.md：§24 14 项 PASS + 黄金场景 24/24 +
-§20.2 十四问可回答 + 测试全量绿）。
-
-后续候选：LLM 精炼实跑（待 ASRO_LLM_API_KEY）；Transmission/五轴真实数据
-随证据积累自动补全；部署执行（域名+TLS）。
-黄金场景：000831 中国稀土资产整合研究 → docs/research-deep-port/R10-CLOSURE.md
+整改 Phase：C0 REOPEN（DONE）→ C1 Thesis Diff Correctness（DOING）→
+C2 Thesis Revision/Version Model → C3 Signal Ladder → C4 Citation Entailment
+→ C5 000831 Semantic Golden Test → C6 Transmission Real Verification →
+C7 Product Compilers → C8 UI（Inbox/Memory/Thesis Center）→ C9 LLM Verify +
+Confidence Cleanup → C10 Full Regression → C11 Final R10 Closure。
 ```
 
 ## Completed
