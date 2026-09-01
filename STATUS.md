@@ -380,24 +380,26 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Next Action
 
 ```text
-Research Capability Deep Port（R 线）：R0–R10 全部 DONE —— CLOSURE PASS
-（docs/research-deep-port/R10-CLOSURE.md）。
+第三轮验收整改（F0–F15）全部 DONE —— FINAL REMEDIATION VERIFIED
+（docs/final-remediation/F15-CLOSURE.md：§17 十三条件逐条核对）；
+每阶段 Manifest/证据在 docs/final-remediation/。
 
-后续候选（按价值排序）：
-1. LLM 结构化精炼/LLM 研究步骤实跑：设 ASRO_LLM_API_KEY（管道+schema 已就绪）；
-2. Transmission/五轴/叙事数据：随真实证据积累自动补全（引擎/视图已就绪）；
-3. 部署执行：域名 + Let's Encrypt TLS + ASRO_JWT_SECRET；
-4. 因子/量化线保持冻结（NO NEW DEVELOPMENT），恢复需用户明示。
+外部阻塞（恢复即自动补全，均诚实登记不计 PASS）：
+1. LLM 精炼/AI 研判：设 ASRO_LLM_API_KEY；
+2. 链级传导/五轴证据：随真实语料积累自动补全；
+3. 因子/量化线保持冻结（NO NEW DEVELOPMENT），恢复需用户明示；
+4. 部署执行（域名/TLS/JWT secret）待用户指令。
 
+常设关口：python scripts/check_closure_consistency.py（Evidence↔Closure 一致）。
 ```
 
 ## Tests
 
 ```text
-backend: 349 passed
-frontend: 7 passed + build PASS
-e2e: Playwright 产品 E2E 17/17 passed（E2E-01…17，真实浏览器+真实源，
-     全量打在 compose 栈：vite :5173 → compose backend :8000）
+backend: 459 collected / 0 FAILED（含 F2-F9 新增 46 用例）
+frontend: vitest 35/35（8 files）+ tsc PASS + build PASS
+e2e: Playwright 30/30（产品 E2E 17 + 视觉 12，compose 栈实跑）
+golden: R10 live 25/25 ×2 + 帷幄跨模块 13/13 ×2（docs/final-remediation/F14-*.md）
 ```
 
 ## Live Verification（本轮实测）
