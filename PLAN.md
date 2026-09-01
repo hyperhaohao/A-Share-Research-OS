@@ -24,8 +24,9 @@
 
 > 依据 docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md（R10 REOPEN）
 > 两条主线：Research OS 正确性闭环 + 观澜核心功能完整迁移（帷幄统帅层）
+> 基线冻结：docs/final-remediation/F0-BASELINE.md（ASRO 4c2e506 / donor 98f1398）
 
-- [ ] F0 Reopen 与基线冻结
+- [x] F0 Reopen 与基线冻结
 - [ ] F1 Closure Truth Gate
 - [ ] F2 Research State Review Fix
 - [ ] F3 Signal Production Fix

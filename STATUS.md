@@ -13,7 +13,12 @@ Research Deep Port — Correctness & Product Closure Remediation
 Status: **REOPEN**（第三轮验收整改 2026-09-01）
 依据：docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md
 
-Baseline: ASRO e9a57ac / donor 98f1398 / Python 3.11.15 / Node v24.16.0
+Baseline: ASRO 4c2e506 / donor 98f1398 / Python 3.11.15 / Node v24.16.0
+基线冻结：docs/final-remediation/F0-BASELINE.md
+（backend 404 collected / 403 passed / 1 FAILED r8-thesis-diff-apply；
+vitest 30/30；build PASS；Golden 6b 500 已复现，根因 InstrumentProfile.get 误用）
+
+F0 DONE。执行中：F1 Closure Truth Gate。
 
 P0 Blockers:
 1. Closure Truth（R10-EVIDENCE-V2 24/25 vs R10-CLOSURE-V2 26/26 冲突）
