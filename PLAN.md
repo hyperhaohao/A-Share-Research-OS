@@ -20,6 +20,30 @@
 
 # Research Capability Deep Port（R 线，当前执行线）
 
+## 第三轮整改 — Correctness & Product Closure Remediation（F0–F15，当前 DOING）
+
+> 依据 docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md（R10 REOPEN）
+> 两条主线：Research OS 正确性闭环 + 观澜核心功能完整迁移（帷幄统帅层）
+
+- [ ] F0 Reopen 与基线冻结
+- [ ] F1 Closure Truth Gate
+- [ ] F2 Research State Review Fix
+- [ ] F3 Signal Production Fix
+- [ ] F4 Integrity Migration（confidence/source independence/subject swap）
+- [ ] F5 Weiwo Event Foundation
+- [ ] F6 Weiwo Tool Orchestration
+- [ ] F7 Weiwo Approval Governance
+- [ ] F8 Weiwo Dynamic Workbench
+- [ ] F9 Weiwo Background / Session / Memory
+- [ ] F10 Weiwo Product Cards & UI
+- [ ] F11 Guanlan Core Parity Audit
+- [ ] F12 Research Product Productization
+- [ ] F13 Full Regression
+- [ ] F14 Golden E2E
+- [ ] F15 Final Evidence & Closure
+
+---
+
 ## 整改线 — Correctness & Product Closure Remediation（F0–F12，当前 DOING）
 
 > 依据第二轮验收整改任务书（R10 REOPEN 第二次）。

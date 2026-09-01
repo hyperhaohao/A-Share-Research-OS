@@ -1,3 +1,10 @@
+# R10-CLOSURE-V2
+
+> **STATUS: REOPENED（第三轮验收整改 2026-09-01）**
+> 依据 docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md
+> Evidence 与 Closure 冲突；confidence=0.6；Source Independence / Subject Swap 未实现；
+> 帷幄核心能力未迁移。以下内容保留为历史，不代表当前验收状态。
+
 # R10-CLOSURE-V2 — Research Capability Deep Port（第二轮验收整改后 Closure）
 
 > STATUS: **VERIFIED** — Correctness & Product Closure Remediation Complete

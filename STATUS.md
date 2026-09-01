@@ -9,29 +9,25 @@
 ## Current Phase
 
 ```text
-历史事实：Guanlan Direct Port G0–G10 DONE（PORT COMPLETE）。
-Research Deep Port R0–R9 主体实现完成。
+Research Deep Port — Correctness & Product Closure Remediation
+Status: **REOPEN**（第三轮验收整改 2026-09-01）
+依据：docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md
 
-**Current Phase: Research Deep Port — Correctness & Product Closure Remediation COMPLETE**
-R10-CLOSURE-V2: **VERIFIED**（docs/research-deep-port/R10-CLOSURE-V2.md）
-R10-EVIDENCE-V2: 26/26 PASS（黄金场景 000831 真实栈全程 API）
+Baseline: ASRO e9a57ac / donor 98f1398 / Python 3.11.15 / Node v24.16.0
 
-第二轮验收整改 F0–F12 全部完成：
-  F0 Reopen + F1-F3 Research State Correctness（Current Thesis 选择器/
-    New Snapshot Revision/Carry Forward Claims/Relation Consumption）+
-  F4 Signal Production API（BUILTIN_RULES + Trust/Type/Entity 三重门）+
-  F5 Golden Rewrite（production API，SEM-01/02 PASS）+
-  F6 Semantic Entailment + Confidence level 函数 + F7-F9 Product/UI +
-  F10 Full Regression（backend exit 0/vitest 30/build PASS/visual 12/12）+
-  F11 Golden Real Verify 26/26 + F12 R10-CLOSURE-V2 生成。
+P0 Blockers:
+1. Closure Truth（R10-EVIDENCE-V2 24/25 vs R10-CLOSURE-V2 26/26 冲突）
+2. Thesis Revision Research State（静默丢 Claim / 固定 confidence=0.6 / 事务不完整）
+3. Signal Production API 500
+4. Source Independence / Subject Swap 未实现
+5. 帷幄核心（Commander Orchestration / Event Protocol / Approval / Workbench / Background）FAIL
+6. 观澜核心模块能力漂移（G2-G7 需逐行为矩阵重审）
 
-外部阻塞：
-  Transmission = BLOCKED_REAL_EVIDENCE（语料无稀土传导证据句）
-  LLM Structured Refinement = BLOCKED_EXTERNAL（ASRO_LLM_API_KEY 缺失）
-  Source Independence = PARTIAL（需 origin_url/publisher 字段）
-  Subject Swap Detection = PARTIAL（需 Entity Dictionary）
-
-非外部阻塞项全部满足 §50 Definition of Done。
+整改 Phase: F0 REOPEN → F1 Closure Truth → F2 Research State → F3 Signal Fix
+→ F4 Integrity → F5 Weiwo Event → F6 Weiwo Tool → F7 Weiwo Approval
+→ F8 Weiwo Workbench → F9 Weiwo Background/Session → F10 Weiwo UI
+→ F11 Parity Audit → F12 Product Productization → F13 Full Regression
+→ F14 Golden E2E → F15 Final Closure
 ```
 
 ## Completed
