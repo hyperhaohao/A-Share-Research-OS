@@ -37,7 +37,7 @@
 - [x] F8 Weiwo Dynamic Workbench
 - [x] F9 Weiwo Background / Session / Memory
 - [x] F10 Weiwo Product Cards & UI
-- [ ] F11 Guanlan Core Parity Audit
+- [x] F11 Guanlan Core Parity Audit
 - [ ] F12 Research Product Productization
 - [ ] F13 Full Regression
 - [ ] F14 Golden E2E
