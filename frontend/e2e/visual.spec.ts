@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
  * 基线首次生成：npx playwright test --update-snapshots visual.spec.ts
  */
 
-const PAGES: Array<{ name: string; path: string; wait: string }> = [
+const PAGES: Array<{ name: string; path: string; wait: string; viewportOnly?: boolean }> = [
   { name: "command-center", path: "/", wait: "[data-testid=commander-page]" },
   { name: "watchlist", path: "/watchlist", wait: "[data-testid=watchlist-page]" },
   { name: "reports", path: "/reports", wait: "[data-testid=reports-page]" },
@@ -14,7 +14,9 @@ const PAGES: Array<{ name: string; path: string; wait: string }> = [
   { name: "experience", path: "/experience", wait: "[data-testid=experience-page]" },
   { name: "workflows", path: "/workflows", wait: "[data-testid=workflows-page]" },
   { name: "screening", path: "/screening", wait: "[data-testid=screening-page]" },
-  { name: "strategy", path: "/strategy", wait: "[data-testid=strategy-page]" },
+  // strategy 页内容随 E2E-12 每次组装新版本而增长 → 全页高度不稳定；
+  // 截视口（确定性），版本列表详情由 product E2E 断言覆盖
+  { name: "strategy", path: "/strategy", wait: "[data-testid=strategy-page]", viewportOnly: true },
   { name: "monitoring", path: "/monitoring", wait: "[data-testid=monitors-page]" },
   { name: "source-health", path: "/source-health", wait: "[data-testid=source-health-page]" },
 ];
@@ -26,7 +28,7 @@ test.describe("visual regression zh-CN light", () => {
       await page.locator(p.wait).waitFor({ timeout: 20_000 });
       await page.waitForTimeout(600);
       await expect(page).toHaveScreenshot(`${p.name}-zh-light.png`, {
-        fullPage: true,
+        fullPage: !p.viewportOnly,
         animations: "disabled",
         maxDiffPixelRatio: 0.35,
         mask: [page.locator(".watch-card-quote"), page.locator(".mono")],

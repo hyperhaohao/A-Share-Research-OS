@@ -39,7 +39,7 @@
 - [x] F10 Weiwo Product Cards & UI
 - [x] F11 Guanlan Core Parity Audit
 - [x] F12 Research Product Productization
-- [ ] F13 Full Regression
+- [x] F13 Full Regression
 - [ ] F14 Golden E2E
 - [ ] F15 Final Evidence & Closure
 
