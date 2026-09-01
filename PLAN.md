@@ -27,7 +27,7 @@
 > 基线冻结：docs/final-remediation/F0-BASELINE.md（ASRO 4c2e506 / donor 98f1398）
 
 - [x] F0 Reopen 与基线冻结
-- [ ] F1 Closure Truth Gate
+- [x] F1 Closure Truth Gate
 - [ ] F2 Research State Review Fix
 - [ ] F3 Signal Production Fix
 - [ ] F4 Integrity Migration（confidence/source independence/subject swap）

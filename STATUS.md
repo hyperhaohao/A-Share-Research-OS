@@ -18,7 +18,8 @@ Baseline: ASRO 4c2e506 / donor 98f1398 / Python 3.11.15 / Node v24.16.0
 （backend 404 collected / 403 passed / 1 FAILED r8-thesis-diff-apply；
 vitest 30/30；build PASS；Golden 6b 500 已复现，根因 InstrumentProfile.get 误用）
 
-F0 DONE。执行中：F1 Closure Truth Gate。
+F0 DONE，F1 DONE（R10-CLOSURE-V2 重写为事实矩阵；scripts/check_closure_consistency.py
+校验 Evidence↔Closure 一致，exit 0）。执行中：F2 Research State Review Fix。
 
 P0 Blockers:
 1. Closure Truth（R10-EVIDENCE-V2 24/25 vs R10-CLOSURE-V2 26/26 冲突）
