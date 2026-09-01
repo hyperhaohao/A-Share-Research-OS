@@ -401,9 +401,10 @@ def _exec_submit_thesis_revision(session: Session, args: dict) -> dict:
 def _exec_create_experience_card(session: Session, args: dict) -> dict:
     from app.services.experience_service import ExperienceService
 
-    out = ExperienceService(session).create_from_report(args["report_id"])
-    card = out.get("card") or {}
-    return {"card_id": card.get("card_id"), "status": card.get("status")}
+    card = ExperienceService(session).create_from_report(args["report_id"])
+    # create_from_report 直接返回 card dict；artifact 由服务内部注册
+    return {"card_id": card.get("card_id"), "status": card.get("status"),
+            "title": (card.get("title") or "")[:80]}
 
 
 def _exec_start_validation_workflow(session: Session, args: dict) -> dict:

@@ -390,12 +390,11 @@ def _apply_inner(
                 tag = "更正" if relation == "supersedes" else "更新"
                 old_refs_sup = list(cf_row.supporting_evidence_refs_json or [])
                 old_refs_opp = list(cf_row.opposing_evidence_refs_json or [])
-                if relation == "supersedes" and ev_id not in old_refs_sup:
-                    old_refs_sup.append(ev_id)
-                elif relation == "updates" and ev_id not in old_refs_sup:
+                if ev_id not in old_refs_sup:
                     old_refs_sup.append(ev_id)
                 version_kind = KIND_SUPERSEDES if relation == "supersedes" else KIND_UPDATED
-                suffix = f"（{tag}：{ev_title}）" if ev_title else f"（{tag}）"
+                # 语句含证据 id 尾码：同证据多 claim 更新时不串行冲突
+                suffix = f"（{tag}：{ev_title[:160]} · {ev_id[-8:]}）" if ev_title else f"（{tag}·{ev_id[-8:]}）"
                 version_claim = Claim(
                     instrument_id=cf_row.instrument_id,
                     snapshot_id=new_snap_id,
@@ -412,7 +411,17 @@ def _apply_inner(
                     source_impact_relation=relation,
                     carried_forward=False,
                 )
-                vid = research_repo.save_claim(version_claim)
+                # 冲突安全：同 (snapshot, statement) 已存在 → 复用该行（幂等）
+                existing_version = session.scalars(
+                    select(ClaimORM).where(
+                        ClaimORM.snapshot_id == new_snap_id,
+                        ClaimORM.statement == version_claim.statement,
+                    )
+                ).first()
+                if existing_version is not None:
+                    vid = existing_version.claim_id
+                else:
+                    vid = research_repo.save_claim(version_claim)
                 revised_claim_ids.append(vid)
                 # 版本 claim 取代 carried 行在 Thesis 中的位置
                 if new_cid in supporting_ids:
