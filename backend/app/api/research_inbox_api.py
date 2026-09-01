@@ -201,68 +201,15 @@ def evaluate_evidence_signals(
     evidence_ids: list[str] = Query(default=None),
     session: Session = Depends(get_session),
 ) -> dict:
-    """F4（P0-B）：正式 Signal 评估 — BUILTIN_SIGNAL_RULES + 自动加载。
+    """F3（P0-C）：正式 Signal 评估 — BUILTIN_SIGNAL_RULES + 完整门迹。
 
-    后端自动：Load Evidence → Load Source Trust → Load Evidence Type →
-    Extract Entities → Load BUILTIN_SIGNAL_RULES → Evaluate。
+    后端自动：Evidence Load → Instrument Ownership Gate → Source Trust →
+    Evidence Type → Entity Resolution（Instrument Registry）→
+    BUILTIN_SIGNAL_RULES → Negative/State Transition Gate → Result + Provenance。
     调用方只传 instrument_id + evidence_ids，不能自定义 A/B 规则。
+    返回含 trust_gate/type_gate/entity_gate/state_transition/rejected_reasons
+    （任务书 §6.3）。实现：app/services/signal_production.py。
     """
-    from app.domain.evidence import EvidenceType
-    from app.domain.signal_rules import BUILTIN_SIGNAL_RULES, SignalResult
-    from app.domain.source_trust import trust_for_evidence
-    from app.services.research_inbox import SignalLadder
+    from app.services.signal_production import evaluate_production_signals
 
-    if not evidence_ids:
-        # default: latest evidence for instrument
-        rows = session.scalars(
-            select(EvidenceORM)
-            .where(EvidenceORM.instrument_id == instrument_id)
-            .order_by(EvidenceORM.available_time.desc())
-            .limit(20)
-        ).all()
-        evidence_ids = [r.evidence_id for r in rows]
-
-    observations = []
-    trust_map = {}
-    entity_map = {}
-    type_map = {}
-    # 动态实体提取：instrument name + 证据文本中的专有名词（非硬编码）
-    from app.services.instrument_service import InstrumentService
-
-    instrument_name = ""
-    profile = InstrumentService(session).get_profile(instrument_id, allow_remote=False)
-    if profile:
-        instrument_name = profile.get("name") or ""
-
-    for eid in evidence_ids:
-        row = session.scalars(
-            select(EvidenceORM).where(
-                EvidenceORM.evidence_id == eid,
-                EvidenceORM.instrument_id == instrument_id,  # P0-B：跨标的校验
-            )
-        ).first()
-        if row is None:
-            continue
-        trust = trust_for_evidence(row.authority_level, row.evidence_type)
-        trust_map[eid] = trust.value
-        type_map[eid] = row.evidence_type
-        # entity extraction: instrument name + 证据来源 + 摘要中的组织名
-        entities = []
-        if instrument_name and instrument_name in (row.summary or ""):
-            entities.append(instrument_name)
-        entities.append(row.source or "")
-        entity_map[eid] = entities
-        observations.append({
-            "observation_id": eid,
-            "text": row.summary or "",
-            "evidence_ids": [eid],
-            "evidence_types": [row.evidence_type],
-        })
-
-    results = SignalLadder.evaluate_rules(
-        observations,
-        BUILTIN_SIGNAL_RULES,
-        evidence_trust=trust_map,
-        evidence_entities=entity_map,
-    )
-    return {"count": len(results), "results": results}
+    return evaluate_production_signals(session, instrument_id, evidence_ids)

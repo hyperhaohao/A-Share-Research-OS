@@ -22,7 +22,7 @@ F0/F1/F2 DONE。F2：apply 移入 thesis_revision 服务（移除破坏性 rollb
 静默丢 Claim 修复；Claim lineage 迁移 c2d3e4f5a6b7；七关系 Apply 语义修复；
 demote_other_currents JSON 变更检测缺陷修复（Current 切换从不落库的潜在 bug）；
 新路径结构化 Claim Builder（废除 [新发现]+截断）；10 用例 + 全量 backend exit 0。
-执行中：F3 Signal Production Fix。
+F3 DONE（500 修复 + Ownership/Trust/Type/Entity/Negative 全门迹 + §6.4 七语义 8 测试；live 栈 HTTP 200、迁移自动应用）。执行中：F4 Integrity Migration。
 
 P0 Blockers:
 1. Closure Truth（R10-EVIDENCE-V2 24/25 vs R10-CLOSURE-V2 26/26 冲突）
