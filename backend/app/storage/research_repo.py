@@ -108,6 +108,8 @@ class ResearchRepository:
             revision_reason=claim.revision_reason,
             source_impact_relation=claim.source_impact_relation,
             carried_forward=bool(claim.carried_forward),
+            confidence_basis_json=claim.confidence_basis,
+            confidence_level=claim.confidence_level,
         )
         self._session.add(row)
         self._session.flush()
@@ -144,6 +146,8 @@ class ResearchRepository:
                 revision_reason=r.revision_reason,
                 source_impact_relation=r.source_impact_relation,
                 carried_forward=bool(r.carried_forward),
+                confidence_basis=r.confidence_basis_json,
+                confidence_level=r.confidence_level,
             )
             for r in rows
         ]
@@ -171,6 +175,8 @@ class ResearchRepository:
             revision_reason=row.revision_reason,
             source_impact_relation=row.source_impact_relation,
             carried_forward=bool(row.carried_forward),
+            confidence_basis=row.confidence_basis_json,
+            confidence_level=row.confidence_level,
         )
 
     def get_thesis(self, thesis_id: str) -> InvestmentThesis | None:

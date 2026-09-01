@@ -183,6 +183,25 @@ class ExtractionService:
 
         evidence = _EvView()
 
+        # F4（任务书 §7.1）：可解释置信度替代固定 0.6 ——
+        # 由源证据信任层 + 引用反查结果（直接引用/语义一致）+ 新鲜度计算
+        from datetime import datetime as _dt, timezone as _tz
+
+        from app.domain.confidence import compute_claim_confidence
+        from app.domain.source_trust import trust_for_evidence
+
+        trust = trust_for_evidence(row.authority_level, row.evidence_type)
+        age_days = None
+        if row.available_time is not None:
+            available = row.available_time if row.available_time.tzinfo else row.available_time.replace(tzinfo=_tz.utc)
+            age_days = max((_dt.now(_tz.utc) - available).total_seconds() / 86400.0, 0.0)
+        outcome = compute_claim_confidence(
+            supporting_trusts=[trust.value],
+            directness="direct_quote",  # 引用反查：support_span 原文定位
+            semantic_consistency="passed",
+            evidence_age_days=age_days,
+        )
+
         claim = Claim(
             instrument_id=record["instrument_id"],
             snapshot_id=snapshot_id,
@@ -191,7 +210,9 @@ class ExtractionService:
             supporting_evidence_refs=(evidence_id,),
             opposing_evidence_refs=(),
             fact_status=FactStatus(record["fact_status"]),
-            confidence=0.6,
+            confidence=outcome.value,
+            confidence_level=outcome.level,
+            confidence_basis=outcome.basis,
             status=ClaimStatus.PROPOSED,
         )
         claim_id = ResearchRepository(self._session).save_claim(claim)

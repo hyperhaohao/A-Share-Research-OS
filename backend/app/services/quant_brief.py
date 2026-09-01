@@ -180,6 +180,18 @@ class QuantBriefService:
             ),
         ]
         for statement, tag in quant_specs:
+            # F4（任务书 §7.1）：可解释置信度替代固定 0.65/0.5 ——
+            # 样本充足性进 basis（n_days < 10 → directness=inference 降级）
+            from app.domain.confidence import compute_claim_confidence
+            from app.domain.source_trust import trust_for_evidence
+
+            outcome = compute_claim_confidence(
+                supporting_trusts=[
+                    trust_for_evidence(latest.authority_level, latest.evidence_type).value
+                ],
+                directness="derived" if metrics["n_days"] >= 10 else "inference",
+                semantic_consistency="passed",
+            )
             claim = Claim(
                 instrument_id=snapshot.instrument_id,
                 snapshot_id=snapshot.snapshot_id,
@@ -187,7 +199,9 @@ class QuantBriefService:
                 claim_type=ClaimType.INDUSTRY_TREND,  # quant signal ≈ trend claim
                 supporting_evidence_refs=(latest.evidence_id,),
                 fact_status=FactStatus.ANALYST_INFERENCE,
-                confidence=0.65 if metrics["n_days"] >= 10 else 0.5,
+                confidence=outcome.value,
+                confidence_level=outcome.level,
+                confidence_basis={**outcome.basis, "sample_days": metrics["n_days"]},
                 status=ClaimStatus.PROPOSED,
                 metadata={"analyst": "quant", "signal_type": tag},
             )

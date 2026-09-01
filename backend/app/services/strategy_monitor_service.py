@@ -350,19 +350,60 @@ class StrategyMonitorService:
     def _decide(
         self, monitor: dict, observations: list[dict], signals: list[dict], evidence_ids: list[str], now: datetime
     ) -> dict:
+        # F4（任务书 §7.1）：决策置信度由可解释因素计算（信号数/观察数/
+        # 证据信任层），替代固定公式 min(0.9, 0.5+0.1*signals) 与固定 0.6
+        from app.domain.confidence import compute_claim_confidence
+        from app.domain.source_trust import trust_for_evidence
+        from app.storage.orm import EvidenceORM
+        from sqlalchemy import select as _select
+
+        ev_rows = (
+            self._session.scalars(
+                _select(EvidenceORM).where(EvidenceORM.evidence_id.in_(evidence_ids[:50]))
+            ).all()
+            if evidence_ids
+            else []
+        )
+        trusts = [
+            trust_for_evidence(r.authority_level, r.evidence_type).value for r in ev_rows
+        ]
+
         if signals:
             decision = DecisionKind.RESEARCH_REVIEW
-            confidence = min(0.9, 0.5 + 0.1 * len(signals))
+            outcome = compute_claim_confidence(
+                supporting_trusts=trusts or ["T4_social_unverified"],
+                corroboration_groups=len(signals),
+                directness="derived",
+            )
+            confidence = min(0.9, outcome.value)
+            basis_note = (
+                f"置信度 basis: model={outcome.model_version} "
+                f"trust={outcome.basis['source_trust']} "
+                f"signals(独立组)={len(signals)} → {outcome.value}/{outcome.level}"
+            )
             rationale = (
                 f"产生 {len(signals)} 条信号（来源 {len(observations)} 条观察）——"
                 "按策略规则需要复核研究状态。决策级别：Research Decision（§25，不涉及真实下单）。"
+                f"{basis_note}"
             )
         else:
             decision = DecisionKind.RESEARCH_CONTINUE
-            confidence = 0.6
+            # 无信号 → 继续观察决策的置信度反映「观察证据对现状的支撑度」，
+            # 由观察证据信任层计算（无证据时诚实给 insufficient 级）
+            outcome = compute_claim_confidence(
+                supporting_trusts=trusts,
+                directness="derived",
+            )
+            confidence = outcome.value
+            basis_note = (
+                f"置信度 basis: model={outcome.model_version} "
+                f"trust={outcome.basis.get('source_trust')} "
+                f"observations={len(observations)} → {outcome.value}/{outcome.level}"
+            )
             rationale = (
                 f"无显著信号（{len(observations)} 条观察均未触发规则）——继续观察。"
                 "决策级别：Research Decision（§25）。"
+                f"{basis_note}"
             )
         return self._repo.add_decision(
             DecisionRecordORM(

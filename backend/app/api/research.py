@@ -70,6 +70,9 @@ def _claim_payload(claim: Claim) -> dict:
         "opposing_evidence_refs": list(claim.opposing_evidence_refs),
         "fact_status": claim.fact_status.value,
         "confidence": claim.confidence,
+        # F4（任务书 §7.4）：UI 可显示「为什么是该置信度」—— level + 因素分解
+        "confidence_level": claim.confidence_level,
+        "confidence_basis": claim.confidence_basis,
         "status": claim.status.value,
         "created_at": claim.created_at.isoformat(),
     }

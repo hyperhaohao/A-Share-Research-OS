@@ -116,6 +116,10 @@ class Claim(BaseModel):
     source_impact_relation: str | None = None  # 驱动修订的 ClaimImpact relation
     carried_forward: bool = False
 
+    # F4: 可解释置信度（§7.1）—— 数值不是概率；basis 落库可审计
+    confidence_level: str | None = None  # high | medium | low | insufficient
+    confidence_basis: dict | None = None
+
     created_at: datetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")

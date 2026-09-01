@@ -125,6 +125,10 @@ class ReplayFeedbackService:
             )
 
         # -- ResearchExperience（append-only 教训，§53） ------------------------
+        # F4（任务书 §7.1）：教训置信度由确定性归因的归因条数计算（非固定 0.6）：
+        # value = 0.50 + 0.05 × min(归因数, 4)，basis 随条目披露、模型版本可追溯
+        _n_attr = len(review.attributions)
+        _lesson_value = round(0.50 + 0.05 * min(_n_attr, 4), 4)
         experience = ResearchExperience(
             context=(
                 f"决策 {decision_id}（{decision_row.decision}）复盘：策略 "
@@ -132,7 +136,7 @@ class ReplayFeedbackService:
             ),
             lesson=review.lesson_summary or "本次验证未产生新归因",
             related_research_type="strategy_review",
-            confidence=0.6,
+            confidence=_lesson_value,
             supporting_validations=(validation.validation_id,),
         )
         experience_id = _ExperienceRepo(self._session).save(experience)

@@ -221,6 +221,24 @@ class DebateEngine:
             )
         )
 
+        # F4（任务书 §7.1）：可解释置信度 —— 辩论轮次作为 basis 因素，
+        # 基础值由证据信任层计算（替代固定公式 0.55+0.05*round / 固定 0.55）
+        from app.domain.confidence import compute_claim_confidence
+
+        trusts = _evidence_trusts(self._session, evidence_base)
+        bull_outcome = compute_claim_confidence(
+            supporting_trusts=trusts, directness="inference",
+            semantic_consistency="passed",
+        )
+        bull_value = min(0.95, bull_outcome.value + 0.04 * min(next_round, 3))
+        bear_outcome = compute_claim_confidence(
+            supporting_trusts=trusts, directness="inference",
+            semantic_consistency="passed",
+        )
+        bear_value = min(0.95, bear_outcome.value + 0.04 * min(next_round, 3))
+        round_adjust = round(0.04 * min(next_round, 3), 4)
+        bull_basis = {**bull_outcome.basis, "debate_round": next_round, "round_adjust": round_adjust}
+        bear_basis = {**bear_outcome.basis, "debate_round": next_round, "round_adjust": round_adjust}
         bull_claim = Claim(
             instrument_id=thesis.instrument_id,
             snapshot_id=thesis.snapshot_id,
@@ -228,7 +246,9 @@ class DebateEngine:
             claim_type=ClaimType.COMPETITIVE_POSITION,
             supporting_evidence_refs=evidence_base,
             fact_status=FactStatus.ANALYST_INFERENCE,
-            confidence=0.55 + 0.05 * min(next_round, 3),
+            confidence=bull_value,
+            confidence_level=bull_outcome.level,
+            confidence_basis=bull_basis,
             status=ClaimStatus.PROPOSED,
             metadata={"debate_role": DebateRole.BULL.value, "debate_round": next_round},
         )
@@ -239,7 +259,9 @@ class DebateEngine:
             claim_type=ClaimType.RISK_FACTOR,
             supporting_evidence_refs=evidence_base,
             fact_status=FactStatus.ANALYST_INFERENCE,
-            confidence=0.55,
+            confidence=bear_value,
+            confidence_level=bear_outcome.level,
+            confidence_basis=bear_basis,
             status=ClaimStatus.PROPOSED,
             metadata={"debate_role": DebateRole.BEAR.value, "debate_round": next_round},
         )
@@ -256,3 +278,15 @@ class DebateEngine:
         )
         self._repo.save_debate_round(debate)
         return debate
+
+def _evidence_trusts(session, evidence_ids) -> list[str]:
+    """F4：证据信任层值列表（辩论/复核 claim 的置信度因素）。"""
+    from sqlalchemy import select as _select
+
+    from app.domain.source_trust import trust_for_evidence
+    from app.storage.orm import EvidenceORM
+
+    rows = session.scalars(
+        _select(EvidenceORM).where(EvidenceORM.evidence_id.in_(list(evidence_ids)))
+    ).all()
+    return [trust_for_evidence(r.authority_level, r.evidence_type).value for r in rows]

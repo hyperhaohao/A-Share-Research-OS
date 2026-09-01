@@ -64,7 +64,7 @@ class ExtractionInput:
 
 @dataclass(frozen=True)
 class ExtractionVerdict:
-    verdict: str  # accepted | rejected
+    verdict: str  # accepted | rejected | uncertain（uncertain 走人工审查，不进正式 Research State）
     reason: str
     verdict_basis: str  # deterministic（LLM entailment 接入后扩展）
     trust_level: str  # 源证据的业务信任层
@@ -119,6 +119,8 @@ def verify_extraction(
     ent_verdict, ent_reason = _semantic_entailment(statement, evidence_text)
     if ent_verdict == "rejected":
         return ExtractionVerdict("rejected", ent_reason, "deterministic", trust.value)
+    if ent_verdict == "uncertain":
+        return ExtractionVerdict("uncertain", ent_reason, "deterministic", trust.value)
 
     return ExtractionVerdict("accepted", "ok", "deterministic", trust.value)
 
@@ -169,7 +171,13 @@ def _semantic_entailment(statement: str, evidence_text: str) -> tuple[str, str]:
         if absolute in stmt and qualified in txt and absolute not in txt:
             return "rejected", "scope_inflation: statement uses absolute but evidence is qualified"
 
-    # 4) 主体偷换：需要 Entity Dictionary（Instrument Registry + Corporate Entity）
-    #    第一阶段确定性实现误报率高 → 留待 LLM entailment 或 entity dict 接入后启用
-    #    （方案第二轮 §22.1：第一阶段可采用 Organization Token Extraction）
+    # 4) 主体偷换（F4，任务书 §7.3）：Entity Dictionary 确定性检测。
+    #    「中国稀土集团 ≠ 中国稀土股份」——不得仅因词面重叠而通过。
+    #    保守触发（仅词典实体混淆对），避免第一阶段误报回潮（§22.1）。
+    from app.domain.entity_dictionary import subject_swap_verdict
+
+    swap_verdict, swap_reason = subject_swap_verdict(statement, txt)
+    if swap_verdict == "uncertain":
+        return "uncertain", swap_reason
+
     return "ok", ""

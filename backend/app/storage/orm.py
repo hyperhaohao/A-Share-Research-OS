@@ -35,6 +35,14 @@ class EvidenceORM(Base):
     source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     source_document_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
+    # F4: 来源独立性字段（第三轮整改任务书 §7.2）
+    publisher: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    origin_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    canonical_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    source_group: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    original_source: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     authority_level: Mapped[str] = mapped_column(String(2))
     fact_status: Mapped[str] = mapped_column(String(32))
 

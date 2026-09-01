@@ -122,6 +122,17 @@ class MarketAnalyst:
 
             # A mechanical, fully-cited fact claim (no prediction language).
             if price is not None and change_pct is not None:
+                # F4（任务书 §7.1）：行情事实置信度由来源信任层计算（行情 T0），
+                # 替代固定 0.99
+                from app.domain.confidence import compute_claim_confidence
+                from app.domain.source_trust import trust_for_evidence
+
+                outcome = compute_claim_confidence(
+                    supporting_trusts=[
+                        trust_for_evidence(latest.authority_level, latest.evidence_type).value
+                    ],
+                    directness="direct_quote",
+                )
                 claim = Claim(
                     instrument_id=snapshot.instrument_id,
                     snapshot_id=snapshot.snapshot_id,
@@ -129,7 +140,9 @@ class MarketAnalyst:
                     claim_type=ClaimType.FUNDAMENTAL_FACT,
                     supporting_evidence_refs=(latest.evidence_id,),
                     fact_status=ClaimFactStatus.CONFIRMED_FACT,
-                    confidence=0.99,
+                    confidence=outcome.value,
+                    confidence_level=outcome.level,
+                    confidence_basis=outcome.basis,
                     status=ClaimStatus.PROPOSED,
                     metadata={"analyst": self.analyst_type.value},
                 )

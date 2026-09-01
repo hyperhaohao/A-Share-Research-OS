@@ -52,6 +52,10 @@ class ClaimORM(Base):
     source_impact_relation: Mapped[str | None] = mapped_column(String(16), nullable=True)
     carried_forward: Mapped[bool | None] = mapped_column(Boolean, nullable=True, server_default=false())
 
+    # F4: 可解释置信度（第三轮整改任务书 §7.1）
+    confidence_basis_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    confidence_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
+
     # A claim is unique within its research state by its content.
     __table_args__ = (
         UniqueConstraint("snapshot_id", "statement", name="uq_claim_snapshot_statement"),

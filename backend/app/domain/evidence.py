@@ -90,6 +90,14 @@ class EvidenceRecord(BaseModel):
     source_url: str | None = Field(default=None, max_length=2048)
     source_document_id: str | None = Field(default=None, max_length=128)
 
+    # F4: 来源独立性字段（第三轮整改任务书 §7.2）
+    publisher: str | None = Field(default=None, max_length=128)   # 发布者（媒体/机构）
+    origin_url: str | None = Field(default=None, max_length=2048)  # 原始出处 URL
+    canonical_url: str | None = Field(default=None, max_length=2048)  # 规范化 URL（多镜像归一）
+    source_group: str | None = Field(default=None, max_length=64)  # 通讯社/集团稿件组
+    original_source: str | None = Field(default=None, max_length=256)  # 二次报道引用的原始来源
+    published_at: datetime | None = None  # 原始发布时间
+
     authority_level: AuthorityLevel
     fact_status: FactStatus
 

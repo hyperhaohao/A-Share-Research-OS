@@ -32,15 +32,23 @@ from app.storage.research_repo import ResearchRepository
 from app.storage.repository import EvidenceRepository
 from app.storage.snapshot_repo import SnapshotRepository
 
+def _ensure_utc(value):
+    from datetime import timezone as _tz
+    return value if (value is None or value.tzinfo is not None) else value.replace(tzinfo=_tz.utc)
+
 
 @dataclass
 class ClaimSpec:
-    """A claim to create, derived mechanically from evidence payloads."""
+    """A claim to create, derived mechanically from evidence payloads.
+
+    F4（任务书 §7.1）：置信度不再由分析师硬编码 —— 落库时由
+    ``compute_claim_confidence`` 按支撑证据信任层/独立性/直接性/新鲜度计算
+    （directness 由 fact_status 推导），basis 随 Claim 落库可审计。
+    """
 
     statement: str
     claim_type: ClaimType
     fact_status: FactStatus
-    confidence: float
     evidence_refs: tuple[str, ...]
 
 
@@ -95,6 +103,9 @@ class BaseSnapshotAnalyst:
         research = ResearchRepository(session)
         created_claims: list[str] = []
         for spec in extracted.claim_specs:
+            # F4（任务书 §7.1）：可解释置信度 —— 由支撑证据的信任层/独立性/
+            # 直接性/新鲜度计算，替代分析师硬编码（0.95/0.9/0.55 已废除）
+            outcome = self._compute_confidence(session, spec)
             claim = Claim(
                 instrument_id=snapshot.instrument_id,
                 snapshot_id=snapshot.snapshot_id,
@@ -102,7 +113,9 @@ class BaseSnapshotAnalyst:
                 claim_type=spec.claim_type,
                 supporting_evidence_refs=spec.evidence_refs,
                 fact_status=spec.fact_status,
-                confidence=spec.confidence,
+                confidence=outcome.value,
+                confidence_level=outcome.level,
+                confidence_basis=outcome.basis,
                 status=ClaimStatus.PROPOSED,
                 metadata={"analyst": self.analyst_type.value},
             )
@@ -160,6 +173,54 @@ class BaseSnapshotAnalyst:
             created_claim_ids=tuple(created_claims),
             open_requests=tuple(open_requests),
         )
+
+
+    # ── F4（任务书 §7.1）：可解释置信度 ──────────────────────────────────────
+    _DIRECTNESS_BY_FACT_STATUS = {
+        FactStatus.OFFICIAL_DISCLOSURE.value: "direct_quote",
+        FactStatus.CONFIRMED_FACT.value: "direct_quote",
+        FactStatus.REGULATORY_DOCUMENT.value: "direct_quote",
+        FactStatus.MANAGEMENT_STATEMENT.value: "derived",
+        FactStatus.MEDIA_REPORT.value: "derived",
+        FactStatus.MARKET_EXPECTATION.value: "derived",
+        FactStatus.ANALYST_INFERENCE.value: "inference",
+        FactStatus.RUMOR.value: "inference",
+    }
+
+    def _compute_confidence(self, session, spec: ClaimSpec):
+        """由支撑证据信任层/独立来源组/直接性/新鲜度计算置信度（非固定值）。"""
+        from datetime import datetime, timezone
+
+        from sqlalchemy import select as _select
+
+        from app.domain.confidence import compute_claim_confidence
+        from app.domain.source_trust import trust_for_evidence
+        from app.services.source_independence import independent_group_count
+        from app.storage.orm import EvidenceORM
+
+        rows = session.scalars(
+            _select(EvidenceORM).where(EvidenceORM.evidence_id.in_(spec.evidence_refs))
+        ).all()
+        if not rows:
+            outcome = compute_claim_confidence(supporting_trusts=[])
+        else:
+            trusts = [trust_for_evidence(r.authority_level, r.evidence_type).value for r in rows]
+            now = datetime.now(timezone.utc)
+            ages = [
+                max((now - _ensure_utc(r.available_time)).total_seconds() / 86400.0, 0.0)
+                for r in rows
+                if r.available_time is not None
+            ]
+            outcome = compute_claim_confidence(
+                supporting_trusts=trusts,
+                corroboration_groups=independent_group_count(rows),
+                directness=self._DIRECTNESS_BY_FACT_STATUS.get(
+                    spec.fact_status.value if hasattr(spec.fact_status, "value") else str(spec.fact_status),
+                    "derived",
+                ),
+                evidence_age_days=min(ages) if ages else None,
+            )
+        return outcome
 
     def extract(self, evidence: list[EvidenceRecord], *, snapshot, pinned_ids: set) -> Extracted:
         raise NotImplementedError
@@ -236,7 +297,6 @@ class FinancialAnalyst(BaseSnapshotAnalyst):
                     ),
                     claim_type=ClaimType.FUNDAMENTAL_FACT,
                     fact_status=FactStatus.OFFICIAL_DISCLOSURE,
-                    confidence=0.95,
                     evidence_refs=refs,
                 )
             )
@@ -247,7 +307,6 @@ class FinancialAnalyst(BaseSnapshotAnalyst):
                     statement=f"公司 {report_date} 报告期营业收入同比增长 {rev_yoy}%",
                     claim_type=ClaimType.FUNDAMENTAL_FACT,
                     fact_status=FactStatus.OFFICIAL_DISCLOSURE,
-                    confidence=0.95,
                     evidence_refs=refs,
                 )
             )
@@ -292,7 +351,6 @@ class EventAnalyst(BaseSnapshotAnalyst):
                     statement=f"公司于 {ev.available_time:%Y-%m-%d} 发布公告《{title}》",
                     claim_type=ClaimType.FUNDAMENTAL_FACT,
                     fact_status=FactStatus.OFFICIAL_DISCLOSURE,
-                    confidence=0.9,
                     evidence_refs=(ev.evidence_id,),
                 )
             )
@@ -344,7 +402,6 @@ class NewsAnalyst(BaseSnapshotAnalyst):
                     ),
                     claim_type=ClaimType.INDUSTRY_TREND,
                     fact_status=FactStatus.MEDIA_REPORT,
-                    confidence=0.55,
                     evidence_refs=refs,
                 )
             )
@@ -392,7 +449,6 @@ class IndustryAnalyst(BaseSnapshotAnalyst):
                     statement=f"公司行业分类为：{label}",
                     claim_type=ClaimType.COMPETITIVE_POSITION,
                     fact_status=FactStatus.CONFIRMED_FACT,
-                    confidence=0.9,
                     evidence_refs=(_latest(evidence).evidence_id,),
                 )
             )
@@ -402,7 +458,6 @@ class IndustryAnalyst(BaseSnapshotAnalyst):
                     statement=f"公司主营业务：{str(main_business)[:200]}",
                     claim_type=ClaimType.COMPETITIVE_POSITION,
                     fact_status=FactStatus.CONFIRMED_FACT,
-                    confidence=0.9,
                     evidence_refs=(_latest(evidence).evidence_id,),
                 )
             )
@@ -460,7 +515,6 @@ class CapitalFlowAnalyst(BaseSnapshotAnalyst):
                 statement=f"最新换手率 {turnover}%，成交额 {amount and round(amount / 1e8, 2)} 亿元",
                 claim_type=ClaimType.FUNDAMENTAL_FACT,
                 fact_status=FactStatus.CONFIRMED_FACT,
-                confidence=0.9,
                 evidence_refs=refs,
             )
         )
@@ -512,7 +566,6 @@ class MacroPolicyAnalyst(BaseSnapshotAnalyst):
                     statement=f"近期存在 {len(refs)} 条相关宏观/政策报道（明细见引用）",
                     claim_type=ClaimType.INDUSTRY_TREND,
                     fact_status=FactStatus.MEDIA_REPORT,
-                    confidence=0.55,
                     evidence_refs=refs,
                 )
             )
