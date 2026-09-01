@@ -179,19 +179,58 @@ def thesis_history(instrument_id: str, session: Session = Depends(get_session)) 
 
 @router.get("/theses/{thesis_id}/diff/{other_id}")
 def thesis_diff_detail(thesis_id: str, other_id: str, session: Session = Depends(get_session)) -> dict:
-    """两版 Thesis 差异对比。"""
+    """两版 Thesis 差异对比（F12 §10.1：带 Claim lineage 与置信度依据）。"""
     t1 = session.scalars(select(ThesisORM).where(ThesisORM.thesis_id == thesis_id)).first()
     t2 = session.scalars(select(ThesisORM).where(ThesisORM.thesis_id == other_id)).first()
     if t1 is None or t2 is None:
         raise AppError("thesis.not_found", status_code=404) from None
     sup1 = set(t1.supporting_claims_json or [])
     sup2 = set(t2.supporting_claims_json or [])
+    opp1 = set(t1.opposing_claims_json or [])
+    opp2 = set(t2.opposing_claims_json or [])
+
+    def _claim_view(cid: str) -> dict:
+        row = session.scalars(
+            select(ClaimORM).where(ClaimORM.claim_id == cid)
+        ).first()
+        if row is None:
+            return {"claim_id": cid, "missing": True}
+        return {
+            "claim_id": row.claim_id,
+            "statement": row.statement[:200],
+            "claim_type": row.claim_type,
+            "confidence": row.confidence,
+            "confidence_level": row.confidence_level,
+            "confidence_basis": row.confidence_basis_json,
+            "revision_kind": row.revision_kind,
+            "parent_claim_id": row.parent_claim_id,
+            "source_impact_relation": row.source_impact_relation,
+            "carried_forward": bool(row.carried_forward),
+            "supporting_evidence_refs": list(row.supporting_evidence_refs_json or []),
+            "opposing_evidence_refs": list(row.opposing_evidence_refs_json or []),
+        }
+
     return {
         "added_claims": sorted(sup2 - sup1),
         "removed_claims": sorted(sup1 - sup2),
         "unchanged_claims": sorted(sup1 & sup2),
+        "added_opposing": sorted(opp2 - opp1),
+        "removed_opposing": sorted(opp1 - opp2),
+        # §10.1：Claim 级 lineage（carried_forward/supersedes/updated + 置信度依据）
+        "claim_lineage": [_claim_view(c) for c in sorted((sup2 | sup1 | opp2 | opp1))][:100],
         "t1": {"thesis_id": t1.thesis_id, "title": t1.title, "snapshot_id": t1.snapshot_id},
-        "t2": {"thesis_id": t2.thesis_id, "title": t2.title, "snapshot_id": t2.snapshot_id},
+        "t2": {
+            "thesis_id": t2.thesis_id,
+            "title": t2.title,
+            "snapshot_id": t2.snapshot_id,
+            "revision_reason": (t2.meta_json or {}).get("revision_reason"),
+            "revision_at": (t2.meta_json or {}).get("revision_at"),
+            "parent_thesis_id": (t2.meta_json or {}).get("parent_thesis_id"),
+            "carried_forward_claims": (t2.meta_json or {}).get("carried_forward_claims"),
+            "revised_claim_ids": (t2.meta_json or {}).get("revised_claim_ids"),
+            "superseded_claim_ids": (t2.meta_json or {}).get("superseded_claim_ids"),
+            "impacts": (t2.meta_json or {}).get("impacts"),
+        },
     }
 
 

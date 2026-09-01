@@ -161,6 +161,68 @@ class ResearchInboxService:
             self._session.scalars(select(SnapshotORM.snapshot_id)).all()
         )
 
+        # 7) Thesis Changes（F12，§10.2：窗口内的 Thesis 修订，append-only 元数据）
+        from app.storage.research_orm import ThesisORM
+
+        thesis_rows = self._session.scalars(
+            select(ThesisORM)
+            .where(ThesisORM.created_at >= cutoff)
+            .order_by(ThesisORM.created_at.desc())
+            .limit(limit_per)
+        ).all()
+        thesis_changes = [
+            {
+                "thesis_id": t.thesis_id,
+                "instrument_id": t.instrument_id,
+                "title": t.title[:120],
+                "revision_at": (t.meta_json or {}).get("revision_at"),
+                "parent_thesis_id": (t.meta_json or {}).get("parent_thesis_id"),
+                "is_current": bool((t.meta_json or {}).get("is_current")),
+            }
+            for t in thesis_rows
+        ]
+
+        # 8) Signal Ladder Hits（F12，§10.2：对窗口内有新证据的标的实时跑
+        #    BUILTIN_SIGNAL_RULES —— 按需评估，有据可查）
+        signal_hits: list[dict] = []
+        involved_instruments = sorted({e["instrument_id"] for e in new_evidence_items})[:5]
+        for instrument_id in involved_instruments:
+            try:
+                from app.services.signal_production import evaluate_production_signals
+
+                out = evaluate_production_signals(
+                    session=self._session, instrument_id=instrument_id
+                )
+                for r in out.get("results", []):
+                    signal_hits.append({
+                        "instrument_id": instrument_id,
+                        "rule_id": r["rule_id"],
+                        "signal_level": r["signal_level"],
+                        "event_type": r["event_type"],
+                        "matched_evidence_ids": r["matched_evidence_ids"][:5],
+                        "state_transition": r.get("state_transition", ""),
+                    })
+            except Exception:  # noqa: BLE001 — 单标的评估失败不影响聚合
+                continue
+
+        # 9) Upcoming Validation（F12，§10.2：与 predictions_due 同源，显式命名）
+        upcoming_validations = list(due_items)
+
+        # 10) Recommended Next Actions（§10.6 确定性建议；缺项诚实缺省）
+        recommended_actions: list[str] = []
+        non_quote_ev = [e for e in new_evidence_items if e.get("kind") != "market_quote"]
+        if non_quote_ev:
+            recommended_actions.append(
+                "对 " + non_quote_ev[0]["instrument_id"] + " 启动 Delta 研究（窗口内有新非行情证据）"
+            )
+        if signal_hits:
+            h0 = signal_hits[0]
+            recommended_actions.append("复核 " + h0["instrument_id"] + " 的 " + h0["signal_level"] + " 级信号")
+        if failed_items:
+            recommended_actions.append("检查失败采集源（Source Health）")
+        if due_items:
+            recommended_actions.append("处理即将到期的预测验证")
+
         return {
             "window_hours": window_hours,
             "generated_at": now.isoformat(),
@@ -169,12 +231,18 @@ class ResearchInboxService:
             "open_research_requests": request_items,
             "predictions_due": due_items,
             "failed_collections": failed_items,
+            "thesis_changes": thesis_changes,
+            "signal_ladder_hits": signal_hits,
+            "upcoming_validations": upcoming_validations,
+            "recommended_actions": recommended_actions,
             "total_snapshots": total_snapshots,
             "count": (
                 len(new_evidence_items)
                 + len(materiality_items)
                 + len(request_items)
                 + len(failed_items)
+                + len(thesis_changes)
+                + len(signal_hits)
             ),
         }
 

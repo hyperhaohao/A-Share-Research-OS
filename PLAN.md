@@ -38,7 +38,7 @@
 - [x] F9 Weiwo Background / Session / Memory
 - [x] F10 Weiwo Product Cards & UI
 - [x] F11 Guanlan Core Parity Audit
-- [ ] F12 Research Product Productization
+- [x] F12 Research Product Productization
 - [ ] F13 Full Regression
 - [ ] F14 Golden E2E
 - [ ] F15 Final Evidence & Closure

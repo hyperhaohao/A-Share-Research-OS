@@ -965,6 +965,16 @@
       "known_failure": "已知失效",
       "research_checklist": "核查清单",
       "user_preference": "研究偏好"
-    }
+    },
+    "thesisChanges": "Thesis 变化",
+    "signalHits": "信号命中",
+    "predictionsDue": "到期预测",
+    "nextActions": "建议下一步",
+    "openInCommander": "在帷幄中继续研究",
+    "retired": "已退役",
+    "retire": "退役",
+    "provenance": "来源与时间",
+    "diffAgainstCurrent": "对比当前版",
+    "claimLineage": "Claim 版本脉络"
   }
 }

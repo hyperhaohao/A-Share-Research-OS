@@ -83,6 +83,8 @@ class MarketProductCompiler:
 
     def compile_overseas_mapping(self) -> dict:
         """海外映射（方案 §11.5）：海外事件 → 影响 → 中国映射（每条挂证据）。"""
+        # F12（§10.5）：诚实命名 —— 关键词证据雷达 ≠ 完整海外映射；
+        # 映射链缺口显形（missing_chain），不得冒充 Mapping
         overseas_kw = ("海外", "美股", "美联储", "美国", "欧洲", "欧盟", "美元", "关税", "出口")
         recent = self._recent_evidence(72, 100)
         overseas_ev = [
@@ -98,11 +100,18 @@ class MarketProductCompiler:
                 "kind": e.evidence_type,
             })
         return {
-            "product_type": "OVERSEAS_MAPPING",
+            "product_type": "OVERSEAS_EVIDENCE_RADAR",
+            "mapping_depth": "evidence_radar",
+            "missing_chain": [
+                "global_industry_mapping",
+                "china_industry_mapping",
+                "a_share_company_mapping",
+                "transmission_evidence_chain",
+            ],
             "compiled_at": _utc().isoformat(),
             "items": items,
             "count": len(items),
-            "note": "海外事件 → 中国映射（每条必须挂证据，禁止无证据荐股）",
+            "note": "海外证据雷达（每条必须挂证据，禁止无证据荐股）；完整海外映射链未接入，缺口显形（§10.5）",
         }
 
     def compile_daily_brief(self) -> dict:
@@ -136,6 +145,47 @@ class MarketProductCompiler:
                     for r in inbox["open_research_requests"][:5]
                 ],
             })
+        # F12（§10.6）：Thesis 变化 / 信号命中 / 到期验证 / 建议下一步
+        if inbox.get("thesis_changes"):
+            sections.append({
+                "title": "Thesis 变化",
+                "items": [
+                    {"text": f"{c['instrument_id']} {c['title'][:70]}", "at": c.get("revision_at")}
+                    for c in inbox["thesis_changes"][:5]
+                ],
+            })
+        if inbox.get("signal_ladder_hits"):
+            sections.append({
+                "title": "信号命中",
+                "items": [
+                    {"text": f"{h['instrument_id']} {h['signal_level']} {h['rule_id']}", "at": None}
+                    for h in inbox["signal_ladder_hits"][:5]
+                ],
+            })
+        if inbox.get("predictions_due"):
+            sections.append({
+                "title": "即将到期验证",
+                "items": [
+                    {"text": str(p.get("instrument_id", "")) + " " + str(p.get("prediction_id", ""))[:16],
+                     "at": p.get("due_at")}
+                    for p in inbox["predictions_due"][:5]
+                ],
+            })
+        recommended = []
+        non_quote = [e for e in inbox["new_evidence"] if e.get("kind") != "market_quote"]
+        if non_quote:
+            recommended.append(
+                "对 " + non_quote[0]["instrument_id"] + " 启动 Delta 研究（窗口内有新非行情证据）"
+            )
+        if inbox.get("signal_ladder_hits"):
+            h0 = inbox["signal_ladder_hits"][0]
+            recommended.append("复核 " + h0["instrument_id"] + " 的 " + h0["signal_level"] + " 级信号")
+        if inbox.get("failed_collections"):
+            recommended.append("检查失败采集源（Source Health）")
+        if inbox.get("predictions_due"):
+            recommended.append("处理即将到期的预测验证")
+        if recommended:
+            sections.append({"title": "建议下一步", "items": [{"text": r, "at": None} for r in recommended]})
         if inbox["failed_collections"]:
             sections.append({
                 "title": "采集失败",

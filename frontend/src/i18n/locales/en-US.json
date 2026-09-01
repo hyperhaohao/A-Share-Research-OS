@@ -966,6 +966,16 @@
       "known_failure": "Known Failure",
       "research_checklist": "Checklist",
       "user_preference": "Preference"
-    }
+    },
+    "thesisChanges": "Thesis Changes",
+    "signalHits": "Signal Hits",
+    "predictionsDue": "Predictions Due",
+    "nextActions": "Recommended Next Actions",
+    "openInCommander": "Continue in Commander",
+    "retired": "Retired",
+    "retire": "Retire",
+    "provenance": "Provenance & Time",
+    "diffAgainstCurrent": "Diff vs current",
+    "claimLineage": "Claim Lineage"
   }
 }
