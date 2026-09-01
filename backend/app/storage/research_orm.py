@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Float, Index, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, Index, String, Text, UniqueConstraint, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.storage.orm import Base
@@ -44,6 +44,13 @@ class ClaimORM(Base):
     confidence: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String(16), default="proposed", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    # F2: Claim Version lineage（第三轮整改任务书 §5.3.4）
+    parent_claim_id: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
+    revision_kind: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    revision_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_impact_relation: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    carried_forward: Mapped[bool | None] = mapped_column(Boolean, nullable=True, server_default=false())
 
     # A claim is unique within its research state by its content.
     __table_args__ = (

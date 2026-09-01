@@ -28,7 +28,7 @@
 
 - [x] F0 Reopen 与基线冻结
 - [x] F1 Closure Truth Gate
-- [ ] F2 Research State Review Fix
+- [x] F2 Research State Review Fix
 - [ ] F3 Signal Production Fix
 - [ ] F4 Integrity Migration（confidence/source independence/subject swap）
 - [ ] F5 Weiwo Event Foundation

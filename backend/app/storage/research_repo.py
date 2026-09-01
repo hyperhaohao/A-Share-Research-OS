@@ -103,6 +103,11 @@ class ResearchRepository:
             confidence=claim.confidence,
             status=claim.status.value,
             created_at=claim.created_at,
+            parent_claim_id=claim.parent_claim_id,
+            revision_kind=claim.revision_kind,
+            revision_reason=claim.revision_reason,
+            source_impact_relation=claim.source_impact_relation,
+            carried_forward=bool(claim.carried_forward),
         )
         self._session.add(row)
         self._session.flush()
@@ -134,6 +139,11 @@ class ResearchRepository:
                 confidence=r.confidence,
                 status=r.status,  # type: ignore[arg-type]
                 created_at=_ensure_utc(r.created_at),
+                parent_claim_id=r.parent_claim_id,
+                revision_kind=r.revision_kind,
+                revision_reason=r.revision_reason,
+                source_impact_relation=r.source_impact_relation,
+                carried_forward=bool(r.carried_forward),
             )
             for r in rows
         ]
@@ -156,6 +166,11 @@ class ResearchRepository:
             confidence=row.confidence,
             status=row.status,  # type: ignore[arg-type]
             created_at=_ensure_utc(row.created_at),
+            parent_claim_id=row.parent_claim_id,
+            revision_kind=row.revision_kind,
+            revision_reason=row.revision_reason,
+            source_impact_relation=row.source_impact_relation,
+            carried_forward=bool(row.carried_forward),
         )
 
     def get_thesis(self, thesis_id: str) -> InvestmentThesis | None:

@@ -45,7 +45,11 @@ def get_current_thesis(
 
 
 def demote_other_currents(session: Session, instrument_id: str, keep_thesis_id: str) -> int:
-    """将同一 instrument 下除 keep_thesis_id 外的所有 is_current 降为 false。"""
+    """将同一 instrument 下除 keep_thesis_id 外的所有 is_current 降为 false。
+
+    F2 修复：必须赋值「新 dict 对象」——原实现原地改 JSON 再回赋同一对象，
+    SQLAlchemy 变更检测视为无变化，导致 Current 切换从不落库（多 Current 腐化）。
+    """
     count = 0
     rows = session.scalars(
         select(ThesisORM).where(ThesisORM.instrument_id == instrument_id)
@@ -55,7 +59,6 @@ def demote_other_currents(session: Session, instrument_id: str, keep_thesis_id: 
             continue
         meta = r.meta_json or {}
         if meta.get("is_current"):
-            meta["is_current"] = False
-            r.meta_json = meta
+            r.meta_json = {**meta, "is_current": False}
             count += 1
     return count

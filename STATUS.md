@@ -18,8 +18,11 @@ Baseline: ASRO 4c2e506 / donor 98f1398 / Python 3.11.15 / Node v24.16.0
 （backend 404 collected / 403 passed / 1 FAILED r8-thesis-diff-apply；
 vitest 30/30；build PASS；Golden 6b 500 已复现，根因 InstrumentProfile.get 误用）
 
-F0 DONE，F1 DONE（R10-CLOSURE-V2 重写为事实矩阵；scripts/check_closure_consistency.py
-校验 Evidence↔Closure 一致，exit 0）。执行中：F2 Research State Review Fix。
+F0/F1/F2 DONE。F2：apply 移入 thesis_revision 服务（移除破坏性 rollback）；
+静默丢 Claim 修复；Claim lineage 迁移 c2d3e4f5a6b7；七关系 Apply 语义修复；
+demote_other_currents JSON 变更检测缺陷修复（Current 切换从不落库的潜在 bug）；
+新路径结构化 Claim Builder（废除 [新发现]+截断）；10 用例 + 全量 backend exit 0。
+执行中：F3 Signal Production Fix。
 
 P0 Blockers:
 1. Closure Truth（R10-EVIDENCE-V2 24/25 vs R10-CLOSURE-V2 26/26 冲突）

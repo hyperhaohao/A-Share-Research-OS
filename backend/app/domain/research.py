@@ -109,6 +109,13 @@ class Claim(BaseModel):
     status: ClaimStatus = ClaimStatus.PROPOSED
     metadata: dict = Field(default_factory=dict)  # e.g. conflict_note explanations
 
+    # F2: Claim Version lineage（第三轮整改任务书 §5.3.4）
+    parent_claim_id: str | None = None
+    revision_kind: str | None = None  # carried_forward | supersedes | updated
+    revision_reason: str | None = None
+    source_impact_relation: str | None = None  # 驱动修订的 ClaimImpact relation
+    carried_forward: bool = False
+
     created_at: datetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
