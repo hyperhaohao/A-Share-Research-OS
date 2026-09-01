@@ -22,7 +22,7 @@ F0/F1/F2 DONE。F2：apply 移入 thesis_revision 服务（移除破坏性 rollb
 静默丢 Claim 修复；Claim lineage 迁移 c2d3e4f5a6b7；七关系 Apply 语义修复；
 demote_other_currents JSON 变更检测缺陷修复（Current 切换从不落库的潜在 bug）；
 新路径结构化 Claim Builder（废除 [新发现]+截断）；10 用例 + 全量 backend exit 0。
-F3 DONE（500 修复 + Ownership/Trust/Type/Entity/Negative 全门迹 + §6.4 七语义 8 测试；live 栈 HTTP 200、迁移自动应用）。F4 DONE（claim_confidence_v1 可解释置信度全路径接线；来源独立性 6 规则 + 独立组裁决；Entity Dictionary + 主体偷换 uncertain；迁移 d3e4f5a6b7c8；全量 backend exit 0）。F5 DONE（command_events append-only 协议 + 执行链事件化 + events/snapshot/stream SSE；6 用例；全量 backend exit 0）。执行中：F6 Weiwo Tool Orchestration。
+F3 DONE（500 修复 + Ownership/Trust/Type/Entity/Negative 全门迹 + §6.4 七语义 8 测试；live 栈 HTTP 200、迁移自动应用）。F4 DONE（claim_confidence_v1 可解释置信度全路径接线；来源独立性 6 规则 + 独立组裁决；Entity Dictionary + 主体偷换 uncertain；迁移 d3e4f5a6b7c8；全量 backend exit 0）。F5 DONE（command_events append-only 协议 + 执行链事件化 + events/snapshot/stream SSE；6 用例；全量 backend exit 0）。F6 DONE（Tool Registry 13 工具 + schema 校验 + 确认门执行面 + 结构化结果/失败显形；7 用例；全量 exit 0）。执行中：F7 Weiwo Approval Governance。
 
 P0 Blockers:
 1. Closure Truth（R10-EVIDENCE-V2 24/25 vs R10-CLOSURE-V2 26/26 冲突）

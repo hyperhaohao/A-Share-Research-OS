@@ -300,3 +300,57 @@ def stream_session_events(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# ── F6：帷幄 Tool Registry（任务书 §8.5） ─────────────────────────────────────
+
+
+@router.get("/tools")
+def list_registry_tools() -> dict:
+    """工具清单（白名单 + schema + 风险分级；不暴露 executor）。"""
+    from app.services.tool_registry import list_tools
+
+    results = list_tools()
+    return {"count": len(results), "results": results}
+
+
+class ToolExecuteIn(BaseModel):
+    arguments: dict = Field(default_factory=dict)
+    command_session_id: str | None = Field(default=None, max_length=40)
+    correlation_id: str | None = Field(default=None, max_length=48)
+    confirmation_token: str | None = Field(default=None, max_length=80)
+
+
+@router.post("/tools/{name}/execute")
+def execute_registry_tool(
+    name: str,
+    payload: ToolExecuteIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    """执行白名单工具：schema 校验 → 确认门 → executor → 结构化结果 + 事件。"""
+    from app.services.tool_registry import execute_tool, get_tool
+
+    spec = get_tool(name)
+    if spec is None:
+        from app.core.errors import AppError
+
+        raise AppError("tool.not_found", status_code=404, detail=f"unknown tool: {name}")
+
+    out = execute_tool(
+        session, name, payload.arguments,
+        command_session_id=payload.command_session_id,
+        correlation_id=payload.correlation_id,
+        confirmation_token=payload.confirmation_token,
+    )
+    session.commit()
+    status_code = 200 if out.get("ok") else {
+        "tool.not_found": 404,
+        "tool.arguments_invalid": 422,
+        "tool.confirmation_required": 422,
+        "tool.confirmation_invalid": 422,
+    }.get(out.get("error_code"), 500)
+    return JSONResponse(status_code=status_code, content=out)
+
+
+# fastapi.responses 导入（模块尾部统一引用）
+from fastapi.responses import JSONResponse  # noqa: E402
