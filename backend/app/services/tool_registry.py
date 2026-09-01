@@ -185,6 +185,7 @@ def execute_tool(
     command_session_id: str | None = None,
     correlation_id: str | None = None,
     confirmation_token: str | None = None,
+    confirmation_id: str | None = None,
 ) -> dict:
     """执行注册表工具：校验 → 门 → executor → 结构化结果 + 事件。"""
     spec = TOOL_REGISTRY.get(name)
@@ -201,20 +202,40 @@ def execute_tool(
             "detail": "; ".join(errors), "tool": name,
         }
 
-    digest_src = repr(sorted((arguments or {}).items()))
+    from app.services.confirmation_gate import arguments_digest
+
+    digest_src = arguments_digest(name, arguments or {})
     if spec.requires_confirmation:
-        if not confirmation_token:
+        if confirmation_id:
+            # F7 持久化审批门：approved + digest 绑定 + 一次性消费（防 TOCTOU）
+            from app.services.confirmation_gate import consume_confirmation_record
+
+            ok, err = consume_confirmation_record(
+                session, confirmation_id,
+                tool_name=name, arguments_digest_value=digest_src,
+            )
+            if not ok:
+                return {
+                    "ok": False, "error_code": err,
+                    "detail": "confirmation pending/rejected/expired/revoked/consumed"
+                              " or arguments replaced",
+                    "tool": name,
+                }
+        elif confirmation_token:
+            if consume_confirmation(confirmation_token, name, digest_src) is None:
+                return {
+                    "ok": False, "error_code": "tool.confirmation_invalid",
+                    "detail": "confirmation token expired, reused, or digest mismatch",
+                    "tool": name,
+                }
+        else:
             return {
                 "ok": False, "error_code": "tool.confirmation_required",
                 "detail": "high-risk tool requires server-issued confirmation",
                 "tool": name, "risk_level": spec.risk_level,
                 "arguments_digest": digest_src,
-            }
-        if consume_confirmation(confirmation_token, name, digest_src) is None:
-            return {
-                "ok": False, "error_code": "tool.confirmation_invalid",
-                "detail": "confirmation token expired, reused, or digest mismatch",
-                "tool": name,
+                "hint": "POST /command/confirmations then decide(approved)"
+                        " then execute with confirmation_id",
             }
 
     started = time.monotonic()

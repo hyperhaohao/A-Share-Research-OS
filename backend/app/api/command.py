@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.application.command_events_orm import CommandEventORM  # noqa: F401 — 注册 Base metadata（create_all/迁移前置）
+from app.application.confirmations_orm import CommandConfirmationORM  # noqa: F401 — 注册 Base metadata
 from app.application.conversation import ConversationRepository
 from app.db import get_session, session_scope
 from app.services.commander import (
@@ -319,6 +320,7 @@ class ToolExecuteIn(BaseModel):
     command_session_id: str | None = Field(default=None, max_length=40)
     correlation_id: str | None = Field(default=None, max_length=48)
     confirmation_token: str | None = Field(default=None, max_length=80)
+    confirmation_id: str | None = Field(default=None, max_length=40)
 
 
 @router.post("/tools/{name}/execute")
@@ -341,6 +343,7 @@ def execute_registry_tool(
         command_session_id=payload.command_session_id,
         correlation_id=payload.correlation_id,
         confirmation_token=payload.confirmation_token,
+        confirmation_id=payload.confirmation_id,
     )
     session.commit()
     status_code = 200 if out.get("ok") else {
@@ -354,3 +357,94 @@ def execute_registry_tool(
 
 # fastapi.responses 导入（模块尾部统一引用）
 from fastapi.responses import JSONResponse  # noqa: E402
+
+
+# ── F7：帷幄审批确认门（任务书 §8.6） ─────────────────────────────────────────
+
+
+class ConfirmationCreateIn(BaseModel):
+    tool_name: str = Field(min_length=2, max_length=64)
+    arguments: dict = Field(default_factory=dict)
+    command_session_id: str | None = Field(default=None, max_length=40)
+    lease_s: int = Field(default=300, ge=5, le=3600)
+
+
+class ConfirmationDecideIn(BaseModel):
+    decision: str = Field(min_length=4, max_length=16)
+    decided_by: str | None = Field(default=None, max_length=64)
+
+
+@router.post("/confirmations", status_code=201)
+def create_confirmation(
+    payload: ConfirmationCreateIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    """为高风险工具创建 pending 确认（§8.6；非高风险工具 422）。"""
+    from app.core.errors import AppError
+    from app.services.confirmation_gate import create_confirmation
+
+    try:
+        out = create_confirmation(
+            session,
+            tool_name=payload.tool_name,
+            arguments=payload.arguments,
+            command_session_id=payload.command_session_id,
+            lease_s=payload.lease_s,
+            decided_by="user",
+        )
+    except ValueError as exc:
+        raise AppError("confirmation.not_applicable", status_code=422,
+                       detail=str(exc)) from None
+    session.commit()
+    return {"confirmation": out}
+
+
+@router.get("/confirmations")
+def list_confirmations(
+    status: str | None = Query(default=None, max_length=16),
+    limit: int = Query(default=50, ge=1, le=200),
+    session: Session = Depends(get_session),
+) -> dict:
+    from app.services.confirmation_gate import list_confirmations
+
+    results = list_confirmations(session, status=status, limit=limit)
+    return {"count": len(results), "results": results}
+
+
+@router.get("/confirmations/{confirmation_id}")
+def get_confirmation(
+    confirmation_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    from app.core.errors import AppError
+    from app.services.confirmation_gate import get_confirmation
+
+    out = get_confirmation(session, confirmation_id)
+    if out is None:
+        raise AppError("confirmation.not_found", status_code=404)
+    return {"confirmation": out}
+
+
+@router.post("/confirmations/{confirmation_id}/decide")
+def decide_confirmation(
+    confirmation_id: str,
+    payload: ConfirmationDecideIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    """批准/拒绝/撤销。幂等：重复决定返回当前状态（无副作用）。"""
+    from app.core.errors import AppError
+    from app.services.confirmation_gate import decide_confirmation
+
+    try:
+        out = decide_confirmation(
+            session, confirmation_id, payload.decision,
+            decided_by=payload.decided_by or "user",
+        )
+    except LookupError as exc:
+        raise AppError("confirmation.not_found", status_code=404,
+                       detail=str(exc)) from None
+    except ValueError as exc:
+        raise AppError("confirmation.bad_decision", status_code=422,
+                       detail=str(exc)) from None
+    session.commit()
+    return {"confirmation": out}
