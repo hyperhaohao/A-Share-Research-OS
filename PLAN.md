@@ -34,7 +34,7 @@
 - [x] F5 Weiwo Event Foundation
 - [x] F6 Weiwo Tool Orchestration
 - [x] F7 Weiwo Approval Governance
-- [ ] F8 Weiwo Dynamic Workbench
+- [x] F8 Weiwo Dynamic Workbench
 - [ ] F9 Weiwo Background / Session / Memory
 - [ ] F10 Weiwo Product Cards & UI
 - [ ] F11 Guanlan Core Parity Audit

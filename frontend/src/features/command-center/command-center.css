@@ -224,3 +224,78 @@
   font-size: 9.5px;
   margin: 0;
 }
+
+/* ── F8 动态 Workbench（任务书 §8.7） ─────────────────────────────────────── */
+.cc-wb-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cc-wb-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  border: 1px solid var(--line, #ddd);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  padding: 3px 8px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cc-wb-tab-active {
+  border-color: var(--zhu, #c23a2f);
+  color: var(--zhu, #c23a2f);
+}
+
+.cc-wb-tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.cc-wb-tab-close {
+  color: var(--secondary, #888);
+  padding: 0 2px;
+}
+
+.cc-wb-tab-close:hover {
+  color: var(--down, #1a7f37);
+}
+
+.cc-wb-body {
+  border-top: 1px solid var(--line, #ddd);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cc-wb-body-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cc-wb-page {
+  font-size: 11px;
+  color: var(--secondary, #888);
+}
+
+.cc-wb-title {
+  font-weight: 600;
+}
+
+.cc-wb-meta {
+  margin: 0;
+}
+
+.cc-wb-open {
+  align-self: flex-start;
+}

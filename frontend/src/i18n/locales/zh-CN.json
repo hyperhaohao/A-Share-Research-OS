@@ -655,7 +655,10 @@
     "openWorkspace": "打开工作台",
     "quoteAsOf": "行情时间",
     "workbenchEmptyTitle": "先研究一只标的",
-    "workbenchEmptyHint": "这里显示标的速记 · 研究产物 · 待验证预测"
+    "workbenchEmptyHint": "这里显示标的速记 · 研究产物 · 待验证预测",
+    "workbenchTabs": "动态工作台",
+    "workbenchEmpty": "暂无打开的产物 —— 产物将自动打开对应页面",
+    "workbenchOpenFull": "在完整页面打开 →"
   },
   "industryWs": {
     "title": "产业研究",

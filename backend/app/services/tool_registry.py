@@ -283,6 +283,10 @@ def execute_tool(
                 correlation_id=correlation_id,
                 payload={"tool": name}, artifact_ids=artifact_ids,
             )
+            # F8：Artifact 自动打开 Workbench 页面（§8.7 非仅链接）
+            from app.services.workbench import open_for_artifacts
+
+            open_for_artifacts(session, command_session_id, artifact_ids)
     return out
 
 

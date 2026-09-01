@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.application.command_events_orm import CommandEventORM  # noqa: F401 — 注册 Base metadata（create_all/迁移前置）
 from app.application.confirmations_orm import CommandConfirmationORM  # noqa: F401 — 注册 Base metadata
+from app.application.workbench_orm import WorkbenchTabORM  # noqa: F401 — 注册 Base metadata
 from app.application.conversation import ConversationRepository
 from app.db import get_session, session_scope
 from app.services.commander import (
@@ -448,3 +449,80 @@ def decide_confirmation(
                        detail=str(exc)) from None
     session.commit()
     return {"confirmation": out}
+
+
+# ── F8：帷幄 Dynamic Workbench（任务书 §8.7） ─────────────────────────────────
+
+
+class WorkbenchOpenIn(BaseModel):
+    artifact_id: str | None = Field(default=None, max_length=40)
+    page: str | None = Field(default=None, max_length=40)
+    payload: dict = Field(default_factory=dict)
+    title: str | None = Field(default=None, max_length=200)
+
+
+@router.get("/sessions/{session_id}/workbench")
+def get_workbench_tabs(
+    session_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """每会话独立 Workbench 状态（刷新恢复数据源）。"""
+    from app.services.workbench import list_tabs
+
+    return {"session_id": session_id, "tabs": list_tabs(session, session_id)}
+
+
+@router.post("/sessions/{session_id}/workbench/open", status_code=201)
+def open_workbench_tab(
+    session_id: str,
+    payload: WorkbenchOpenIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    """打开 Tab：artifact 自动映射注册表页面；或显式 page（白名单）。"""
+    from app.core.errors import AppError
+    from app.services.workbench import open_tab
+
+    try:
+        tab = open_tab(
+            session, session_id,
+            artifact_id=payload.artifact_id,
+            page=payload.page,
+            payload=payload.payload,
+            title=payload.title,
+        )
+    except AppError:
+        raise
+    session.commit()
+    return {"tab": tab}
+
+
+@router.delete("/sessions/{session_id}/workbench/{tab_id}")
+def close_workbench_tab(
+    session_id: str,
+    tab_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    from app.core.errors import AppError
+    from app.services.workbench import close_tab
+
+    out = close_tab(session, session_id, tab_id)
+    if out is None:
+        raise AppError("workbench.tab_not_found", status_code=404)
+    session.commit()
+    return out
+
+
+@router.post("/sessions/{session_id}/workbench/{tab_id}/activate")
+def activate_workbench_tab(
+    session_id: str,
+    tab_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    from app.core.errors import AppError
+    from app.services.workbench import activate_tab
+
+    out = activate_tab(session, session_id, tab_id)
+    if out is None:
+        raise AppError("workbench.tab_not_found", status_code=404)
+    session.commit()
+    return {"tab": out}

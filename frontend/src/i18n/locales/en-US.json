@@ -656,7 +656,10 @@
     "openWorkspace": "Open workspace",
     "quoteAsOf": "Quote as of",
     "workbenchEmptyTitle": "Research an instrument first",
-    "workbenchEmptyHint": "Instrument brief · research artifacts · pending predictions"
+    "workbenchEmptyHint": "Instrument brief · research artifacts · pending predictions",
+    "workbenchTabs": "Dynamic Workbench",
+    "workbenchEmpty": "No open artifacts yet — artifacts auto-open their page",
+    "workbenchOpenFull": "Open full page →"
   },
   "industryWs": {
     "title": "Industry Research",

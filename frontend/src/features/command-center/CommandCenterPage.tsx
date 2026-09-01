@@ -149,6 +149,7 @@ export function CommandCenterPage() {
             activePlan={activePlan}
             selectedInstrument={selectedInstrument}
             pendingPredictions={duePreds}
+            sessionId={sessionId}
           />
         </aside>
       </div>

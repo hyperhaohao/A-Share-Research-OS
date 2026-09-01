@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Panel } from "../../ui/guanlan";
@@ -6,6 +6,12 @@ import { formatArtifactType, uiLang } from "../../presentation/enumLabels";
 import { formatWhen } from "../../presentation/format";
 import { useInstrumentName } from "../../shared/instrument";
 import type { Plan } from "./plan";
+import {
+  activateWorkbenchTab,
+  closeWorkbenchTab,
+  fetchWorkbenchTabs,
+  resolveTabRoute,
+} from "./workbench";
 
 interface ArtifactLike {
   artifact_id: string;
@@ -50,15 +56,19 @@ export function CommandCenterWorkbench({
   activePlan,
   selectedInstrument,
   pendingPredictions,
+  sessionId,
 }: {
   activePlan: Plan | null;
   selectedInstrument: string | null;
   pendingPredictions: PredictionItem[];
+  sessionId: string | null;
 }) {
   const { t } = useTranslation();
   const instrumentId = activePlan?.instrument_id ?? selectedInstrument ?? null;
   return (
     <>
+      {sessionId != null && <WorkbenchTabs sessionId={sessionId} />}
+
       {instrumentId ? (
         <InstrumentBriefCard instrumentId={instrumentId} activePlan={activePlan} />
       ) : (
@@ -297,5 +307,89 @@ function PredRow({ prediction: p }: { prediction: PredictionItem }) {
         {t("predictions.dueBy", { date: formatWhen(p.due_at, lang) })}
       </span>
     </li>
+  );
+}
+
+/**
+ * F8 动态 Workbench（任务书 §8.7）：右栏不再是固定信息卡 ——
+ * Artifact/Tool Result 自动打开注册表页面 Tab（后端 open_for_artifacts），
+ * 每会话独立状态（服务端持久化 → 刷新恢复）；Tab payload 驱动真实页面
+ * （route 占位符 + artifact 溯源参数）+「在完整页面打开」不丢上下文。
+ */
+function WorkbenchTabs({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const tabsQuery = useQuery({
+    queryKey: ["cc-workbench-tabs", sessionId],
+    enabled: sessionId != null,
+    refetchInterval: 5000,
+    queryFn: () => fetchWorkbenchTabs(sessionId),
+  });
+  const tabs = tabsQuery.data ?? [];
+  const active = tabs.find((tab) => tab.is_active) ?? null;
+
+  return (
+    <Panel title={t("cc.workbenchTabs")}>
+      <div data-testid="workbench-tabs">
+      {tabs.length === 0 ? (
+        <p className="secondary">{t("cc.workbenchEmpty")}</p>
+      ) : (
+        <>
+          <div className="cc-wb-strip" data-testid="workbench-tab-strip">
+            {tabs.map((tab) => (
+              <button
+                key={tab.tab_id}
+                className={"cc-wb-tab" + (tab.is_active ? " cc-wb-tab-active" : "")}
+                data-testid={"workbench-tab-" + tab.page}
+                onClick={() => {
+                  void activateWorkbenchTab(sessionId, tab.tab_id).then(() => {
+                    void queryClient.invalidateQueries({
+                      queryKey: ["cc-workbench-tabs", sessionId],
+                    });
+                  });
+                }}
+              >
+                <span className="cc-wb-tab-title">{tab.title}</span>
+                <span
+                  className="cc-wb-tab-close"
+                  data-testid={"workbench-close-" + tab.tab_id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void closeWorkbenchTab(sessionId, tab.tab_id).then(() => {
+                      void queryClient.invalidateQueries({
+                        queryKey: ["cc-workbench-tabs", sessionId],
+                      });
+                    });
+                  }}
+                >
+                  ×
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {active && (
+            <div className="cc-wb-body" data-testid="workbench-tab-active">
+              <div className="cc-wb-body-head">
+                <span className="cc-wb-page mono">{active.page}</span>
+                <span className="cc-wb-title">{active.title}</span>
+              </div>
+              {active.payload?.instrument_ids != null &&
+                Array.isArray(active.payload.instrument_ids) &&
+                active.payload.instrument_ids.length > 0 && (
+                  <p className="secondary mono cc-wb-meta">
+                    {active.payload.instrument_ids.join(" · ")}
+                  </p>
+                )}
+              <Link to={resolveTabRoute(active)} className="control-btn cc-wb-open">
+                {t("cc.workbenchOpenFull")}
+              </Link>
+            </div>
+            )}
+          </>
+        )}
+      </div>
+    </Panel>
   );
 }

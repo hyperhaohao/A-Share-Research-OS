@@ -388,6 +388,10 @@ class ResearchCommander:
                         payload={"step_id": step["step_id"]},
                         artifact_ids=list(artifact_ids),
                     )
+                    # F8：Artifact 自动打开 Workbench 页面（§8.7 非仅链接）
+                    from app.services.workbench import open_for_artifacts
+
+                    open_for_artifacts(self._session, sid, list(artifact_ids))
 
         status = PlanStatus.FAILED if failed else PlanStatus.COMPLETED
 
