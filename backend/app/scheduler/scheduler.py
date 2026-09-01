@@ -110,4 +110,19 @@ class Scheduler:
             except Exception:  # noqa: BLE001 — one monitor must not kill the tick
                 result.failed.append(monitor_row.monitor_id)
 
+        # F9：帷幄后台任务跑道 —— Scheduler Worker 泵（持久化 + lease 恢复，
+        # 不依赖 daemon thread，§8.8）。一个 tick 泵多个任务（有界）。
+        from app.services.background_runway import run_one
+
+        for _ in range(5):
+            try:
+                done = run_one(self._session, worker_id=f"tick-{id(now)}")
+            except Exception:  # noqa: BLE001 — one task must not kill the tick
+                self._session.rollback()
+                result.failed.append("background_runway")
+                break
+            if done is None:
+                break
+            result.succeeded.append(done["task_id"])
+
         return result

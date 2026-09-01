@@ -35,7 +35,7 @@
 - [x] F6 Weiwo Tool Orchestration
 - [x] F7 Weiwo Approval Governance
 - [x] F8 Weiwo Dynamic Workbench
-- [ ] F9 Weiwo Background / Session / Memory
+- [x] F9 Weiwo Background / Session / Memory
 - [ ] F10 Weiwo Product Cards & UI
 - [ ] F11 Guanlan Core Parity Audit
 - [ ] F12 Research Product Productization

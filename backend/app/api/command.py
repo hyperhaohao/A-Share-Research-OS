@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.application.command_events_orm import CommandEventORM  # noqa: F401 — 注册 Base metadata（create_all/迁移前置）
 from app.application.confirmations_orm import CommandConfirmationORM  # noqa: F401 — 注册 Base metadata
 from app.application.workbench_orm import WorkbenchTabORM  # noqa: F401 — 注册 Base metadata
+from app.application.background_orm import BackgroundTaskORM, SessionMemoryORM  # noqa: F401 — 注册 Base metadata
 from app.application.conversation import ConversationRepository
 from app.db import get_session, session_scope
 from app.services.commander import (
@@ -526,3 +527,170 @@ def activate_workbench_tab(
         raise AppError("workbench.tab_not_found", status_code=404)
     session.commit()
     return {"tab": out}
+
+
+# ── F9：后台任务跑道 + 会话治理 + 会话记忆（任务书 §8.8/§8.9） ────────────────
+
+
+class TaskSubmitIn(BaseModel):
+    tool_name: str = Field(min_length=2, max_length=64)
+    arguments: dict = Field(default_factory=dict)
+    command_session_id: str | None = Field(default=None, max_length=40)
+    confirmation_id: str | None = Field(default=None, max_length=40)
+    max_attempts: int = Field(default=3, ge=1, le=5)
+
+
+@router.post("/tasks", status_code=202)
+def submit_background_task(
+    payload: TaskSubmitIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    """提交后台任务（持久化 + 合并；高风险工具需已批准确认）。"""
+    from app.core.errors import AppError
+    from app.services.background_runway import submit_task
+
+    try:
+        out = submit_task(
+            session,
+            tool_name=payload.tool_name,
+            arguments=payload.arguments,
+            command_session_id=payload.command_session_id,
+            confirmation_id=payload.confirmation_id,
+            max_attempts=payload.max_attempts,
+        )
+    except LookupError as exc:
+        raise AppError("task.tool_not_found", status_code=404,
+                       detail=str(exc)) from None
+    except ValueError as exc:
+        raise AppError("task.not_submittable", status_code=422,
+                       detail=str(exc)) from None
+    session.commit()
+    return {"task": out}
+
+
+@router.get("/tasks")
+def list_background_tasks(
+    command_session_id: str | None = Query(default=None, max_length=40),
+    limit: int = Query(default=50, ge=1, le=200),
+    session: Session = Depends(get_session),
+) -> dict:
+    """会话级 + 全局任务列表（§8.8）。"""
+    from app.services.background_runway import list_tasks
+
+    results = list_tasks(session, command_session_id=command_session_id, limit=limit)
+    return {"count": len(results), "results": results}
+
+
+@router.post("/tasks/{task_id}/cancel")
+def cancel_background_task(task_id: str, session: Session = Depends(get_session)) -> dict:
+    from app.core.errors import AppError
+    from app.services.background_runway import cancel_task
+
+    out = cancel_task(session, task_id)
+    if out is None:
+        raise AppError("task.not_found", status_code=404)
+    session.commit()
+    return {"task": out}
+
+
+@router.post("/tasks/{task_id}/retry")
+def retry_background_task(task_id: str, session: Session = Depends(get_session)) -> dict:
+    from app.core.errors import AppError
+    from app.services.background_runway import retry_task
+
+    out = retry_task(session, task_id)
+    if out is None:
+        raise AppError("task.not_found", status_code=404)
+    session.commit()
+    return {"task": out}
+
+
+class SessionUpdateIn(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=128)
+    status: str | None = Field(default=None, max_length=16)
+
+
+@router.patch("/sessions/{session_id}")
+def update_session_governance(
+    session_id: str,
+    payload: SessionUpdateIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    """重命名 / 归档 / 恢复（§8.9 会话治理）。"""
+    from app.core.errors import AppError
+    from app.services.session_memory import archive_session, rename_session
+
+    out: dict | None = None
+    if payload.title:
+        out = rename_session(session, session_id, payload.title)
+    if payload.status in ("archived", "active"):
+        out = archive_session(session, session_id, archived=payload.status == "archived")
+    if out is None:
+        raise AppError("session.not_found", status_code=404)
+    session.commit()
+    return {"session": out}
+
+
+@router.get("/sessions/{session_id}/overview")
+def get_session_overview(
+    session_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """会话治理概览：状态 + 关联 Instrument/Thesis/Plan/Workbench/Task。"""
+    from app.core.errors import AppError
+    from app.services.session_memory import session_overview
+
+    out = session_overview(session, session_id)
+    if out is None:
+        raise AppError("session.not_found", status_code=404)
+    return out
+
+
+class SessionMemoryIn(BaseModel):
+    goal: str | None = Field(default=None, max_length=4000)
+    confirmed_params: dict | None = None
+    key_conclusions: list[str] | None = None
+    open_questions: list[str] | None = None
+
+
+@router.get("/sessions/{session_id}/memory")
+def get_session_memory(
+    session_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """Session Memory（双层记忆的会话层；Research Memory 见 /memories）。"""
+    from app.services.session_memory import get_memory
+
+    return {"memory": get_memory(session, session_id)}
+
+
+@router.put("/sessions/{session_id}/memory")
+def put_session_memory(
+    session_id: str,
+    payload: SessionMemoryIn,
+    session: Session = Depends(get_session),
+) -> dict:
+    from app.services.session_memory import upsert_memory
+
+    out = upsert_memory(
+        session, session_id,
+        goal=payload.goal,
+        confirmed_params=payload.confirmed_params,
+        key_conclusions=payload.key_conclusions,
+        open_questions=payload.open_questions,
+    )
+    session.commit()
+    return {"memory": out}
+
+
+@router.post("/sessions/{session_id}/memory/compact")
+def compact_session_memory(
+    session_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """长对话压缩（阈值内不压缩时显形原因；force 由 body 无参触发即手动压缩）。"""
+    from app.services.session_memory import maybe_compact
+
+    out = maybe_compact(session, session_id, threshold_turns=50)
+    session.commit()
+    return out

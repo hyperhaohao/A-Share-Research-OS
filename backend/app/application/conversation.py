@@ -64,6 +64,9 @@ class ConversationSessionORM(Base):
     session_id: Mapped[str] = mapped_column(String(24), unique=True, index=True)
     title: Mapped[str] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # F9：会话治理（任务书 §8.9）
+    status: Mapped[str] = mapped_column(String(16), default="active")
+    last_activity_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class ConversationTurnORM(Base):
@@ -152,17 +155,33 @@ class ConversationRepository:
             "created_at": row.created_at.isoformat(),
         }
 
-    def list_sessions(self, *, limit: int = 50) -> list[dict]:
-        rows = self._session.scalars(
+    def list_sessions(
+        self, *, limit: int = 50, include_archived: bool = False
+    ) -> list[dict]:
+        """F9 会话治理：默认不含 archived；按最后活动排序。"""
+        stmt = (
             select(ConversationSessionORM)
             .order_by(ConversationSessionORM.created_at.desc())
             .limit(limit)
-        ).all()
+        )
+        if not include_archived:
+            archived = "archived"
+            stmt = stmt.where(
+                (ConversationSessionORM.status != archived)
+                | (ConversationSessionORM.status.is_(None))
+            )
+        rows = self._session.scalars(stmt).all()
         return [
             {
                 "session_id": r.session_id,
                 "title": r.title,
+                "status": r.status,
                 "created_at": _ensure_utc(r.created_at).isoformat() if r.created_at else None,
+                "last_activity_at": (
+                    _ensure_utc(r.last_activity_at).isoformat()
+                    if r.last_activity_at
+                    else None
+                ),
             }
             for r in rows
         ]
