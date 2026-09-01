@@ -6,6 +6,7 @@ import { uiLang } from "../../presentation/enumLabels";
 import { formatWhen } from "../../presentation/format";
 import { useInstrumentName } from "../../shared/instrument";
 import { stepIndex, stepToInkStatus, type Plan } from "./plan";
+import { EventThread } from "./EventThread";
 
 interface Turn {
   turn_id: string;
@@ -109,6 +110,8 @@ export function CommandCenterTranscript({
             <PlanChain plan={activePlan} testid="commander-plan-progress" />
           </div>
         )}
+        {/* F10：事件线程卡片（工具/审批/任务/产物/错误 —— §8.10 中栏） */}
+        {sessionId != null && <EventThread sessionId={sessionId} />}
         <div ref={bottomRef} />
       </div>
       <form

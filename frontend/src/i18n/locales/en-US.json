@@ -659,7 +659,41 @@
     "workbenchEmptyHint": "Instrument brief · research artifacts · pending predictions",
     "workbenchTabs": "Dynamic Workbench",
     "workbenchEmpty": "No open artifacts yet — artifacts auto-open their page",
-    "workbenchOpenFull": "Open full page →"
+    "workbenchOpenFull": "Open full page →",
+    "pendingConfirmations": "Pending Confirmations",
+    "noPendingConfirmations": "No pending confirmations",
+    "backgroundTasks": "Background Tasks",
+    "noBackgroundTasks": "No background tasks",
+    "confirmApprove": "Approve",
+    "confirmReject": "Reject",
+    "taskRetry": "Retry",
+    "threadIdle": "Event thread idle — run a research plan to see the live chain",
+    "cardPlan": "Plan",
+    "cardToolCall": "Tool call",
+    "cardToolResult": "Tool result",
+    "cardToolError": "Tool failed",
+    "cardConfirmation": "Confirmation",
+    "cardTask": "Background task",
+    "cardRun": "Plan run",
+    "cardArtifact": "Artifact",
+    "cardArtifactNote": "Workbench page auto-opened",
+    "cardMemory": "Memory compaction",
+    "memoryCompacted": "Session memory compacted to version {version}; raw events remain auditable",
+    "taskStatus": {
+      "queued": "Queued",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "confirmationStatus": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "expired": "Expired",
+      "revoked": "Revoked",
+      "consumed": "Consumed"
+    }
   },
   "industryWs": {
     "title": "Industry Research",

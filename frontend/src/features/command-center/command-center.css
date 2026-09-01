@@ -299,3 +299,50 @@
 .cc-wb-open {
   align-self: flex-start;
 }
+
+/* ── F10 事件线程卡片（任务书 §8.10） ─────────────────────────────────────── */
+.cc-event-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.cc-thread-empty {
+  margin: 0;
+}
+
+.cc-card {
+  border: 1px solid var(--line, #ddd);
+  border-left-width: 3px;
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.cc-card-ok { border-left-color: var(--up, #1a7f37); }
+.cc-card-error { border-left-color: var(--down, #c23a2f); }
+.cc-card-running { border-left-color: var(--jin, #b8860b); }
+
+.cc-card-kind {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--secondary, #888);
+  letter-spacing: 0.04em;
+}
+
+.cc-card-title { font-weight: 600; }
+
+.cc-card-actions {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.cc-card-digest { font-size: 11px; }
+
+.cc-confirm-tool { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }

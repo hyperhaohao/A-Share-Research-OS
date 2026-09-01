@@ -84,8 +84,156 @@ export function CommandCenterLeft({
         </ul>
       </Panel>
 
+      <Panel title={t("cc.pendingConfirmations")}>
+        <div data-testid="pending-confirmations">
+          <PendingConfirmationsPanel />
+        </div>
+      </Panel>
+
+      <Panel title={t("cc.backgroundTasks")}>
+        <div data-testid="background-tasks">
+          <BackgroundTasksPanel />
+        </div>
+      </Panel>
+
       <SessionSwitcher sessionId={sessionId} onSessionChange={onSessionChange} />
     </>
+  );
+}
+
+/** 未处理确认（F7 服务端真实状态；批准/拒绝走 §8.6 状态机）。 */
+function PendingConfirmationsPanel() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const pendingQuery = useQuery({
+    queryKey: ["cc-confirmations-pending"],
+    refetchInterval: 5000,
+    queryFn: async (): Promise<Array<{ confirmation_id: string; tool_name: string }>> => {
+      const resp = await fetch("/api/v1/command/confirmations?status=pending");
+      if (!resp.ok) return [];
+      const body = (await resp.json()) as {
+        results: Array<{ confirmation_id: string; tool_name: string }>;
+      };
+      return body.results ?? [];
+    },
+  });
+
+  const decideMutation = useMutation({
+    mutationFn: async (input: { id: string; decision: "approved" | "rejected" }) => {
+      const resp = await fetch(
+        `/api/v1/command/confirmations/${input.id}/decide`,
+        { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ decision: input.decision }) },
+      );
+      if (!resp.ok) throw new Error("confirmation.decide_failed");
+      return resp.json();
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["cc-confirmations-pending"] }),
+  });
+
+  const pending = pendingQuery.data ?? [];
+  if (pending.length === 0) {
+    return <p className="secondary">{t("cc.noPendingConfirmations")}</p>;
+  }
+  return (
+    <ul className="watch-list">
+      {pending.map((c) => (
+        <li key={c.confirmation_id} className="result-row">
+          <span className="mono cc-confirm-tool">{c.tool_name}</span>
+          <span className="cc-card-actions">
+            <button
+              type="button"
+              className="gl-button gl-button-primary"
+              data-testid={"confirm-approve-" + c.confirmation_id}
+              aria-label={t("cc.confirmApprove")}
+              disabled={decideMutation.isPending}
+              onClick={() => decideMutation.mutate({ id: c.confirmation_id, decision: "approved" })}
+            >
+              {t("cc.confirmApprove")}
+            </button>
+            <button
+              type="button"
+              className="gl-button gl-button-ghost"
+              data-testid={"confirm-reject-" + c.confirmation_id}
+              aria-label={t("cc.confirmReject")}
+              disabled={decideMutation.isPending}
+              onClick={() => decideMutation.mutate({ id: c.confirmation_id, decision: "rejected" })}
+            >
+              {t("cc.confirmReject")}
+            </button>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** 后台任务（F9 跑道：状态 + 进度 + 恢复入口）。 */
+function BackgroundTasksPanel() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const tasksQuery = useQuery({
+    queryKey: ["cc-background-tasks"],
+    refetchInterval: 5000,
+    queryFn: async (): Promise<
+      Array<{ task_id: string; tool_name: string; status: string; progress: number }>
+    > => {
+      const resp = await fetch("/api/v1/command/tasks?limit=6");
+      if (!resp.ok) return [];
+      const body = (await resp.json()) as {
+        results: Array<{ task_id: string; tool_name: string; status: string; progress: number }>;
+      };
+      return body.results ?? [];
+    },
+  });
+
+  const retryMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const resp = await fetch(`/api/v1/command/tasks/${taskId}/retry`, { method: "POST" });
+      if (!resp.ok) throw new Error("task.retry_failed");
+      return resp.json();
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["cc-background-tasks"] }),
+  });
+
+  const tasks = tasksQuery.data ?? [];
+  if (tasks.length === 0) {
+    return <p className="secondary">{t("cc.noBackgroundTasks")}</p>;
+  }
+  return (
+    <ul className="watch-list">
+      {tasks.map((task) => (
+        <li key={task.task_id} className="result-row" data-testid={"bg-task-" + task.status}>
+          <span className="mono">{task.tool_name}</span>
+          <span
+            className={
+              task.status === "failed"
+                ? "status-error"
+                : task.status === "succeeded"
+                  ? "status-ok"
+                  : "secondary"
+            }
+          >
+            {t(`cc.taskStatus.${task.status}`, { defaultValue: task.status })}
+            {task.progress > 0 ? ` · ${task.progress}%` : ""}
+          </span>
+          {(task.status === "failed" || task.status === "cancelled") && (
+            <button
+              type="button"
+              className="gl-button gl-button-ghost"
+              data-testid={"task-retry-" + task.task_id}
+              onClick={() => retryMutation.mutate(task.task_id)}
+            >
+              {t("cc.taskRetry")}
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }
 

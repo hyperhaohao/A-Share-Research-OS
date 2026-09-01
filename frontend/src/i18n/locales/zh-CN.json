@@ -658,7 +658,41 @@
     "workbenchEmptyHint": "这里显示标的速记 · 研究产物 · 待验证预测",
     "workbenchTabs": "动态工作台",
     "workbenchEmpty": "暂无打开的产物 —— 产物将自动打开对应页面",
-    "workbenchOpenFull": "在完整页面打开 →"
+    "workbenchOpenFull": "在完整页面打开 →",
+    "pendingConfirmations": "未处理确认",
+    "noPendingConfirmations": "暂无待确认操作",
+    "backgroundTasks": "后台任务",
+    "noBackgroundTasks": "暂无后台任务",
+    "confirmApprove": "批准",
+    "confirmReject": "拒绝",
+    "taskRetry": "重试",
+    "threadIdle": "事件线程空闲 —— 运行研究计划后此处实时展示执行链",
+    "cardPlan": "计划",
+    "cardToolCall": "工具调用",
+    "cardToolResult": "工具结果",
+    "cardToolError": "工具失败",
+    "cardConfirmation": "确认门",
+    "cardTask": "后台任务",
+    "cardRun": "计划执行",
+    "cardArtifact": "产物",
+    "cardArtifactNote": "已自动打开工作台页面",
+    "cardMemory": "记忆压缩",
+    "memoryCompacted": "会话记忆已压缩至版本 {version}；原始事件仍可审计",
+    "taskStatus": {
+      "queued": "排队中",
+      "running": "执行中",
+      "succeeded": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    },
+    "confirmationStatus": {
+      "pending": "待确认",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "expired": "已过期",
+      "revoked": "已撤销",
+      "consumed": "已执行"
+    }
   },
   "industryWs": {
     "title": "产业研究",
