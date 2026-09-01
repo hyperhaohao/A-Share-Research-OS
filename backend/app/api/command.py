@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.application.command_events_orm import CommandEventORM  # noqa: F401 — 注册 Base metadata（create_all/迁移前置）
 from app.application.conversation import ConversationRepository
 from app.db import get_session, session_scope
 from app.services.commander import (
@@ -32,7 +33,12 @@ class TurnIn(BaseModel):
 
 @router.post("/sessions", status_code=201)
 def create_session(session: Session = Depends(get_session)) -> dict:
+    from app.application.command_events import append_event
+
     created = ConversationRepository(session).create_session("研究对话")
+    sid = created["session_id"]
+    append_event(session, sid, "session_created",
+                 payload={"title": created.get("title")})
     session.commit()
     return {"session": created}
 
@@ -80,6 +86,10 @@ def post_turn(
 
     text = payload.text.strip()
     user_turn = repo.add_turn(session_id, role="user", text=text)
+    from app.application.command_events import append_event
+
+    append_event(session, session_id, "user_message",
+                 payload={"text": text, "turn_id": user_turn["turn_id"]})
 
     interp = interpret_command(text)
     if interp.instrument_hint is None:
@@ -91,6 +101,8 @@ def post_turn(
             "例如：研究中国稀土最近的资产重组迹象。"
         )
         refusal = repo.add_turn(session_id, role="commander", text=reply)
+        append_event(session, session_id, "assistant_message",
+                     payload={"text": reply, "refusal": True})
         session.commit()
         return {"turn": user_turn, "reply": refusal, "plan": None}
 
@@ -104,6 +116,20 @@ def post_turn(
     reply_text = "已创建研究计划：" + " → ".join(s.title for s in steps)
     commander_turn = repo.add_turn(
         session_id, role="commander", text=reply_text, plan_id=plan["plan_id"]
+    )
+    append_event(
+        session, session_id, "plan_created",
+        plan_id=plan["plan_id"],
+        payload={"plan_id": plan["plan_id"], "title": plan["title"],
+                 "steps": [
+                     {"step_id": st["step_id"], "title": st["title"],
+                      "action": st.get("action")}
+                     for st in plan["steps"]
+                 ]},
+    )
+    append_event(
+        session, session_id, "assistant_message",
+        plan_id=plan["plan_id"], payload={"text": reply_text},
     )
     # commit before the worker thread opens its own session (cross-connection
     # visibility — same contract as POST /tasks/{id}/run)
@@ -155,3 +181,122 @@ def list_plans(
 ) -> dict:
     results = ConversationRepository(session).list_plans(session_id, limit=limit)
     return {"count": len(results), "results": results}
+
+
+# ── F5：帷幄事件回放 / Snapshot / Live SSE（任务书 §8.3/§8.4） ────────────────
+
+
+@router.get("/sessions/{session_id}/events")
+def list_session_events(
+    session_id: str,
+    after_sequence: int = Query(default=0, ge=0),
+    limit: int = Query(default=200, ge=1, le=500),
+    session: Session = Depends(get_session),
+) -> dict:
+    """事件回放（纯读；重放不重复执行副作用）。"""
+    from app.application.command_events import latest_sequence, list_events
+
+    results = list_events(session, session_id, after_sequence=after_sequence, limit=limit)
+    return {
+        "session_id": session_id,
+        "latest_sequence": latest_sequence(session, session_id),
+        "count": len(results),
+        "results": results,
+    }
+
+
+@router.get("/sessions/{session_id}/snapshot")
+def session_snapshot(
+    session_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """连接快照：会话 + 对话 + 计划 + 事件断点（刷新恢复的数据源）。"""
+    from app.application.command_events import latest_sequence
+
+    repo = ConversationRepository(session)
+    detail = repo.get_session(session_id)
+    if detail is None:
+        from app.core.errors import AppError
+
+        raise AppError("session.not_found", status_code=404)
+    return {
+        "session": detail,
+        "turns": repo.list_turns(session_id),
+        "plans": repo.list_plans(session_id, limit=50),
+        "latest_sequence": latest_sequence(session, session_id),
+    }
+
+
+@router.get("/sessions/{session_id}/stream")
+def stream_session_events(
+    session_id: str,
+    after_sequence: int = Query(default=0, ge=0),
+    max_seconds: int = Query(default=120, ge=5, le=3600),
+    session: Session = Depends(get_session),
+):
+    """Live SSE（任务书 §8.4）：
+
+    Connect → Session Snapshot 校验 → Replay(after_sequence) → Live Events →
+    Heartbeat →（断线）以 last sequence 重连续传。sequence 单调 → 不丢事件、
+    不重复展示。每轮 poll 独立短会话（跨连接可见已提交事件）；每轮回放有界
+    （limit 500）构成慢客户端背压；达时长上限发 stream_end 注释帧。
+    """
+    import time
+
+    from fastapi.responses import StreamingResponse
+    from sqlalchemy.orm import sessionmaker
+
+    from app.application.command_events import encode_sse, latest_sequence, list_events
+
+    engine = session.get_bind()
+    factory = sessionmaker(bind=engine, future=True, expire_on_commit=False)
+
+    def poll() -> tuple[bool, list[dict], int]:
+        from app.application.conversation import ConversationRepository
+
+        with session_scope(factory) as db:
+            exists = ConversationRepository(db).get_session(session_id) is not None
+            if not exists:
+                return False, [], 0
+            events = list_events(db, session_id, after_sequence=_cursor[0], limit=500)
+            return True, events, latest_sequence(db, session_id)
+
+    from app.application.conversation import ConversationRepository as _CR
+
+    with session_scope(factory) as db:
+        if _CR(db).get_session(session_id) is None:
+            from app.core.errors import AppError
+
+            raise AppError("session.not_found", status_code=404)
+
+    _cursor = [after_sequence]
+
+    def event_stream():
+        yield "retry: 3000\n\n"
+        deadline = time.monotonic() + max_seconds
+        idle = False
+        while time.monotonic() < deadline:
+            ok, events, latest = poll()
+            if not ok:
+                yield "event: run_failed\ndata: {\"error\":\"session.not_found\"}\n\n"
+                return
+            if events:
+                idle = False
+                for ev in events:
+                    _cursor[0] = max(_cursor[0], ev["sequence"])
+                    sent = yield encode_sse(ev)
+                    if sent is False:  # client disconnected
+                        return
+            else:
+                _cursor[0] = max(_cursor[0], latest)
+                if not idle:
+                    idle = True
+                time.sleep(0.6)
+                yield ": heartbeat\n\n"
+        yield ": stream_end\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

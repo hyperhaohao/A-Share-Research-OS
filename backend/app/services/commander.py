@@ -290,16 +290,38 @@ class ResearchCommander:
 
     def execute(self, plan: dict) -> dict:
         """Run pending steps in order; the first failure stops the plan and
-        is recorded on it (failures are visible, never silent)."""
+        is recorded on it (failures are visible, never silent).
+
+        F5：全程发帷幄事件（step_started/step_updated/tool_call/tool_result/
+        tool_error/run_completed/run_failed，correlation=corr_<plan>_<step>）。
+        """
+        from app.application.command_events import append_event
         from app.application.conversation import ConversationRepository
 
         repo = ConversationRepository(self._session)
         plan = repo.get_plan(plan["plan_id"]) or plan
         failed: str | None = None
+        sid = plan.get("session_id")
 
         for step in plan["steps"]:
             if step["status"] in (PlanStepStatus.OK, PlanStepStatus.FAILED):
                 continue
+            correlation = f"corr_{plan['plan_id']}_{step['step_id']}"
+            if sid:
+                append_event(
+                    self._session, sid, "step_started",
+                    plan_id=plan["plan_id"], correlation_id=correlation,
+                    status="running",
+                    payload={"step_id": step["step_id"], "title": step["title"],
+                             "action": step.get("action")},
+                )
+                append_event(
+                    self._session, sid, "tool_call",
+                    plan_id=plan["plan_id"], correlation_id=correlation,
+                    status="running",
+                    payload={"tool": step.get("action"), "step_id": step["step_id"],
+                             "title": step["title"]},
+                )
 
             def mutate_running(p: dict, step_id=step["step_id"]) -> dict:
                 for s in p["steps"]:
@@ -314,6 +336,13 @@ class ResearchCommander:
             except Exception as exc:  # noqa: BLE001 — step failure is plan state
                 failed = step["title"]
                 error_text = str(exc)[:300]
+                if sid:
+                    append_event(
+                        self._session, sid, "tool_error",
+                        plan_id=plan["plan_id"], correlation_id=correlation,
+                        status="failed",
+                        payload={"step_id": step["step_id"], "error": error_text},
+                    )
 
                 def mutate_failed(p: dict, step_id=step["step_id"]) -> dict:
                     for s in p["steps"]:
@@ -336,6 +365,29 @@ class ResearchCommander:
                     p["run_id"] = detail  # the pipeline run this plan produced
                 return p
             plan = repo.update_plan(plan["plan_id"], mutate_ok)
+            if sid:
+                append_event(
+                    self._session, sid, "tool_result",
+                    plan_id=plan["plan_id"], correlation_id=correlation,
+                    status="completed",
+                    payload={"step_id": step["step_id"], "detail": str(detail)[:200]},
+                    artifact_ids=list(artifact_ids or []),
+                )
+                append_event(
+                    self._session, sid, "step_updated",
+                    plan_id=plan["plan_id"], correlation_id=correlation,
+                    status="ok",
+                    payload={"step_id": step["step_id"], "title": step["title"],
+                             "detail": str(detail)[:200]},
+                    artifact_ids=list(artifact_ids or []),
+                )
+                if artifact_ids:
+                    append_event(
+                        self._session, sid, "artifact_created",
+                        plan_id=plan["plan_id"], correlation_id=correlation,
+                        payload={"step_id": step["step_id"]},
+                        artifact_ids=list(artifact_ids),
+                    )
 
         status = PlanStatus.FAILED if failed else PlanStatus.COMPLETED
 
@@ -344,7 +396,21 @@ class ResearchCommander:
             if failed:
                 p["error"] = failed
             return p
-        return repo.update_plan(plan["plan_id"], finalize)
+        plan = repo.update_plan(plan["plan_id"], finalize)
+        if sid:
+            if failed:
+                append_event(
+                    self._session, sid, "run_failed",
+                    plan_id=plan["plan_id"], status="failed",
+                    payload={"failed_step": failed},
+                )
+            else:
+                append_event(
+                    self._session, sid, "run_completed",
+                    plan_id=plan["plan_id"], status="completed",
+                    payload={"run_id": plan.get("run_id")},
+                )
+        return plan
 
     # -- steps -----------------------------------------------------------------
 

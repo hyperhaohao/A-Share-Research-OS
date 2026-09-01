@@ -31,7 +31,7 @@
 - [x] F2 Research State Review Fix
 - [x] F3 Signal Production Fix
 - [x] F4 Integrity Migration（confidence/source independence/subject swap）
-- [ ] F5 Weiwo Event Foundation
+- [x] F5 Weiwo Event Foundation
 - [ ] F6 Weiwo Tool Orchestration
 - [ ] F7 Weiwo Approval Governance
 - [ ] F8 Weiwo Dynamic Workbench
