@@ -340,3 +340,24 @@
     grid-auto-columns: unset;
   }
 }
+
+/* ── G1 产业链图谱 ────────────────────────────────────────────────────── */
+.ig-segment-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.ig-segment {
+  display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--line, #ddd); border-radius: 4px;
+  padding: 6px 10px; min-width: 120px;
+}
+.ig-segment-order { font-size: 10px; color: var(--secondary, #888); }
+.ig-segment-name { font-weight: 600; }
+.ig-segment-pos { font-size: 11px; }
+.ig-edge { flex-wrap: wrap; }
+.ig-edge-path { display: inline-flex; gap: 6px; align-items: baseline; font-weight: 600; }
+.ig-edge-dir { font-size: 16px; }
+.ig-edge-dir.up { color: var(--up, #1a7f37); }
+.ig-edge-dir.down { color: var(--down, #c23a2f); }
+.ig-edge-relation { font-size: 11px; }
+.ig-edge-metric { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ig-edge-evidence { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.ig-pos-note { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ig-as-of { margin: 4px 0 0; }

@@ -27,7 +27,7 @@
 > F0–F15 第三轮完成后，语义维度重新计权：Structural PASS ≠ Semantic PASS。
 
 - [x] G0 基线、迁移台账和状态修正
-- [ ] G1 真实 Industry Graph
+- [x] G1 真实 Industry Graph
 - [ ] G2 产业语义 PIT/证据治理/五轴
 - [ ] G3 Experience 原—炼—验—用
 - [ ] G4 Typed Dataflow Workflow

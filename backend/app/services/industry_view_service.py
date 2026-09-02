@@ -58,7 +58,16 @@ class IndustryViewService:
         if industry_map is None:
             industry_map = self._maps.build_industry_map(instrument_id)
         chain = list(industry_map.get("industry_chain") or [])
-        related = list(industry_map.get("related_instruments") or [])
+        # G1：related 持久化去重（按 instrument_id 保留首现，防重复写入膨胀）
+        _seen_related: set[str] = set()
+        related = []
+        for r in (industry_map.get("related_instruments") or []):
+            rid = (r or {}).get("instrument_id") if isinstance(r, dict) else r
+            if rid and rid in _seen_related:
+                continue
+            if rid:
+                _seen_related.add(rid)
+            related.append(r)
         disclosures = dict(industry_map.get("disclosures") or {})
 
         segments = [

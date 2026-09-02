@@ -43,6 +43,15 @@ from app.api.screening import router as screening_router
 from app.api.strategies import router as strategies_router
 from app.api.strategy_monitors import router as strategy_monitors_router
 from app.api.research_map import router as research_map_router
+from app.api.industry_graph import router as industry_graph_router
+from app.storage.industry_graph_orm import (  # noqa: F401 — G1 Base metadata 注册（create_all 前置）
+    CompanyIndustryPositionORM as _G1Pos,
+    IndustryChainORM as _G1Chain,
+    IndustryEdgeEvidenceORM as _G1EE,
+    IndustryEdgeORM as _G1Edge,
+    IndustryProductORM as _G1Prd,
+    IndustrySegmentORM as _G1Seg,
+)
 from app.api.replay import router as replay_router
 from app.api.views import router as views_router
 from app.api.auth import router as auth_router
@@ -121,6 +130,7 @@ def create_app() -> FastAPI:
         )
 
     register_error_handlers(app)
+    app.include_router(industry_graph_router, prefix="/api/v1")
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(instruments_router, prefix="/api/v1")
     app.include_router(market_data_router, prefix="/api/v1")

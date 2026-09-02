@@ -766,7 +766,25 @@
       "weakening": "降温",
       "invalidated": "已失效",
       "uncertain": "不确定"
-    }
+    },
+    "tabGraph": "产业链图",
+    "graphChains": "产业链",
+    "graphTitle": "产业链图谱",
+    "graphEmpty": "该标的研究域暂无产业链图谱",
+    "graphSeedHint": "产业链图谱由研究运营显式构建（POST /industry-graph/seed/rare-earth）",
+    "graphSegments": "环节",
+    "graphCompanies": "家公司",
+    "graphEdges": "传导边",
+    "noEdgeEvidence": "暂无支撑证据（不可发布）",
+    "edgeStatus": {
+      "active": "可发布",
+      "degraded": "证据不足降级",
+      "insufficient": "证据缺失",
+      "retired": "已退役"
+    },
+    "graphPositions": "公司在链上的位置",
+    "revenueExposure": "收入暴露",
+    "graphReplayable": "as_of 可重放"
   },
   "experienceWs": {
     "sourceTitle": "原 · 来源与主张",

@@ -11,9 +11,10 @@ import {
 } from "./industryView";
 import { IndustryChainView } from "./IndustryChainView";
 import { GlobalIndustryPositionView } from "./GlobalIndustryPositionView";
+import { IndustryGraphView } from "./IndustryGraphView";
 import { IndustrySegmentDetail } from "./IndustrySegmentDetail";
 
-type WorkspaceTab = "chain" | "global";
+type WorkspaceTab = "chain" | "global" | "graph";
 
 /**
  * 产业研究三视图工作区（Guanlan Direct Port G2，方案 §7/§33）：
@@ -115,6 +116,19 @@ export function IndustryResearchWorkspace({
             >
               {t("industryWs.tabGlobal")}
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "graph"}
+              className={`ir-tab${tab === "graph" ? " ir-tab-on" : ""}`}
+              data-testid="ir-tab-graph"
+              onClick={() => {
+                setTab("graph");
+                setSegment(null);
+              }}
+            >
+              {t("industryWs.tabGraph")}
+            </button>
           </div>
           <Button
             variant="primary"
@@ -138,6 +152,9 @@ export function IndustryResearchWorkspace({
         <IndustryChainView view={view} onOpenSegment={(s) => setSegment(s)} />
       )}
       {tab === "global" && <GlobalIndustryPositionView view={view} />}
+      {tab === "graph" && instrumentId != null && (
+        <IndustryGraphView instrumentId={instrumentId} />
+      )}
 
       <details className="technical-details gl-details">
         <summary className="secondary">{t("industryWs.technical")}</summary>

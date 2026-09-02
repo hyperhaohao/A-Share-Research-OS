@@ -767,7 +767,25 @@
       "weakening": "weakening",
       "invalidated": "invalidated",
       "uncertain": "uncertain"
-    }
+    },
+    "tabGraph": "Industry Graph",
+    "graphChains": "Chains",
+    "graphTitle": "Industry Chain Graph",
+    "graphEmpty": "No industry chain graph in this research scope yet",
+    "graphSeedHint": "Chain graphs are built explicitly (POST /industry-graph/seed/rare-earth)",
+    "graphSegments": "Segments",
+    "graphCompanies": "companies",
+    "graphEdges": "Transmission Edges",
+    "noEdgeEvidence": "No supporting evidence (unpublishable)",
+    "edgeStatus": {
+      "active": "publishable",
+      "degraded": "evidence-degraded",
+      "insufficient": "insufficient",
+      "retired": "retired"
+    },
+    "graphPositions": "Company Positions",
+    "revenueExposure": "Revenue exposure",
+    "graphReplayable": "as_of replayable"
   },
   "experienceWs": {
     "sourceTitle": "Raw · Source & claims",

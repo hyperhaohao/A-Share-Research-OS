@@ -6,7 +6,7 @@
 > 执行顺序：G0 → G1 → G2 → G3 → G4 → G5 → G6 → G7 → G8 → G9 → G10 → G11 → G12 → G13 → G14
 
 - [x] G0 基线、迁移台账和状态修正
-- [ ] G1 真实 Industry Graph（Chain/Segment/Edge/Product/Position/EdgeEvidence）
+- [x] G1 真实 Industry Graph（Chain/Segment/Edge/Product/Position/EdgeEvidence）
 - [ ] G2 产业语义 PIT/证据治理/五轴
 - [ ] G3 Experience 原—炼—验—用（规则组件 + Confirmation/Audit）
 - [ ] G4 Typed Dataflow Workflow（端口/schema/data_contract）

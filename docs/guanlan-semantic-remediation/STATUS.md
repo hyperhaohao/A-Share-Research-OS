@@ -10,7 +10,7 @@ Status: REJECT — GUANLAN RESEARCH CAPABILITY MIGRATION INCOMPLETE（2026-09-02
 Baseline: ASRO c66952e | backend 459/0 | vitest 35/35 | tsc/build PASS
 台账：MIGRATION-MATRIX.md（G0 代码实读；六项关键指控全部核实属实）
 
-执行中：G1 真实 Industry Graph
+G1 DONE（见 G1-MANIFEST.md）。执行中：G2 产业语义 PIT/证据治理/五轴。
 ```
 
 ## 关键核实结论（代码实读）
