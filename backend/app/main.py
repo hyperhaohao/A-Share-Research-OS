@@ -45,6 +45,11 @@ from app.api.strategy_monitors import router as strategy_monitors_router
 from app.api.research_map import router as research_map_router
 from app.api.industry_graph import router as industry_graph_router
 from app.api.workflow_typed import router as workflow_typed_router
+from app.api.screening_v2 import router as screening_v2_router
+from app.storage.screen_definition_orm import (  # noqa: F401 — G5 metadata
+    ScreenDefinitionORM as _G5Def,
+    ScreenDefinitionRunORM as _G5Run,
+)
 from app.storage.workflow_io_orm import WorkflowNodeIOORM  # noqa: F401 — G4 metadata
 from app.storage.industry_graph_orm import (  # noqa: F401 — G1 Base metadata 注册（create_all 前置）
     CompanyIndustryPositionORM as _G1Pos,
@@ -134,6 +139,7 @@ def create_app() -> FastAPI:
     register_error_handlers(app)
     app.include_router(industry_graph_router, prefix="/api/v1")
     app.include_router(workflow_typed_router, prefix="/api/v1")
+    app.include_router(screening_v2_router, prefix="/api/v1")
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(instruments_router, prefix="/api/v1")
     app.include_router(market_data_router, prefix="/api/v1")
