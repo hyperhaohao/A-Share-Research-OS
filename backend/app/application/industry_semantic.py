@@ -23,6 +23,7 @@ from app.domain.industry_semantic import (
     VALID_TRANSMISSION_DIRECTIONS,
 )
 from app.storage.orm import Base, EvidenceORM
+from app.storage.industry_graph_orm import IndustryEdgeORM
 
 
 def _utc() -> datetime:
@@ -46,6 +47,11 @@ class IndustrySemanticORM(Base):
     payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    # G2：图谱链接 + 反对证据（任务书 §G2.1）
+    chain_id: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
+    segment_id: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    edge_id: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
+    contrary_evidence_refs_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
 
 class IndustrySemanticRepository:
@@ -116,6 +122,10 @@ class IndustrySemanticRepository:
             "title": r.title,
             "mechanism": r.mechanism,
             "evidence_refs": list(r.evidence_refs_json or []),
+            "chain_id": r.chain_id,
+            "segment_id": r.segment_id,
+            "edge_id": r.edge_id,
+            "contrary_evidence_refs": list(r.contrary_evidence_refs_json or []),
             "payload": dict(r.payload_json or {}),
             "as_of": r.as_of.isoformat() if r.as_of else None,
             "created_at": r.created_at.isoformat() if r.created_at else None,
@@ -184,6 +194,10 @@ class IndustrySemanticService:
         instrument_id: str | None = None,
         as_of: datetime | None = None,
         extra_payload: dict | None = None,
+        chain_id: str | None = None,
+        segment_id: str | None = None,
+        edge_id: str | None = None,
+        contrary_evidence_claims: list[dict] | None = None,
     ) -> dict:
         if object_type == "driver":
             self._require(direction in VALID_DIRECTIONS, f"invalid direction: {direction}")
@@ -199,6 +213,61 @@ class IndustrySemanticService:
                 "invalid axis",
             )
         self._verify_citations(evidence_claims)
+        if contrary_evidence_claims:
+            self._verify_citations(contrary_evidence_claims)
+
+        # G2（§G2.1/§G2.2）：Evidence Ownership Gate —— 证据存在 + PIT
+        # （available_time ≤ as_of）+ 产业归属（链上位置或产业/环节名提及）。
+        from app.services.industry_graph_service import IndustryGraphService
+
+        gate = IndustryGraphService(self._session)
+        as_of_eff = as_of or _utc()
+        graph_links = {"chain_id": chain_id, "segment_id": segment_id, "edge_id": edge_id}
+        if any(graph_links.values()):
+            # 显式链接时校验目标存在且属于同一链
+            if edge_id:
+                edge_row = self._session.scalars(
+                    select(IndustryEdgeORM).where(IndustryEdgeORM.edge_id == edge_id)
+                ).first()
+                if edge_row is None:
+                    raise ValueError(f"edge not found: {edge_id}")
+                graph_links["chain_id"] = graph_links["chain_id"] or edge_row.chain_id
+            if chain_id and gate._get_chain_row(chain_id) is None:
+                raise ValueError(f"chain not found: {chain_id}")
+            if segment_id and gate._get_segment_row(segment_id) is None:
+                raise ValueError(f"segment not found: {segment_id}")
+        # 链回填（edge→chain）落到落库参数
+        if chain_id is None and any(graph_links.values()):
+            chain_id = graph_links.get("chain_id")
+        industry_name = None
+        for c in list(evidence_claims) + list(contrary_evidence_claims or []):
+            ev_row = self._session.scalars(
+                select(EvidenceORM).where(EvidenceORM.evidence_id == str(c.get("evidence_id")))
+            ).first()
+            if ev_row is None:
+                continue
+            available = ev_row.available_time
+            if available is not None and available.tzinfo is None:
+                available = available.replace(tzinfo=timezone.utc)
+            if available is not None and available > as_of_eff:
+                raise ValueError(
+                    f"evidence {c.get('evidence_id')} available_at "
+                    f"{available.isoformat()} > as_of {as_of_eff.isoformat()}"
+                )
+            # 产业归属：链名/环节名提及 或 标的在含该产业名的链上有位置
+            if industry_name is None:
+                from app.storage.industry_graph_orm import IndustryChainORM as _C
+
+                chain_row = self._session.scalars(
+                    select(_C).where(_C.name.contains(industry_id))
+                ).first() if industry_id else None
+                industry_name = chain_row.name if chain_row else industry_id
+            related = self._evidence_relates_to_industry(industry_name, ev_row)
+            if not related:
+                raise ValueError(
+                    f"evidence {c.get('evidence_id')} ({ev_row.instrument_id}) "
+                    f"has no relation to industry {industry_id}"
+                )
 
         version = self._repo.latest_version(object_type, object_key) + 1
         row = IndustrySemanticORM(
@@ -212,6 +281,10 @@ class IndustrySemanticService:
             title=title[:200],
             mechanism=mechanism[:2000],
             evidence_refs_json=evidence_claims,
+            chain_id=chain_id,
+            segment_id=segment_id,
+            edge_id=edge_id,
+            contrary_evidence_refs_json=list(contrary_evidence_claims or []) or None,
             payload_json=extra_payload or {},
             created_at=_utc(),
             as_of=as_of or _utc(),
@@ -240,8 +313,11 @@ class IndustrySemanticService:
                 route="/industry-map",
                 metadata={"industry_id": industry_id, "status": status},
             )
-        except Exception:  # noqa: BLE001 — 注册失败不阻断研究状态写入
-            pass
+        except Exception as exc:  # noqa: BLE001 — 不阻断研究状态，但显形 INCOMPLETE_PROVENANCE
+            saved["provenance_status"] = "INCOMPLETE_PROVENANCE"
+            saved["provenance_error"] = f"{type(exc).__name__}: {exc}"[:300]
+        else:
+            saved["provenance_status"] = "complete"
         return saved
 
     @staticmethod
@@ -250,22 +326,45 @@ class IndustrySemanticService:
             raise ValueError(message)
 
     def narrative_temperature(self, object_key: str, *, now: datetime | None = None) -> dict:
-        """可复算的温度（方案 §9.5）：对比最近 14 天与再前 14 天的证据观察计数。
+        """可复算温度（G2，§G2.3）：**服务端**从证据表读取
+        ``available_time``（禁止客户端提交时间集合），且只统计
+        已验证信任层（T0/T1）的证据为有效观察；T2/T3 单独披露不计入。
 
         观察点总量不足（<3）→ insufficient（不展示数字温度，不造数值）。
         """
+        from app.domain.source_trust import trust_for_evidence
+
         now = now or _utc()
         rows = self._repo.get_versions("narrative", object_key)
         if not rows:
-            return {"temperature": "insufficient", "recent_obs": 0, "prior_obs": 0}
+            return {"temperature": "insufficient", "recent_obs": 0, "prior_obs": 0,
+                    "basis": "server_evidence_table"}
         latest = max(rows, key=lambda r: r["version"])
-        stamps = [
-            datetime.fromisoformat(c["observed_at"]).timestamp()
-            for c in (latest["evidence_refs"] or [])
-            if c.get("observed_at")
-        ]
+        ev_ids = [str(c.get("evidence_id") or "")
+                  for c in (latest["evidence_refs"] or [])]
+        ev_ids = [e for e in ev_ids if e]
+        stamps: list[float] = []
+        lower_trust = 0
+        for evidence_id in ev_ids:
+            row = self._session.scalars(
+                select(EvidenceORM).where(EvidenceORM.evidence_id == evidence_id)
+            ).first()
+            if row is None:
+                continue
+            trust = trust_for_evidence(row.authority_level, row.evidence_type)
+            available = row.available_time
+            if available is not None and available.tzinfo is None:
+                available = available.replace(tzinfo=timezone.utc)
+            if available is None:
+                continue
+            if trust.value.startswith(("T0", "T1")):
+                stamps.append(available.timestamp())
+            else:
+                lower_trust += 1
         if len(stamps) < 3:
-            return {"temperature": "insufficient", "recent_obs": 0, "prior_obs": 0}
+            return {"temperature": "insufficient", "recent_obs": 0, "prior_obs": 0,
+                    "validated_obs": len(stamps), "lower_trust_obs": lower_trust,
+                    "basis": "server_evidence_table"}
         recent_cut = now.timestamp() - 14 * 86400
         prior_cut = now.timestamp() - 28 * 86400
         recent = sum(1 for t in stamps if t >= recent_cut)
@@ -276,4 +375,36 @@ class IndustrySemanticService:
             temperature = "cooling"
         else:
             temperature = "stable"
-        return {"temperature": temperature, "recent_obs": recent, "prior_obs": prior}
+        return {"temperature": temperature, "recent_obs": recent, "prior_obs": prior,
+                "validated_obs": len(stamps), "lower_trust_obs": lower_trust,
+                "basis": "server_evidence_table"}
+
+    def _evidence_relates_to_industry(self, industry_name: str, ev) -> bool:
+        """G2 产业归属：证据文本提及产业/环节名，或标的相关链上有位置。"""
+        text = f"{ev.title or ''} {ev.summary or ''}"
+        if industry_name and industry_name in text:
+            return True
+        from app.storage.industry_graph_orm import (
+            CompanyIndustryPositionORM as _Pos,
+            IndustryChainORM as _Chain,
+        )
+
+        chains = self._session.scalars(
+            select(_Chain).where(_Chain.name.contains((industry_name or "")[:100]))
+        ).all() if industry_name else []
+        for chain in chains:
+            pos = self._session.scalars(
+                select(_Pos)
+                .where(_Pos.chain_id == chain.chain_id)
+                .where(_Pos.instrument_id == (ev.instrument_id or ""))
+            ).first()
+            if pos is not None:
+                return True
+            from app.storage.industry_graph_orm import IndustrySegmentORM as _Seg
+
+            segments = self._session.scalars(
+                select(_Seg).where(_Seg.chain_id == chain.chain_id)
+            ).all()
+            if any(s.name and s.name in text for s in segments):
+                return True
+        return False

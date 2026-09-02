@@ -52,29 +52,33 @@ ANNOUNCE_TEXT = (
 )
 
 
-def _insert_evidence(client, *, evidence_id: str, summary: str, authority: str = "B2") -> str:
+def _insert_evidence(client, *, evidence_id: str, summary: str, authority: str = "B2",
+                     available_days_ago: float | None = None) -> str:
     """经 save 插入证据（内容寻址 id），返回真实 evidence_id。"""
     from datetime import datetime, timezone
 
     from app.domain.evidence import AuthorityLevel, EvidenceRecord, EvidenceType, FactStatus
     from app.storage.repository import EvidenceRepository
 
+    from datetime import timedelta as _td
+
     factory = client.app.state._test_factory
     session = factory()
     try:
+        at = (datetime.now(timezone.utc) - _td(days=available_days_ago))             if available_days_ago is not None             else datetime(2026, 8, 20, tzinfo=timezone.utc)
         record = EvidenceRecord(
             instrument_id="SZSE:000831",
             evidence_type=EvidenceType.NEWS,
             title="中国稀土公告",
             summary=summary,
-            source="eastmoney_news" + evidence_id[-4:],
+            source="eastmoney_news" + evidence_id[-4:] + str(available_days_ago),
             source_type="media",
             authority_level=AuthorityLevel(authority),
             fact_status=FactStatus.MEDIA_REPORT,
-            event_time=datetime(2026, 8, 20, tzinfo=timezone.utc),
-            available_time=datetime(2026, 8, 20, tzinfo=timezone.utc),
-            ingested_time=datetime(2026, 8, 30, tzinfo=timezone.utc),
-            revision_time=datetime(2026, 8, 30, tzinfo=timezone.utc),
+            event_time=at,
+            available_time=at,
+            ingested_time=at + _td(minutes=1),
+            revision_time=at + _td(minutes=1),
         )
         saved_id, _ = EvidenceRepository(session).save(record)
         session.commit()
@@ -191,31 +195,39 @@ def test_transmission_and_invalid_direction(client):
 
 
 def test_narrative_temperature_insufficient_then_computable(client):
-    evidence_id = _insert_evidence(
-        client, evidence_id="ev_r3_news0004", summary=ANNOUNCE_TEXT
-    )
-    span_claim = {"evidence_id": evidence_id,
-                  "support_span": "以集中竞价方式减持公司股份不超过1061.22万股",
-                  "observed_at": "2026-08-20T10:31:00Z"}
+    """G2（§G2.3）：温度服务端复算 —— 从证据表 available_time 读取 +
+    信任门（T0/T1 计入已验证观察）；客户端 observed_at 不再参与（伪造也忽略）。"""
+    span = "以集中竞价方式减持公司股份不超过1061.22万股"
     base = {
         "object_key": "reduce_wave",
         "industry_id": "稀土",
         "title": "稀土板块股东减持潮",
         "instrument_id": "SZSE:000831",
     }
+    # 单证据 → insufficient（观察点不足）
+    e1 = _insert_evidence(client, evidence_id="ev_r3_news0004", summary=ANNOUNCE_TEXT,
+                          available_days_ago=10, authority="A1")
     client.post("/api/v1/industry-semantics/narrative", json={
-        **base, "status": "emerging", "evidence_claims": [dict(span_claim)],
+        **base, "status": "emerging",
+        "evidence_claims": [{"evidence_id": e1, "support_span": span,
+                             "observed_at": "2099-01-01T00:00:00Z"}],
     })
     temp = client.get("/api/v1/industry-semantics/narrative/reduce_wave/temperature").json()
-    assert temp["temperature"] == "insufficient"  # 证据点不足 → 不展示温度
+    assert temp["temperature"] == "insufficient"
+    assert temp["basis"] == "server_evidence_table"
 
-    # 新版本携带 3 个观察点（近窗 2 + 前窗 1）→ 可复算 warming
+    # 新版本：近窗 2 条（7/8 天前）+ 前窗 1 条（21 天前）→ warming；
+    # 客户端 observed_at=2099 伪造 → 服务端忽略
+    e2 = _insert_evidence(client, evidence_id="ev_r3_news0005", summary=ANNOUNCE_TEXT,
+                          available_days_ago=7, authority="B1")
+    e3 = _insert_evidence(client, evidence_id="ev_r3_news0006", summary=ANNOUNCE_TEXT,
+                          available_days_ago=21, authority="A1")
     client.post("/api/v1/industry-semantics/narrative", json={
         **base, "status": "active",
         "evidence_claims": [
-            {**span_claim, "observed_at": "2026-08-20T10:31:00Z"},
-            {**span_claim, "observed_at": "2026-08-29T10:31:00Z"},
-            {**span_claim, "observed_at": "2026-08-10T10:31:00Z"},
+            {"evidence_id": e1, "support_span": span, "observed_at": "2099-01-01T00:00:00Z"},
+            {"evidence_id": e2, "support_span": span, "observed_at": "2099-01-01T00:00:00Z"},
+            {"evidence_id": e3, "support_span": span, "observed_at": "2099-01-01T00:00:00Z"},
         ],
     })
     temp2 = client.get("/api/v1/industry-semantics/narrative/reduce_wave/temperature").json()

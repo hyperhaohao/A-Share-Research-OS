@@ -108,6 +108,8 @@ def _run_pipeline(client, monkeypatch) -> dict:
 
 def test_industry_map_from_real_evidence(client, monkeypatch):
     body = _run_pipeline(client, monkeypatch)
+    # G2：快照由显式命令生成（GET 不再隐式建快照）
+    client.get("/api/v1/research-map/industry-map/SZSE:000831")
     resp = client.get("/api/v1/research-map/industry-map/SZSE:000831")
     if resp.status_code == 404:
         # industry source may be unavailable in this environment — the 404 is
@@ -192,8 +194,11 @@ def test_views_refuse_without_research_state(client):
 
 def test_g2_industry_view_assembles_from_real_evidence(client, monkeypatch):
     """GET /views/industry/{id}：链级→segments、五轴、真实主题/指标、披露；
-    驱动/传导/站位无证据源 → None/[]（§25 诚实置空）。"""
+    驱动/传导/站位无证据源 → None/[]（§25 诚实置空）。
+    G2：快照经显式命令生成（GET /views 不再隐式建快照）。"""
     _run_pipeline(client, monkeypatch)
+    client.get("/api/v1/research-map/industry-map/SZSE:000831")  # 显式建快照 Command
+    client.get("/api/v1/research-map/global-context/SZSE:000831")  # 显式建宏观快照
 
     resp = client.get("/api/v1/views/industry/SZSE:000831")
     assert resp.status_code == 200, resp.text
@@ -218,8 +223,10 @@ def test_g2_industry_view_assembles_from_real_evidence(client, monkeypatch):
 
 
 def test_g2_segment_view_evidence_and_404(client, monkeypatch):
-    """环节详情：环节证据为真实共现检索；链外环节 404 显式拒绝。"""
+    """环节详情：环节证据为真实共现检索；链外环节 404 显式拒绝。
+    G2：快照经显式命令生成。"""
     _run_pipeline(client, monkeypatch)
+    client.get("/api/v1/research-map/industry-map/SZSE:000831")  # 显式建快照 Command
 
     resp = client.get("/api/v1/views/industry/SZSE:000831/segment/稀土矿采选")
     assert resp.status_code == 200, resp.text

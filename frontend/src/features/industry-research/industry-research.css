@@ -361,3 +361,9 @@
 .ig-edge-evidence { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .ig-pos-note { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ig-as-of { margin: 4px 0 0; }
+.ig-axes-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ig-axis {
+  border: 1px solid var(--line, #ddd); border-radius: 4px;
+  padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 110px;
+}
+.ig-axis-name { font-size: 11px; color: var(--secondary, #888); }

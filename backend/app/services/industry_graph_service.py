@@ -462,6 +462,140 @@ class IndustryGraphService:
             })
         return out
 
+
+    # ── Global Industry Position 五轴（G2，§G2.7） ──────────────────────────
+
+    def global_position(self, chain_id: str, instrument_id: str | None = None) -> dict:
+        """五轴产业定位：资源/产能/成本/技术/政策。
+
+        每轴由图谱与证据确定性派生；无数据 → status=insufficient（显形，
+        不再固定空页）。instrument_id 给定时输出该公司视角。
+        """
+        from app.domain.industry_graph import RelationType
+        from app.storage.orm import EvidenceORM
+
+        chain = self._get_chain_row(chain_id)
+        if chain is None:
+            raise AppError("industry_graph.chain_not_found", status_code=404) from None
+        segments = self._session.scalars(
+            select(IndustrySegmentORM).where(IndustrySegmentORM.chain_id == chain_id)
+            .order_by(IndustrySegmentORM.stage_order.asc())
+        ).all()
+        positions = self._session.scalars(
+            select(CompanyIndustryPositionORM)
+            .where(CompanyIndustryPositionORM.chain_id == chain_id)
+        ).all()
+        if instrument_id:
+            positions = [p for p in positions if p.instrument_id == instrument_id]
+        edges = self._session.scalars(
+            select(IndustryEdgeORM).where(IndustryEdgeORM.chain_id == chain_id)
+        ).all()
+        seg_name = {s.segment_id: s.name for s in segments}
+
+        def axis_block(axis, status, values):
+            return {"axis": axis, "status": status, "values": values}
+
+        # 资源轴：上游（stage_order 最小环节）producer 位置
+        upstream = min((s.stage_order for s in segments), default=0)
+        upstream_ids = {s.segment_id for s in segments if s.stage_order == upstream}
+        # 资源轴为链视角（上游 producer 全量），不随 instrument 过滤 ——
+        # 公司视角下资源来自链上游，链上无上游公司时才 insufficient
+        all_chain_positions = self._session.scalars(
+            select(CompanyIndustryPositionORM)
+            .where(CompanyIndustryPositionORM.chain_id == chain_id)
+        ).all()
+        resource_values = [
+            {
+                "instrument_id": p.instrument_id,
+                "segment": seg_name.get(p.segment_id, p.segment_id),
+                "role": p.role,
+                "capacity": (p.capacity_note or "")[:120] or None,
+            }
+            for p in all_chain_positions if p.segment_id in upstream_ids
+        ]
+        axes = [axis_block(
+            "resource", "ok" if resource_values else "insufficient", resource_values)]
+
+        # 产能轴：带 capacity/暴露的位置
+        capacity_values = [
+            {
+                "instrument_id": p.instrument_id,
+                "segment": seg_name.get(p.segment_id, p.segment_id),
+                "revenue_exposure_pct": p.revenue_exposure_pct,
+                "capacity": (p.capacity_note or "")[:120] or None,
+            }
+            for p in positions
+            if (p.capacity_note or p.revenue_exposure_pct is not None)
+        ]
+        axes.append(axis_block(
+            "capacity", "ok" if capacity_values else "insufficient", capacity_values))
+
+        # 成本轴：触及本公司环节的成本/价格传导边
+        own_segments = {p.segment_id for p in positions}
+        cost_edges = [
+            e for e in edges
+            if e.relation_type in (RelationType.COST_TRANSMISSION.value,
+                                   RelationType.PRICE_TRANSMISSION.value)
+            and (not own_segments
+                 or e.source_segment_id in own_segments
+                 or e.target_segment_id in own_segments)
+        ]
+        cost_values = [
+            {
+                "edge_id": e.edge_id,
+                "metric": e.transmission_metric or None,
+                "path": f"{seg_name.get(e.source_segment_id, '')}→{seg_name.get(e.target_segment_id, '')}",
+                "direction": e.direction,
+                "status": e.status,
+            }
+            for e in cost_edges
+        ]
+        axes.append(axis_block(
+            "cost", "ok" if cost_values else "insufficient", cost_values))
+
+        # 技术轴：本链 driver/transmission 语义对象（证据支撑）
+        from app.application.industry_semantic import IndustrySemanticORM
+
+        drivers = self._session.scalars(
+            select(IndustrySemanticORM)
+            .where(IndustrySemanticORM.chain_id == chain_id)
+            .where(IndustrySemanticORM.object_type.in_(("driver", "transmission")))
+        ).all()
+        tech_values = [
+            {"object_type": d.object_type, "title": d.title[:100],
+             "direction": d.direction, "evidence_refs": len(d.evidence_refs_json or [])}
+            for d in drivers
+        ]
+        axes.append(axis_block(
+            "technology", "ok" if tech_values else "insufficient", tech_values))
+
+        # 政策轴：policy 语义对象 或 policy_transmission 边
+        policy_sem = self._session.scalars(
+            select(IndustrySemanticORM)
+            .where(IndustrySemanticORM.chain_id == chain_id)
+            .where(IndustrySemanticORM.payload_json.contains('"axis": "policy"'))
+        ).all()
+        policy_edges = [e for e in edges
+                        if e.relation_type == RelationType.POLICY_TRANSMISSION.value]
+        policy_values = [
+            {"source": "semantic", "title": d.title[:100]}
+            for d in policy_sem
+        ] + [
+            {"source": "edge", "edge_id": e.edge_id,
+             "metric": e.transmission_metric or None}
+            for e in policy_edges
+        ]
+        axes.append(axis_block(
+            "policy", "ok" if policy_values else "insufficient", policy_values))
+
+        return {
+            "chain": self._chain_dict(chain),
+            "instrument_id": instrument_id,
+            "axes": axes,
+            "as_of": _now().isoformat(),
+            "replayable": True,
+        }
+
     def _evidence_relates_to_chain(self, chain_id: str, ev: EvidenceORM) -> bool:
         """Ownership：证据标的在链上有位置，或证据提及链名/环节名。"""
         pos = self._session.scalars(

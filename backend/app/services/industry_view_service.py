@@ -54,9 +54,12 @@ class IndustryViewService:
             "name": None,
             "code": None,
         }
+        # G2（§G2.4/§G2.5）：GET 不隐式建快照/写库；无快照诚实置空，
+        # 快照由研究管线或显式 Command（POST /research-map/rebuild）生成
         industry_map = self._maps.latest_map(instrument_id)
         if industry_map is None:
-            industry_map = self._maps.build_industry_map(instrument_id)
+            industry_map = {"industry_chain": [], "related_instruments": [],
+                            "disclosures": {"snapshot": "not_built_yet"}}
         chain = list(industry_map.get("industry_chain") or [])
         # G1：related 持久化去重（按 instrument_id 保留首现，防重复写入膨胀）
         _seen_related: set[str] = set()
@@ -112,7 +115,8 @@ class IndustryViewService:
         context = self._maps.latest_context(instrument_id)
         if context is None:
             try:
-                context = self._maps.build_global_context(instrument_id)
+                context = self._maps.latest_context(instrument_id) or {
+                    "topics": [], "disclosures": {"snapshot": "not_built_yet"}}
             except KeyError:
                 context = None  # 宏观证据缺失 → 主题/指标诚实为空（§25）
         themes: list[dict] = []

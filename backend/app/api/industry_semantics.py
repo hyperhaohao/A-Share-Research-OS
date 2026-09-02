@@ -42,6 +42,11 @@ class SemanticUpsertIn(BaseModel):
     axis: str | None = Field(default=None, max_length=32)
     position: str | None = Field(default=None, max_length=32)
     reason: str | None = Field(default=None, max_length=500)
+    # G2：图谱链接 + 反对证据（§G2.1/§G2.2）
+    chain_id: str | None = Field(default=None, max_length=32)
+    segment_id: str | None = Field(default=None, max_length=32)
+    edge_id: str | None = Field(default=None, max_length=32)
+    contrary_evidence_claims: list[ClaimIn] = Field(default_factory=list, max_length=12)
 
 
 def _svc(session: Session) -> IndustrySemanticService:
@@ -74,6 +79,10 @@ def upsert_semantic(object_type: str, payload: SemanticUpsertIn, session: Sessio
             instrument_id=payload.instrument_id,
             as_of=as_of,
             extra_payload=extra,
+            chain_id=payload.chain_id,
+            segment_id=payload.segment_id,
+            edge_id=payload.edge_id,
+            contrary_evidence_claims=[c.model_dump() for c in payload.contrary_evidence_claims],
         )
     except ValueError as exc:
         raise AppError("industry_semantic.citation_failed", status_code=422, detail=str(exc)) from None
@@ -86,6 +95,7 @@ def list_semantics(
     object_type: str,
     industry_id: str | None = Query(default=None, max_length=64),
     instrument_id: str | None = Query(default=None, max_length=32),
+    as_of: str | None = Query(default=None, max_length=40),
     limit: int = Query(default=50, ge=1, le=200),
     session: Session = Depends(get_session),
 ) -> dict:
@@ -94,7 +104,18 @@ def list_semantics(
     results = _svc(session).latest_by_type(
         object_type, industry_id=industry_id, instrument_id=instrument_id, limit=limit
     )
-    return {"count": len(results), "results": results}
+    as_of_dt = None
+    if as_of:
+        try:
+            as_of_dt = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        except ValueError:
+            raise AppError("industry_semantic.bad_as_of", status_code=422) from None
+    if as_of_dt is not None:
+        # PIT 重放：as_of 之后创建的版本不可见（纯读，不触发采集）
+        results = [r for r in results
+                   if (r.get("created_at") or "") <= as_of_dt.isoformat()]
+    return {"count": len(results), "results": results,
+            "as_of": as_of_dt.isoformat() if as_of_dt else None}
 
 
 @router.get("/{object_type}/{object_key}")

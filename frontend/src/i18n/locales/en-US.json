@@ -785,7 +785,10 @@
     },
     "graphPositions": "Company Positions",
     "revenueExposure": "Revenue exposure",
-    "graphReplayable": "as_of replayable"
+    "graphReplayable": "as_of replayable",
+    "fiveAxes": "Five-Axis Position",
+    "axisItems": "items",
+    "axisInsufficient": "insufficient"
   },
   "experienceWs": {
     "sourceTitle": "Raw · Source & claims",

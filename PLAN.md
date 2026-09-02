@@ -28,7 +28,7 @@
 
 - [x] G0 基线、迁移台账和状态修正
 - [x] G1 真实 Industry Graph
-- [ ] G2 产业语义 PIT/证据治理/五轴
+- [x] G2 产业语义 PIT/证据治理/五轴
 - [ ] G3 Experience 原—炼—验—用
 - [ ] G4 Typed Dataflow Workflow
 - [ ] G5 Experience-driven Screening

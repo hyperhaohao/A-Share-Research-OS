@@ -784,7 +784,10 @@
     },
     "graphPositions": "公司在链上的位置",
     "revenueExposure": "收入暴露",
-    "graphReplayable": "as_of 可重放"
+    "graphReplayable": "as_of 可重放",
+    "fiveAxes": "五轴产业定位",
+    "axisItems": "项",
+    "axisInsufficient": "证据不足"
   },
   "experienceWs": {
     "sourceTitle": "原 · 来源与主张",

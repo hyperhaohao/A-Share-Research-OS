@@ -210,6 +210,18 @@ def instrument_positions(
     return {"count": len(results), "results": results}
 
 
+@router.get("/chains/{chain_id}/global-position")
+def chain_global_position(
+    chain_id: str,
+    instrument_id: str | None = Query(default=None, max_length=32),
+    session: Session = Depends(get_session),
+) -> dict:
+    """五轴产业定位（G2 §G2.7）：资源/产能/成本/技术/政策，缺轴 insufficient 显形。"""
+    from app.services.industry_graph_service import IndustryGraphService
+
+    return IndustryGraphService(session).global_position(chain_id, instrument_id)
+
+
 @router.get("/instruments/{instrument_id}/peers")
 def instrument_peers(
     instrument_id: str,

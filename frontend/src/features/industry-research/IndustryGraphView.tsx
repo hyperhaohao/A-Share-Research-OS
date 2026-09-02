@@ -52,6 +52,12 @@ interface GraphPosition {
   capacity_note: string;
 }
 
+interface GraphAxis {
+  axis: string;
+  status: string;
+  values: Array<Record<string, unknown>>;
+}
+
 interface ChainGraph {
   chain: GraphChain;
   segments: GraphSegment[];
@@ -96,6 +102,17 @@ export function IndustryGraphView({ instrumentId }: { instrumentId: string }) {
   const positions = (positionsQuery.data?.results ?? []).filter(
     (p) => activeChainId == null || p.chain_id === activeChainId,
   );
+
+  // G2：五轴产业定位（资源/产能/成本/技术/政策；缺轴 insufficient 显形）
+  const axesQuery = useQuery({
+    queryKey: ["industry-graph-axes", activeChainId, instrumentId],
+    enabled: activeChainId != null,
+    queryFn: () =>
+      fetchJson<{ axes: GraphAxis[] }>(
+        `/api/v1/industry-graph/chains/${activeChainId}/global-position?instrument_id=${encodeURIComponent(instrumentId)}`,
+      ),
+  });
+  const axes = axesQuery.data?.axes ?? [];
 
   const segmentName = (id: string): string =>
     graph?.segments.find((s) => s.segment_id === id)?.name ?? id;
@@ -193,6 +210,25 @@ export function IndustryGraphView({ instrumentId }: { instrumentId: string }) {
                 </li>
               ))}
             </ul>
+          </Panel>
+
+          <Panel title={t("industryWs.fiveAxes")}>
+            <div className="ig-axes-row" data-testid="graph-axes">
+              {axes.map((a) => (
+                <div key={a.axis} className={`ig-axis ig-axis-${a.status}`}>
+                  <span className="ig-axis-name mono">{a.axis}</span>
+                  <span
+                    className={`secondary ${
+                      a.status === "ok" ? "status-ok" : ""
+                    }`}
+                  >
+                    {a.status === "ok"
+                      ? `${a.values.length} ${t("industryWs.axisItems")}`
+                      : t("industryWs.axisInsufficient")}
+                  </span>
+                </div>
+              ))}
+            </div>
           </Panel>
 
           <Panel title={t("industryWs.graphPositions")}>
