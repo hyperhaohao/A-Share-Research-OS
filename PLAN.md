@@ -40,7 +40,7 @@
 - [ ] G11 帷幄全链整合
 - [x] G12 长任务/并发/失败恢复
 - [x] G13 语义测试与 Golden
-- [ ] G14 Evidence 与 Closure
+- [x] G14 Evidence 与 Closure
 
 ---
 

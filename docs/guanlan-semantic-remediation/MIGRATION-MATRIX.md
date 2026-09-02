@@ -139,3 +139,24 @@ Typed Workflow（G4）、Screening 编译（G5）、可执行回测（G6）、�
 因果 Replay（G8）、产品 Artifact 化（G9）。
 PASS 基础设施：Evidence/PIT/Claim/Thesis/Artifact/Provenance/Confirmation Gate/
 事件协议/审批门/后台跑道（保留，不重建 —— 任务书 §三.2）。
+
+---
+
+## 附：G0→G14 整改后的最终状态（逐模块）
+
+| 模块 | G0 状态 | G 线整改后 | 关键证据 |
+|---|---:|---:|---|
+| 产业链研究 | FAIL | **PASS** | G1 六表图谱 + 传导边 + 位置（G1-MANIFEST） |
+| 产业语义 | PARTIAL | **PASS** | G2 Ownership Gate/服务端温度/五轴（G2-MANIFEST） |
+| 全球产业定位 | FAIL | **PASS** | G2 五轴端点（缺轴 insufficient 显形） |
+| 经验提炼 | PARTIAL | **PASS** | G3 规则组件/FAIL 门/审计/Diff/指标 |
+| Workflow Studio | FAIL | **PASS** | G4 端口/schema/data_contract/节点 I/O 账本 |
+| 智能选股 | FAIL | **PASS** | G5 经验编译 Definition + 发布门 + PIT 运行 |
+| Strategy Lab | FAIL | **PASS** | G6 事件引擎（Entry/Exit/Risk/成本/滑点/停牌） |
+| Strategy Monitor | FAIL | **PASS** | G7 策略规则执行 + Cursor 幂等 + 状态机 |
+| Replay | FAIL | **PASS** | G8 因果引用 + rule_error → 可执行规则修改 |
+| Research Products | PARTIAL | **PASS** | G9 版本化编译 + Artifact + 页面 |
+| Thesis Center/Inbox/Memory | PARTIAL | **PASS** | G10（strengthened/weakened/幂等/审计/Diff） |
+| 帷幄全链 | PARTIAL | **PASS** | G11 research_state_check + 既有确认审计 |
+| 长任务/恢复 | PARTIAL | **PASS** | G12 pause/resume/heartbeat/dead-letter |
+| 语义测试/Golden | — | **PASS** | G13 Golden A/B/C + 否定测试矩阵 |
