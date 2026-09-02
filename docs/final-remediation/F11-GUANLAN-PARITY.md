@@ -1,5 +1,10 @@
 # F11-GUANLAN-PARITY — 观澜核心能力逐行为对等复审
 
+> **STATUS: SUPERSEDED（语义维度）— 2026-09-02**
+> 本矩阵裁决的是「行为/产品面对等」；观澜**研究语义**（可执行规则/数据流/
+> 因果链/真实回测）由 docs/guanlan-semantic-remediation/MIGRATION-MATRIX.md
+> 重新裁决，多篇 PARTIAL 在语义维度降级为 FAIL。保留历史。
+
 > 阶段：F11（第三轮整改任务书 §9 P1-B / §9.7 矩阵模板）
 > 日期：2026-09-02 | 基线：docs/final-remediation/F0-BASELINE.md
 > donor 固定 commit 98f1398；license=None → 全程 BEHAVIORAL ADAPTATION（不复制源码）。

@@ -1,5 +1,13 @@
 # F15-CLOSURE — 第三轮验收整改最终 Closure
 
+> **STATUS: SUPERSEDED（观澜语义维度）— 2026-09-02**
+> docs/观澜研究能力语义迁移整改任务书.md 复审确认：第三轮任务书范围内的
+> F0–F15 口径（帷幄迁移 + 研究状态正确性）成立，但观澜研究能力的**语义
+> 真实性**（产业链图/Typed Workflow/经验编译选股/可执行回测/策略感知监控/
+> 因果 Replay/产品 Artifact 化）未达成 —— 见
+> docs/guanlan-semantic-remediation/MIGRATION-MATRIX.md（G0 代码实读裁决）。
+> 本文件保留为第三轮范围历史，不作为观澜语义迁移的验收依据。
+
 > 任务书：docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md
 > 执行区间：F0（2026-09-01）→ F15（2026-09-02）
 > ASRO 基线：4c2e506（整改开始 HEAD）→ 本 Closure（git log 见下）

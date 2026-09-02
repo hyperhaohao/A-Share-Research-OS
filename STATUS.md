@@ -9,8 +9,15 @@
 ## Current Phase
 
 ```text
+Guanlan Research Capability Semantic Migration Remediation（G0–G14）
+Status: **REJECT — MIGRATION INCOMPLETE**（第四轮验收整改 2026-09-02）
+依据：docs/观澜研究能力语义迁移整改任务书.md
+台账：docs/guanlan-semantic-remediation/MIGRATION-MATRIX.md
+第三轮 F0–F15 已完成并推送（c66952e）；语义维度由本轮重新裁决。
+
+——以下为第三轮历史——
 Research Deep Port — Correctness & Product Closure Remediation
-Status: **REOPEN**（第三轮验收整改 2026-09-01）
+Status: REOPEN（第三轮验收整改 2026-09-01）
 依据：docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md
 
 Baseline: ASRO 4c2e506 / donor 98f1398 / Python 3.11.15 / Node v24.16.0

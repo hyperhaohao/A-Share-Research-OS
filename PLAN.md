@@ -20,7 +20,31 @@
 
 # Research Capability Deep Port（R 线，当前执行线）
 
-## 第三轮整改 — Correctness & Product Closure Remediation（F0–F15，当前 DOING）
+## 第四轮整改 — 观澜研究能力语义迁移（G0–G14，当前 DOING）
+
+> 依据 docs/观澜研究能力语义迁移整改任务书.md（REJECT，2026-09-02）
+> 台账：docs/guanlan-semantic-remediation/MIGRATION-MATRIX.md
+> F0–F15 第三轮完成后，语义维度重新计权：Structural PASS ≠ Semantic PASS。
+
+- [x] G0 基线、迁移台账和状态修正
+- [ ] G1 真实 Industry Graph
+- [ ] G2 产业语义 PIT/证据治理/五轴
+- [ ] G3 Experience 原—炼—验—用
+- [ ] G4 Typed Dataflow Workflow
+- [ ] G5 Experience-driven Screening
+- [ ] G6 Executable Strategy Lab
+- [ ] G7 Strategy-aware Monitor
+- [ ] G8 Causal Replay
+- [ ] G9 Research Products 产品化
+- [ ] G10 Thesis Center/Inbox/Memory
+- [ ] G11 帷幄全链整合
+- [ ] G12 长任务/并发/失败恢复
+- [ ] G13 语义测试与 Golden
+- [ ] G14 Evidence 与 Closure
+
+---
+
+## 第三轮整改 — Correctness & Product Closure Remediation（F0–F15，历史）
 
 > 依据 docs/A-Share-Research-OS-第三轮验收整改任务书-Research-State与观澜核心功能完整迁移.md（R10 REOPEN）
 > 两条主线：Research OS 正确性闭环 + 观澜核心功能完整迁移（帷幄统帅层）
