@@ -29,7 +29,7 @@
 > → R11 帷幄/持久任务 → R12 真实 Golden 与 Closure Gate
 
 - [ ] R0 可复现基线与 Closure Gate
-- [ ] R1 统一权威生产模型
+- [x] R1 统一权威生产模型
 - [ ] R2 Experience 验证与审批治理
 - [ ] R3 Fail-closed Screen Compiler
 - [ ] R4 StrategyDefinition 与真实条件回测

@@ -57,6 +57,13 @@ class StrategyVersionORM(Base):
     verdict: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # R1（任务书 §R1.2）：权威生产模型字段
+    source_screen_definition_id: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
+    source_screen_run_id: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
+    input_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_version_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    confirmation_id: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
 
 
 class StrategyBacktestRunORM(Base):

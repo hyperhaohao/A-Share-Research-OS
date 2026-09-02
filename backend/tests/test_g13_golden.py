@@ -210,27 +210,17 @@ def test_golden_b_experience_to_strategy_closure(client):
     run = client.post(f"/api/v1/screening-v2/definitions/{d['def_id']}/run").json()["run"]
     assert run["artifact_id"]  # 运行注册 Artifact
 
-    # 策略组装 + 可执行回测（entry 规则变化 → 交易变化，G6 断言）
-    from app.application.strategy import StrategyVersionORM
-    factory = client.app.state._test_factory
-    session = factory()
-    try:
-        session.add(StrategyVersionORM(
-            version_id="strat_g13test000001",
-            name="G13 策略", version_no=1,
-            philosophy="G13", source_card_id=card_id,
-            source_screening_run_id="sr_g13test000001",
-            universe_json=[{"instrument_id": "SZSE:000831"}],
-            entry_policy_json={"kind": "forward_return", "horizon_days": 20,
-                               "threshold_pct": 3.0},
-            exit_policy_json={"kind": "horizon_end"},
-            risk_policy_json={}, status="EXPERIMENTAL",
-            created_at=NOW, updated_at=NOW,
-        ))
-        session.commit()
-    finally:
-        session.close()
-    bt = client.post("/api/v1/strategies/strat_g13test000001/backtest-v2").json()
+    # 策略组装走 R1 权威路径：ScreenRun → StrategyDefinitionVersion（幂等）
+    sv = client.post("/api/v1/strategies/from-screen-run", json={
+        "screen_run_id": run["run_id"], "name": "G13 策略"}).json()["strategy_version"]
+    assert sv["source_version_ids"], "因果链 ID 落库"
+    # 幂等：重复提交 → 既有版本
+    sv2 = client.post("/api/v1/strategies/from-screen-run", json={
+        "screen_run_id": run["run_id"], "name": "G13 策略"}).json()["strategy_version"]
+    assert sv2["version_id"] == sv["version_id"]
+
+    # 可执行回测（G6 引擎消费同一 StrategyDefinition）
+    bt = client.post(f"/api/v1/strategies/{sv['version_id']}/backtest-v2").json()
     assert bt["aggregate"]["engine"] == "event_backtest_v1"
 
 

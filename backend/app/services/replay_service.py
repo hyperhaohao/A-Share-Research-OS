@@ -163,20 +163,68 @@ class ReplayFeedbackService:
                                         "exit_rules": exit_rules}
             self._session.add(new_row)
             self._session.flush()
-            strategy_v2 = {"version_id": new_row.version_id}
+            from app.application.artifacts import ArtifactService
+
+            ArtifactService(self._session).register(
+                artifact_type="strategy_version",
+                domain_type="StrategyVersion",
+                domain_id=new_row.version_id,
+                title=f"{new_row.name} v{new_row.version_no}",
+                instrument_ids=(),
+                created_by="replay_rule_error",
+                route="/strategy",
+            )
+            strategy_v2 = {"version_id": new_row.version_id,
+                           "version_no": new_row.version_no,
+                           "name": new_row.name,
+                           "source_card_id": new_row.source_card_id}
             rule_feedback = {
                 "strategy_version_id": new_row.version_id,
                 "changed_exit_rules": exit_rules,
                 "old_version_id": version["version_id"],
             }
-        if strategy_v2 is None and version.get("source_screening_run_id"):
-            # 源筛选运行可能已不可用 —— 诚实跳过 v2（不伪造版本）
-            try:
-                strategy_v2 = strategy_repo.create_from_screening(
-                    version["source_screening_run_id"], version["name"]
+        if strategy_v2 is None:
+            # R1：不再走旧 create_from_screening 路径 —— 直接克隆旧版本行
+            # （规则不变；仅版本 +1，保持 append-only 语义）
+            from app.application.strategy import (
+                StrategyRepository as _SR2,
+                StrategyVersionORM as _VORM,
+            )
+
+            old_row = _SR2(self._session).get_version_row(version["version_id"])
+            if old_row is not None:
+                new_row = _VORM(
+                    version_id=f"strat_{uuid4().hex[:12]}",
+                    name=old_row.name,
+                    version_no=old_row.version_no + 1,
+                    philosophy=old_row.philosophy,
+                    source_card_id=old_row.source_card_id,
+                    source_screening_run_id=old_row.source_screening_run_id,
+                    universe_json=list(old_row.universe_json or []),
+                    entry_policy_json=dict(old_row.entry_policy_json or {}),
+                    exit_policy_json=dict(old_row.exit_policy_json or {}),
+                    risk_policy_json=dict(old_row.risk_policy_json or {}),
+                    status=old_row.status,
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc),
                 )
-            except KeyError:
-                strategy_v2 = None
+                self._session.add(new_row)
+                self._session.flush()
+                from app.application.artifacts import ArtifactService
+
+                ArtifactService(self._session).register(
+                    artifact_type="strategy_version",
+                    domain_type="StrategyVersion",
+                    domain_id=new_row.version_id,
+                    title=f"{new_row.name} v{new_row.version_no}",
+                    instrument_ids=(),
+                    created_by="replay",
+                    route="/strategy",
+                )
+                strategy_v2 = {"version_id": new_row.version_id,
+                               "version_no": new_row.version_no,
+                               "name": new_row.name,
+                               "source_card_id": new_row.source_card_id}
 
         # -- ResearchExperience（append-only 教训，§53） ------------------------
         # F4（任务书 §7.1）：教训置信度由确定性归因的归因条数计算（非固定 0.6）：

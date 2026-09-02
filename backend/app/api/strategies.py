@@ -246,3 +246,24 @@ def run_backtest_v2(version_id: str, session: Session = Depends(get_session)) ->
         "failure_cases": failure_cases,
         "artifact_id": artifact_id,
     }
+
+
+class FromScreenRunIn(BaseModel):
+    screen_run_id: str = Field(min_length=6, max_length=32)
+    name: str | None = Field(default=None, max_length=120)
+    confirmation_id: str | None = Field(default=None, max_length=32)
+
+
+@router.post("/from-screen-run", status_code=201)
+def create_strategy_from_screen_run(payload: FromScreenRunIn,
+                                    session: Session = Depends(get_session)) -> dict:
+    """R1 权威路径：ScreenRun → StrategyDefinitionVersion（幂等）。"""
+    from app.services.research_production import ResearchProductionFacade
+
+    out = ResearchProductionFacade(session).create_strategy_from_screen_run(
+        screen_run_id=payload.screen_run_id,
+        name=payload.name,
+        confirmation_id=payload.confirmation_id,
+    )
+    session.commit()
+    return {"strategy_version": out}
