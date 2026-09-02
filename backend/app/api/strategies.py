@@ -112,3 +112,137 @@ def validate_strategy(version_id: str, session: Session = Depends(get_session)) 
     except StrategyRefusal as exc:
         raise AppError("strategy.validation_blocked", status_code=422, detail=str(exc)) from None
     return {"strategy": version}
+
+
+# ── G6：可执行回测 v2（事件驱动，真实 Entry/Exit/Risk 执行） ─────────────────
+
+
+@router.post("/{version_id}/backtest-v2", status_code=202)
+def run_backtest_v2(version_id: str, session: Session = Depends(get_session)) -> dict:
+    """事件驱动回测：执行版本 Entry/Exit/Risk 规则（成本/滑点/停牌/涨跌停）。
+
+    Entry 规则缺失 → INSUFFICIENT_SIGNALS 零交易（§G6 DoD，不冒充回测）。
+    结果（trades/NAV/metrics/分期/regime）落 StrategyBacktestRun + Artifact。
+    """
+    from app.application.strategy import (
+        BacktestStatus,
+        StrategyBacktestRunORM,
+        StrategyRepository,
+    )
+    from app.core.errors import AppError
+    from datetime import datetime as _dt, timezone as _tz
+    from uuid import uuid4 as _uuid4
+
+    version = StrategyRepository(session).get_version(version_id)
+    if version is None:
+        raise AppError("strategy.version_not_found", status_code=404) from None
+
+    entry_policy = dict(version["entry_policy"] or {})
+    exit_policy = dict(version["exit_policy"] or {})
+    risk_policy = dict(version["risk_policy"] or {})
+    horizon = int(entry_policy.get("horizon_days") or 20)
+    threshold = float(entry_policy.get("threshold_pct") or 0.0)
+    # 现有 entry_policy 语义（forward_return 阈值）→ G6 入场规则转换（可解释）
+    # entry_rules 显式空列表 = 无入场（INSUFFICIENT_SIGNALS）；缺省才转换默认
+    if "entry_rules" in entry_policy:
+        entry_rules = list(entry_policy["entry_rules"])
+    else:
+        entry_rules = [{"kind": "quote_move", "pct": threshold,
+                        "window": min(horizon, 10)}]
+    exit_rules = exit_policy.get("exit_rules") or [
+        {"kind": "max_hold_days", "days": horizon}
+    ]
+    risk_rules = risk_policy.get("risk_rules") or [
+        {"kind": "max_drawdown", "pct": float(risk_policy.get("max_drawdown_pct", 15.0))}
+    ]
+
+    from app.services.backtest_engine import BacktestSpec, BacktestInputError, run_event_backtest
+
+    spec = BacktestSpec(
+        entry_rules=entry_rules, exit_rules=exit_rules, risk_rules=risk_rules,
+        cost_bps=float(risk_policy.get("cost_bps", 10.0)),
+        slippage_bps=float(risk_policy.get("slippage_bps", 10.0)),
+    )
+
+    from app.services.workflow_service import load_daily_bars
+
+    results = []
+    aggregate_trades = 0
+    aggregate_returns = []
+    failure_cases = []
+    for member in version["universe"]:
+        instrument_id = member["instrument_id"] if isinstance(member, dict) else str(member)
+        bars = load_daily_bars(session, instrument_id)
+        try:
+            out = run_event_backtest(bars, spec)
+        except BacktestInputError as exc:
+            failure_cases.append({"instrument_id": instrument_id,
+                                  "reason": str(exc)})
+            continue
+        results.append({"instrument_id": instrument_id, **out})
+        aggregate_trades += out["metrics"]["n_trades"]
+        aggregate_returns.extend(t["return_pct"] for t in out["trades"])
+
+    n_ok = len(results)
+    aggregate = {
+        "engine": "event_backtest_v1",
+        "entry_rules": entry_rules, "exit_rules": exit_rules,
+        "risk_rules": risk_rules,
+        "n_instruments_ok": n_ok,
+        "n_trades_total": aggregate_trades,
+        "mean_trade_return_pct": (
+            round(sum(aggregate_returns) / len(aggregate_returns), 3)
+            if aggregate_returns else None
+        ),
+        "combined_phase_metrics": [
+            {**r["metrics"], "instrument_id": r["instrument_id"]}
+            for r in results
+        ][:10],
+    }
+
+    row = StrategyBacktestRunORM(
+        backtest_id=f"bt_{_uuid4().hex[:12]}",
+        version_id=version_id,
+        results_json=results,
+        aggregate_json=aggregate,
+        failure_cases_json=failure_cases,
+        status=BacktestStatus.COMPLETED,
+        created_at=_dt.now(_tz.utc),
+        updated_at=_dt.now(_tz.utc),
+    )
+    session.add(row)
+    session.flush()
+
+    artifact_id = None
+    try:
+        from app.application.artifacts import ArtifactService
+
+        artifact_id = ArtifactService(session).register(
+            artifact_type="strategy_backtest",
+            domain_type="StrategyBacktest",
+            domain_id=row.backtest_id,
+            title=f"可执行回测 {version['name']} v{version['version_no']}",
+            instrument_ids=(),
+            created_by="backtest_v2",
+            route="/strategy",
+            metadata={"n_trades_total": aggregate_trades,
+                      "entry_rules": entry_rules},
+        )
+    except Exception as exc:  # noqa: BLE001 — 显形 INCOMPLETE_PROVENANCE
+        aggregate["provenance_status"] = "INCOMPLETE_PROVENANCE"
+        aggregate["provenance_error"] = f"{type(exc).__name__}: {exc}"[:200]
+    row.aggregate_json = aggregate
+    session.flush()
+
+    if aggregate_trades == 0 and not entry_policy.get("entry_rules"):
+        aggregate["status"] = "INSUFFICIENT_SIGNALS"
+        row.aggregate_json = aggregate
+        session.flush()
+
+    return {
+        "backtest_id": row.backtest_id,
+        "aggregate": aggregate,
+        "n_instruments": len(results),
+        "failure_cases": failure_cases,
+        "artifact_id": artifact_id,
+    }

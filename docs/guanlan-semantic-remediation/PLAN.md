@@ -11,7 +11,7 @@
 - [x] G3 Experience 原—炼—验—用（规则组件 + Confirmation/Audit）
 - [x] G4 Typed Dataflow Workflow（端口/schema/data_contract）
 - [x] G5 Experience-driven Screening（Definition 编译/版本化）
-- [ ] G6 Executable Strategy Lab（真实交易路径回测）
+- [x] G6 Executable Strategy Lab（真实交易路径回测）
 - [ ] G7 Strategy-aware Monitor（执行策略版本 + Cursor + 状态机）
 - [ ] G8 Causal Replay（因果引用 + Attribution + 可执行反馈）
 - [ ] G9 Research Products 产品化（Artifact/Version/PIT + 页面）

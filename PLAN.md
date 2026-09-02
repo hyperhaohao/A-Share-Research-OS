@@ -32,7 +32,7 @@
 - [x] G3 Experience 原—炼—验—用
 - [x] G4 Typed Dataflow Workflow
 - [x] G5 Experience-driven Screening
-- [ ] G6 Executable Strategy Lab
+- [x] G6 Executable Strategy Lab
 - [ ] G7 Strategy-aware Monitor
 - [ ] G8 Causal Replay
 - [ ] G9 Research Products 产品化
