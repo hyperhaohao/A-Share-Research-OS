@@ -701,3 +701,12 @@ M13/M14 与 M15–M18 可交错推进，但各自 DoD 独立成立。
 - Prediction 一旦创建不可修改；
 - ReportVersion 永不覆盖旧版本；
 - 每个 Milestone 的代码、测试、migration、文档同一阶段闭环。
+
+---
+
+## 观澜研究能力语义迁移（G0–G14，2026-09-02）— DONE
+
+> 依据 docs/观澜研究能力语义迁移整改任务书.md；台账与证据：
+> docs/guanlan-semantic-remediation/
+> 结论：**GUANLAN RESEARCH CAPABILITY MIGRATION VERIFIED**
+> （FINAL-CLOSURE.md；外部阻塞诚实登记，不计 PASS）

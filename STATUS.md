@@ -403,7 +403,7 @@ None（Phase A 完成；下一单元 Phase B，唯一外部挂起项见 Open Iss
 ## Tests
 
 ```text
-backend: 459 collected / 0 FAILED（含 F2-F9 新增 46 用例）
+backend: 528 collected / 0 FAILED（含 G1-G12 语义迁移新用例）
 frontend: vitest 35/35（8 files）+ tsc PASS + build PASS
 e2e: Playwright 30/30（产品 E2E 17 + 视觉 12，compose 栈实跑）
 golden: R10 live 25/25 ×2 + 帷幄跨模块 13/13 ×2（docs/final-remediation/F14-*.md）
