@@ -28,6 +28,10 @@ class AttributionDimension(str, Enum):
     RISK = "risk"
     TIMING = "timing"
     MARKET_REGIME = "market_regime"
+    # G8（任务书 §G8.3）：七类归因补全
+    RULE_ERROR = "rule_error"
+    EXECUTION_ERROR = "execution_error"
+    INSUFFICIENT_DATA = "insufficient_data"
 
 
 class Attribution(BaseModel):
@@ -146,6 +150,29 @@ class RegressionReviewService:
                         f"direction correct but return {validation.instrument_return_pct:.2f}% "
                         "fell outside the predicted band"
                     ),
+                )
+            )
+
+        # G8（§G8.3）：规则错误 —— 方向错误且回撤显著 → 止损/入场规则问题
+        # （确定性：|回撤| ≥ 3% 且方向错误 → RULE_ERROR）
+        adverse_excursion = abs(validation.instrument_return_pct or 0.0)
+        if wrong_direction and adverse_excursion >= 3.0:
+            attributions.append(
+                Attribution(
+                    dimension=AttributionDimension.RULE_ERROR,
+                    note=(
+                        f"adverse excursion {adverse_excursion:.2f}% exceeded typical "
+                        "risk thresholds — entry/stop rules need tightening"
+                    ),
+                )
+            )
+
+        # G8：执行/数据不足类（有据才判，无据不造）
+        if validation.instrument_return_pct is None:
+            attributions.append(
+                Attribution(
+                    dimension=AttributionDimension.INSUFFICIENT_DATA,
+                    note="validation lacks instrument return data",
                 )
             )
 

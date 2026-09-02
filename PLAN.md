@@ -34,7 +34,7 @@
 - [x] G5 Experience-driven Screening
 - [x] G6 Executable Strategy Lab
 - [x] G7 Strategy-aware Monitor
-- [ ] G8 Causal Replay
+- [x] G8 Causal Replay
 - [ ] G9 Research Products 产品化
 - [ ] G10 Thesis Center/Inbox/Memory
 - [ ] G11 帷幄全链整合

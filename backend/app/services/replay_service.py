@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from uuid import uuid4
 
 class ReplayRefusal(ValueError):
     """Explicit refusal — a broken chain is disclosed, never papered over."""
@@ -55,16 +56,15 @@ class ReplayFeedbackService:
         if version is None:
             raise ReplayRefusal("the decision's strategy version no longer exists")
 
-        # -- Decision → 已验证 Prediction（§50：只用已存在且成熟的验证） --------
-        universe_ids = [m["instrument_id"] for m in version["universe"]]
+        # -- Decision → 已验证 Prediction（§50 + §G8.1：严格因果链） -----------
+        # G8：Prediction 必须直接引用本 Decision（decision_id 因果引用）；
+        # 无因果链接的 Prediction（即使同 universe）不得进入 Replay。
         candidate_rows = (
             self._session.scalars(
                 select(PredictionORM)
-                .where(PredictionORM.instrument_id.in_(universe_ids))
+                .where(PredictionORM.decision_id == decision_id)
                 .order_by(PredictionORM.created_at.desc(), PredictionORM.id.desc())
             ).all()
-            if universe_ids
-            else []
         )
         predictions = PredictionRepository(self._session)
         validations = ValidationRepository(self._session)
@@ -118,11 +118,65 @@ class ReplayFeedbackService:
             card_version_no = new_no
 
         # -- StrategyVersion v(n+1)（重组即拾取新卡片内容） ----------------------
+        # G8（§G8.5）：rule_error 归因 → **可执行规则修改**（出场止损放宽为
+        # 观测不利波动的 1.2 倍，确定性、可解释），非仅改描述
+        from app.domain.regression import AttributionDimension
+
+        rule_error = any(a.dimension == AttributionDimension.RULE_ERROR
+                         for a in review.attributions)
         strategy_v2 = None
-        if version.get("source_screening_run_id"):
-            strategy_v2 = strategy_repo.create_from_screening(
-                version["source_screening_run_id"], version["name"]
+        rule_feedback = None
+        if rule_error:
+            adverse = max(
+                (abs(float(c.get("forward_return_pct") or 0.0))
+                 for c in (getattr(validation, "cases", None) or [])),
+                default=0.0,
             )
+            new_stop = round(max(3.0, adverse * 1.2), 2)
+            # 直接克隆旧版本行 → v(n+1)（不依赖 screening run 存在）；
+            # 规则体可执行修改：exit_rules 追加 stop_loss（确定性）
+            from app.application.strategy import (
+                StrategyRepository as _SR2,
+                StrategyVersionORM as _VORM,
+            )
+
+            old_row = _SR2(self._session).get_version_row(version["version_id"])
+            new_row = _VORM(
+                version_id=f"strat_{uuid4().hex[:12]}",
+                name=old_row.name,
+                version_no=old_row.version_no + 1,
+                philosophy=old_row.philosophy,
+                source_card_id=old_row.source_card_id,
+                source_screening_run_id=old_row.source_screening_run_id,
+                universe_json=list(old_row.universe_json or []),
+                entry_policy_json=dict(old_row.entry_policy_json or {}),
+                exit_policy_json=dict(old_row.exit_policy_json or {}),
+                risk_policy_json=dict(old_row.risk_policy_json or {}),
+                status=old_row.status,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            exit_rules = list((new_row.exit_policy_json or {}).get("exit_rules") or [])
+            exit_rules.append({"kind": "stop_loss", "pct": new_stop,
+                               "origin": f"replay rule_error (adverse {adverse:.2f}%)"})
+            new_row.exit_policy_json = {**(new_row.exit_policy_json or {}),
+                                        "exit_rules": exit_rules}
+            self._session.add(new_row)
+            self._session.flush()
+            strategy_v2 = {"version_id": new_row.version_id}
+            rule_feedback = {
+                "strategy_version_id": new_row.version_id,
+                "changed_exit_rules": exit_rules,
+                "old_version_id": version["version_id"],
+            }
+        if strategy_v2 is None and version.get("source_screening_run_id"):
+            # 源筛选运行可能已不可用 —— 诚实跳过 v2（不伪造版本）
+            try:
+                strategy_v2 = strategy_repo.create_from_screening(
+                    version["source_screening_run_id"], version["name"]
+                )
+            except KeyError:
+                strategy_v2 = None
 
         # -- ResearchExperience（append-only 教训，§53） ------------------------
         # F4（任务书 §7.1）：教训置信度由确定性归因的归因条数计算（非固定 0.6）：
@@ -198,6 +252,7 @@ class ReplayFeedbackService:
             "experience_id": experience_id,
             "card_version_no": card_version_no,
             "strategy_v2": strategy_v2,
+            "rule_feedback": rule_feedback,
             "validation_id": validation.validation_id,
             "prediction_id": prediction.prediction_id,
             "as_of": utc_now().isoformat(),

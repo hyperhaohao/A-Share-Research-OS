@@ -44,5 +44,3 @@
 ## 状态
 
 IMPLEMENTED / INTEGRATED / TESTED。
-Gap→G8：Replay 因果链（Prediction 引用 Decision/Signal + Attribution 七类 +
-规则反馈改变可执行定义）。

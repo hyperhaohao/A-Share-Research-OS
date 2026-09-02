@@ -35,6 +35,7 @@ class PredictionORM(Base):
 
     confidence: Mapped[float] = mapped_column(Float)
     supporting_thesis_id: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    decision_id: Mapped[str | None] = mapped_column(String(24), nullable=True, index=True)
     trigger_conditions_json: Mapped[list] = mapped_column(JSON, default=list)
     invalidate_conditions_json: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -88,6 +89,7 @@ class PredictionRepository:
             else None,
             confidence=prediction.confidence,
             supporting_thesis_id=prediction.supporting_thesis_id,
+            decision_id=prediction.decision_id,
             trigger_conditions_json=list(prediction.trigger_conditions),
             invalidate_conditions_json=list(prediction.invalidate_conditions),
             created_at=prediction.created_at,
@@ -125,6 +127,7 @@ class PredictionRepository:
             expected_excess_return_range=excess,
             confidence=r.confidence,
             supporting_thesis_id=r.supporting_thesis_id,
+            decision_id=r.decision_id,
             trigger_conditions=tuple(r.trigger_conditions_json or ()),
             invalidate_conditions=tuple(r.invalidate_conditions_json or ()),
             created_at=_ensure_utc(r.created_at),

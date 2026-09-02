@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
@@ -295,3 +295,56 @@ def due_predictions(session: Session = Depends(get_session)) -> dict:
     service = ValidationService(session)
     due = service.due_unvalidated()
     return {"count": len(due), "results": [_payload(p) for p in due]}
+
+
+class PredictionFromDecisionIn(BaseModel):
+    decision_id: str = Field(min_length=6, max_length=32)
+    expected_direction: str = Field(min_length=2, max_length=8)
+    expected_return_min: float
+    expected_return_max: float
+    horizon: Horizon
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
+@router.post("/from-decision", status_code=201)
+def create_prediction_from_decision(
+    payload: PredictionFromDecisionIn, session: Session = Depends(get_session)
+) -> dict:
+    """G8（§G8.1）：由 Decision 因果派生 Prediction（decision_id 链接落库）。
+
+    方向/区间由研究者基于决策显式给定（人工锚定），因果引用由系统强制。
+    """
+    from app.application.strategy_monitor import DecisionRecordORM
+    from app.core.errors import AppError
+    from app.domain.evidence import utc_now
+
+    decision_row = session.scalars(
+        select(DecisionRecordORM).where(
+            DecisionRecordORM.decision_id == payload.decision_id)
+    ).first()
+    if decision_row is None:
+        raise AppError("decision.not_found", status_code=404) from None
+
+    try:
+        direction = Direction(payload.expected_direction.upper())
+    except ValueError:
+        raise AppError("prediction.bad_direction", status_code=422,
+                       detail="expected_direction must be UP or DOWN") from None
+
+    as_of = utc_now()
+    record = PredictionRecord(
+        instrument_id=decision_row.instrument_id,
+        research_run_id=None,
+        as_of=as_of,
+        horizon=payload.horizon,
+        expected_direction=direction,
+        expected_return_range=(payload.expected_return_min,
+                               payload.expected_return_max),
+        confidence=payload.confidence,
+        decision_id=payload.decision_id,
+        created_at=as_of,
+    )
+    saved_id = PredictionRepository(session).save(record)
+    session.commit()
+    saved = PredictionRepository(session).get(saved_id)
+    return {"prediction": saved.model_dump(mode="json")}

@@ -59,6 +59,8 @@ class PredictionRecord(BaseModel):
 
     confidence: float = Field(ge=0.0, le=1.0)
     supporting_thesis_id: str | None = None
+    # G8（任务书 §G8.1）：因果引用 —— Prediction 直接引用其来源 Decision
+    decision_id: str | None = None
     trigger_conditions: tuple[str, ...] = ()
     invalidate_conditions: tuple[str, ...] = ()
 

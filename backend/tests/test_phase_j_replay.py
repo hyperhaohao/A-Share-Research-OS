@@ -193,6 +193,7 @@ def test_replay_full_loop_backfills_card_and_strategy(client, monkeypatch):
             expected_direction=Direction.UP,
             expected_return_range=(0.0, 10.0),
             confidence=0.6,
+            decision_id=chain["decision_id"],  # G8：因果引用 Decision
         )
         saved_id = PredictionRepository(session).save(prediction)
     validated = client.post(f"/api/v1/predictions/{saved_id}/validate")
