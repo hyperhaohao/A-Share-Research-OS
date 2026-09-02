@@ -290,7 +290,7 @@ def list_tasks(session: Session, *, command_session_id: str | None = None, limit
     """会话级 + 全局任务列表（§8.8）。"""
     stmt = (
         select(BackgroundTaskORM)
-        .order_by(BackgroundTaskORM.created_at.desc())
+        .order_by(BackgroundTaskORM.created_at.desc(), BackgroundTaskORM.id.desc())
         .limit(limit)
     )
     if command_session_id:

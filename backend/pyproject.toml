@@ -25,7 +25,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not live'"
 markers = [
     # Remediation R0.7 — honest test classification (整改任务书 §5.2.D / §31):
     #   api_integration: FastAPI TestClient flows with monkeypatched sources —

@@ -212,7 +212,7 @@ class TaskRepository:
         stmt = select(ResearchTaskORM)
         if enabled is not None:
             stmt = stmt.where(ResearchTaskORM.enabled == enabled)
-        rows = self._session.scalars(stmt.order_by(ResearchTaskORM.created_at.desc())).all()
+        rows = self._session.scalars(stmt.order_by(ResearchTaskORM.created_at.desc(), ResearchTaskORM.id.desc())).all()
         return [self._row_to_domain(r) for r in rows]
 
     def get(self, task_id: str) -> ResearchTask | None:

@@ -208,7 +208,7 @@ def list_confirmations(
         select(ORM).where(ORM.status == "pending").limit(limit)
     ).all():
         _expire_if_due(session, row)
-    stmt = select(ORM).order_by(ORM.created_at.desc()).limit(limit)
+    stmt = select(ORM).order_by(ORM.created_at.desc(), ORM.id.desc()).limit(limit)
     if status:
         stmt = stmt.where(ORM.status == status)
     return [_row_to_dict(r) for r in session.scalars(stmt).all()]

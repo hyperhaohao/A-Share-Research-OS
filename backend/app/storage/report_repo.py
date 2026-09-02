@@ -76,13 +76,13 @@ class ReportRepository:
         stmt = select(ReportORM).where(ReportORM.instrument_id == instrument_id)
         if language:
             stmt = stmt.where(ReportORM.language == language)
-        rows = self._session.scalars(stmt.order_by(ReportORM.created_at.desc())).all()
+        rows = self._session.scalars(stmt.order_by(ReportORM.created_at.desc(), ReportORM.id.desc())).all()
         return [self._row_to_dict(r) for r in rows]
 
     def list_recent(self, *, limit: int = 50) -> list[dict]:
         """All reports, newest first (报告库 product list)."""
         rows = self._session.scalars(
-            select(ReportORM).order_by(ReportORM.created_at.desc()).limit(limit)
+            select(ReportORM).order_by(ReportORM.created_at.desc(), ReportORM.id.desc()).limit(limit)
         ).all()
         return [self._row_to_dict(r) for r in rows]
 

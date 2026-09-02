@@ -217,7 +217,7 @@ def list_tabs(session: Session, session_id: str) -> list[dict]:
     rows = session.scalars(
         select(WorkbenchTabORM)
         .where(WorkbenchTabORM.session_id == session_id)
-        .order_by(WorkbenchTabORM.created_at.desc())
+        .order_by(WorkbenchTabORM.created_at.desc(), WorkbenchTabORM.id.desc())
         .limit(20)
     ).all()
     return [_row_to_dict(r) for r in rows]
@@ -238,7 +238,7 @@ def close_tab(session: Session, session_id: str, tab_id: str) -> dict | None:
         latest = session.scalars(
             select(WorkbenchTabORM)
             .where(WorkbenchTabORM.session_id == session_id)
-            .order_by(WorkbenchTabORM.created_at.desc())
+            .order_by(WorkbenchTabORM.created_at.desc(), WorkbenchTabORM.id.desc())
             .limit(1)
         ).first()
         if latest is not None:

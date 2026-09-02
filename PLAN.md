@@ -20,7 +20,31 @@
 
 # Research Capability Deep Port（R 线，当前执行线）
 
-## 第四轮整改 — 观澜研究能力语义迁移（G0–G14，当前 DOING）
+## 第五轮整改 — 语义迁移第二轮（R0–R12，当前 DOING）
+
+> 依据 docs/观澜研究能力语义迁移第二轮整改任务书.md（REJECT — G14 CLOSURE INVALID）
+> R0 可复现基线/Closure Gate → R1 统一权威模型 → R2 验证与审批治理
+> → R3 Fail-closed Compiler → R4 真实条件回测 → R5 游标治理 → R6 因果 Replay
+> → R7 图谱 PIT → R8 Workflow 生产化 → R9 产品内容级 Diff → R10 Thesis/Memory
+> → R11 帷幄/持久任务 → R12 真实 Golden 与 Closure Gate
+
+- [ ] R0 可复现基线与 Closure Gate
+- [ ] R1 统一权威生产模型
+- [ ] R2 Experience 验证与审批治理
+- [ ] R3 Fail-closed Screen Compiler
+- [ ] R4 StrategyDefinition 与真实条件回测
+- [ ] R5 策略监控与游标治理
+- [ ] R6 严格因果 Replay
+- [ ] R7 Industry Graph PIT 与证据归属
+- [ ] R8 Typed Workflow 生产化
+- [ ] R9 Research Products 内容级 Diff
+- [ ] R10 Thesis Center 与不可变 Memory
+- [ ] R11 帷幄审批、Workbench 与持久任务
+- [ ] R12 真实 Golden 与 Closure Gate
+
+---
+
+## 第四轮整改 — 观澜研究能力语义迁移（G0–G14，被第二轮 REOPEN）
 
 > 依据 docs/观澜研究能力语义迁移整改任务书.md（REJECT，2026-09-02）
 > 台账：docs/guanlan-semantic-remediation/MIGRATION-MATRIX.md

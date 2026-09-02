@@ -220,7 +220,7 @@ def list_predictions(
     limit: int = Query(default=200, ge=1, le=500),
     session: Session = Depends(get_session),
 ) -> dict:
-    stmt = select(PredictionORM).order_by(PredictionORM.created_at.desc()).limit(limit)
+    stmt = select(PredictionORM).order_by(PredictionORM.created_at.desc(), PredictionORM.id.desc()).limit(limit)
     if instrument_id is not None:
         stmt = stmt.where(PredictionORM.instrument_id == instrument_id)
     orm_rows = session.scalars(stmt).all()

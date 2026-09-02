@@ -1,5 +1,11 @@
 # G14 — FINAL-CLOSURE（观澜研究能力语义迁移）
 
+> **STATUS: REOPEN — G14 CLOSURE INVALID（2026-09-02 第二轮复审）**
+> 复审基线 main@b25eede：uv.lock 漂移（lock --check FAIL）、全新 frozen 环境
+> 回归存在失败、测试确定性（created_at 排序无 tiebreaker）与 live marker
+> 管理不满足 §G14 第 13 条。第二轮整改（R0–R12）执行中，本 Closure 重新
+> 开放；复审结论见 docs/观澜研究能力语义迁移第二轮整改任务书.md。
+
 > 任务书：docs/观澜研究能力语义迁移整改任务书.md
 > 执行区间：G0 → G14（2026-09-02）| 基线 ASRO c66952e
 > 本 Closure 签署前，第三轮 F15-CLOSURE 的「语义维度」已标注 SUPERSEDED。

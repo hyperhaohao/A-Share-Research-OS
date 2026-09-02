@@ -94,7 +94,7 @@ def session_overview(session: Session, session_id: str) -> dict | None:
         thesis = session.scalars(
             select(ThesisORM)
             .where(ThesisORM.instrument_id == instrument_id)
-            .order_by(ThesisORM.created_at.desc())
+            .order_by(ThesisORM.created_at.desc(), ThesisORM.id.desc())
             .limit(1)
         ).first()
         if thesis is not None:
@@ -102,7 +102,7 @@ def session_overview(session: Session, session_id: str) -> dict | None:
     tasks = session.scalars(
         select(BackgroundTaskORM)
         .where(BackgroundTaskORM.command_session_id == session_id)
-        .order_by(BackgroundTaskORM.created_at.desc())
+        .order_by(BackgroundTaskORM.created_at.desc(), BackgroundTaskORM.id.desc())
         .limit(20)
     ).all()
     return {

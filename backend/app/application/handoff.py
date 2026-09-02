@@ -129,7 +129,7 @@ class HandoffService:
         from app.storage.agent_repo import _ensure_utc
 
         rows = self._session.scalars(
-            select(HandoffORM).order_by(HandoffORM.created_at.desc()).limit(limit)
+            select(HandoffORM).order_by(HandoffORM.created_at.desc(), HandoffORM.id.desc()).limit(limit)
         ).all()
         return [
             {

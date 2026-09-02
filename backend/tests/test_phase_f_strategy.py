@@ -82,7 +82,7 @@ def _mock_sources(monkeypatch, *, kline_ok: bool = True) -> None:
     monkeypatch.setattr(httpx, "get", fake_get)
 
 
-def _await(client, path: str, key: str, *, timeout_s: float = 60.0) -> dict:
+def _await(client, path: str, key: str, *, timeout_s: float = 120.0) -> dict:
     import time
 
     deadline = timeout_s

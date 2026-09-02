@@ -157,7 +157,7 @@ def thesis_history(instrument_id: str, session: Session = Depends(get_session)) 
     rows = session.scalars(
         select(ThesisORM)
         .where(ThesisORM.instrument_id == instrument_id)
-        .order_by(ThesisORM.created_at.desc())
+        .order_by(ThesisORM.created_at.desc(), ThesisORM.id.desc())
         .limit(30)
     ).all()
     current = get_current_thesis(session, instrument_id)

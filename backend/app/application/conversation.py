@@ -161,7 +161,7 @@ class ConversationRepository:
         """F9 会话治理：默认不含 archived；按最后活动排序。"""
         stmt = (
             select(ConversationSessionORM)
-            .order_by(ConversationSessionORM.created_at.desc())
+            .order_by(ConversationSessionORM.created_at.desc(), ConversationSessionORM.id.desc())
             .limit(limit)
         )
         if not include_archived:

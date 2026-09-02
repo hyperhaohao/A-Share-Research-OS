@@ -247,7 +247,7 @@ class ArtifactService:
         instrument_id: str | None = None,
         limit: int = 20,
     ) -> list[dict]:
-        stmt = select(ArtifactORM).order_by(ArtifactORM.created_at.desc())
+        stmt = select(ArtifactORM).order_by(ArtifactORM.created_at.desc(), ArtifactORM.id.desc())
         if query:
             pattern = f"%{query.upper()}%"
             stmt = stmt.where(func.upper(ArtifactORM.title).like(pattern))

@@ -72,7 +72,7 @@ class RegressionRepository:
     def list_all(self, *, limit: int = 50) -> list[RegressionReview]:
         rows = self._session.scalars(
             select(RegressionReviewORM)
-            .order_by(RegressionReviewORM.created_at.desc())
+            .order_by(RegressionReviewORM.created_at.desc(), RegressionReviewORM.id.desc())
             .limit(limit)
         ).all()
         return [
@@ -109,7 +109,7 @@ class ExperienceRepository:
     def list_all(self, *, limit: int = 100) -> list[ResearchExperience]:
         rows = self._session.scalars(
             select(ResearchExperienceORM)
-            .order_by(ResearchExperienceORM.created_at.desc())
+            .order_by(ResearchExperienceORM.created_at.desc(), ResearchExperienceORM.id.desc())
             .limit(limit)
         ).all()
         return [
