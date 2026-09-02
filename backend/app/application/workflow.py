@@ -35,6 +35,10 @@ class WorkflowStatus:
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    # G4：typed run 控制态
+    PAUSED = "paused"
+    CANCELLED = "cancelled"
+    SUCCEEDED = "succeeded"
 
 
 class NodeStatus:
@@ -121,6 +125,33 @@ class WorkflowRepository:
         if card_id is not None:
             stmt = stmt.where(WorkflowRunORM.card_id == card_id)
         return [_row_to_run(r) for r in self._session.scalars(stmt).all()]
+
+    def get_run_row(self, run_id: str):
+        """G4：ORM 行访问（typed 引擎直接控制状态）。"""
+        return self._session.scalars(
+            select(WorkflowRunORM).where(WorkflowRunORM.run_id == run_id)
+        ).first()
+
+    def update_node(self, run_id: str, node_key: str, status: str, *,
+                    detail: str | None = None, error: str | None = None) -> bool:
+        """G4：按 node_id 更新 run 内节点状态（供 typed 引擎落节点态）。"""
+        row = self._session.scalars(
+            select(WorkflowRunORM).where(WorkflowRunORM.run_id == run_id)
+        ).first()
+        if row is None:
+            return False
+        nodes = [dict(n) for n in (row.nodes_json or [])]
+        for n in nodes:
+            if n.get("node_id") in (f"n_{node_key}", node_key) or                     str(n.get("key")) == node_key:
+                n["status"] = status
+                if detail is not None:
+                    n["detail"] = detail
+                if error is not None:
+                    n["error"] = error
+        row.nodes_json = nodes
+        row.updated_at = _utc()
+        self._session.flush()
+        return True
 
     def update_run(self, run_id: str, mutate: Any) -> dict | None:
         row = self._session.scalars(

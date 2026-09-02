@@ -30,7 +30,7 @@
 - [x] G1 真实 Industry Graph
 - [x] G2 产业语义 PIT/证据治理/五轴
 - [x] G3 Experience 原—炼—验—用
-- [ ] G4 Typed Dataflow Workflow
+- [x] G4 Typed Dataflow Workflow
 - [ ] G5 Experience-driven Screening
 - [ ] G6 Executable Strategy Lab
 - [ ] G7 Strategy-aware Monitor
