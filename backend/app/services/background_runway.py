@@ -155,6 +155,7 @@ def claim_next(session: Session, *, worker_id: str, lease_s: int = DEFAULT_LEASE
     row.status = "running"
     row.worker_id = worker_id
     row.lease_expires_at = now + timedelta(seconds=lease_s)
+    row.heartbeat_at = now
     row.started_at = row.started_at or now
     row.attempts = (row.attempts or 0) + 1
     row.progress = max(row.progress or 0, 5)
@@ -217,6 +218,7 @@ def run_one(session: Session, *, worker_id: str = "scheduler", lease_s: int = DE
         else:
             fresh.status = "failed"
             fresh.current_step = "failed"
+            fresh.dead_letter = True  # G12：超过重试上限 → dead-letter 标记
             _emit(session, fresh, "task_failed", payload={"error": fresh.last_error})
     session.commit()
     return _row_to_dict(fresh)
@@ -250,6 +252,36 @@ def retry_task(session: Session, task_id: str) -> dict | None:
         row.progress = 0
         row.current_step = "requeued"
         _emit(session, row, "task_progress", payload={"requeued": True})
+    session.flush()
+    return _row_to_dict(row)
+
+
+def pause_task(session: Session, task_id: str) -> dict | None:
+    """G12：queued → paused（人工暂停；paused 不被泵认领）。"""
+    row = session.scalars(
+        select(BackgroundTaskORM).where(BackgroundTaskORM.task_id == task_id)
+    ).first()
+    if row is None:
+        return None
+    if row.status == "queued":
+        row.status = "paused"
+        row.current_step = "paused"
+        _emit(session, row, "task_progress", payload={"paused": True})
+    session.flush()
+    return _row_to_dict(row)
+
+
+def resume_task(session: Session, task_id: str) -> dict | None:
+    """paused → queued（恢复执行）。"""
+    row = session.scalars(
+        select(BackgroundTaskORM).where(BackgroundTaskORM.task_id == task_id)
+    ).first()
+    if row is None:
+        return None
+    if row.status == "paused":
+        row.status = "queued"
+        row.current_step = "resumed"
+        _emit(session, row, "task_progress", payload={"resumed": True})
     session.flush()
     return _row_to_dict(row)
 

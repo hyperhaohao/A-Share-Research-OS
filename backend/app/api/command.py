@@ -593,6 +593,30 @@ def cancel_background_task(task_id: str, session: Session = Depends(get_session)
     return {"task": out}
 
 
+@router.post("/tasks/{task_id}/pause")
+def pause_background_task(task_id: str, session: Session = Depends(get_session)) -> dict:
+    from app.core.errors import AppError
+    from app.services.background_runway import pause_task
+
+    out = pause_task(session, task_id)
+    if out is None:
+        raise AppError("task.not_found", status_code=404)
+    session.commit()
+    return {"task": out}
+
+
+@router.post("/tasks/{task_id}/resume")
+def resume_background_task(task_id: str, session: Session = Depends(get_session)) -> dict:
+    from app.core.errors import AppError
+    from app.services.background_runway import resume_task
+
+    out = resume_task(session, task_id)
+    if out is None:
+        raise AppError("task.not_found", status_code=404)
+    session.commit()
+    return {"task": out}
+
+
 @router.post("/tasks/{task_id}/retry")
 def retry_background_task(task_id: str, session: Session = Depends(get_session)) -> dict:
     from app.core.errors import AppError

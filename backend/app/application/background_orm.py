@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.storage.orm import Base
@@ -31,6 +31,9 @@ class BackgroundTaskORM(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     result_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # G12：heartbeat（worker 存活信号）+ dead-letter 标记
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    dead_letter: Mapped[bool] = mapped_column(Boolean, default=False)
 
     __table_args__ = (
         UniqueConstraint("task_id", name="uq_cmd_bg_task_id"),

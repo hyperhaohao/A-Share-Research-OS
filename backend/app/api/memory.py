@@ -104,3 +104,17 @@ def memory_from_experience(card_id: str, session: Session = Depends(get_session)
         raise AppError("memory.not_approved", status_code=422, detail=str(exc)) from None
     session.commit()
     return {"memory": memory}
+
+
+@router.get("/{memory_id}/versions/diff")
+def memory_version_diff(memory_id: str, v1: int, v2: int,
+                        session: Session = Depends(get_session)) -> dict:
+    """记忆版本 Diff（§G10：内容 append-only；恢复=candidate 重建）。"""
+    from app.core.errors import AppError
+    from app.application.memory import MemoryService
+
+    try:
+        out = MemoryService(session).version_diff(memory_id, v1, v2)
+    except KeyError:
+        raise AppError("memory.not_found", status_code=404) from None
+    return out

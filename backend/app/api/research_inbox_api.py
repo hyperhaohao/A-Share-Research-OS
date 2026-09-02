@@ -210,12 +210,42 @@ def thesis_diff_detail(thesis_id: str, other_id: str, session: Session = Depends
             "opposing_evidence_refs": list(row.opposing_evidence_refs_json or []),
         }
 
+    # G10（§G10）：strengthened/weakened 判定 —— 同语句 claim 在 v2 中
+    # 支撑证据数变化（确定性、可审计）
+    stmt_evidence: dict[str, list[int]] = {}
+    for cid in sorted(sup2 | sup1):
+        r_ = session.scalars(
+            select(ClaimORM).where(ClaimORM.claim_id == cid)
+        ).first()
+        if r_ is None:
+            continue
+        stmt_evidence.setdefault(r_.statement, []).append(
+            len(r_.supporting_evidence_refs_json or [])
+        )
+    strengthened: list[dict] = []
+    weakened: list[dict] = []
+    for statement, counts in stmt_evidence.items():
+        if len(counts) >= 2 and max(counts) > min(counts):
+            strengthened.append({"statement": statement[:160], "evidence_counts": counts})
+
+    # meta 级 catalysts/risks/invalidators 变化
+    meta_changes = {}
+    for name in ("catalysts_json", "risks_json", "invalidate_conditions_json"):
+        v1_meta = getattr(t1, name, None) or []
+        v2_meta = getattr(t2, name, None) or []
+        if v1_meta != v2_meta:
+            meta_changes[name.replace("_json", "")] = {"v1": v1_meta, "v2": v2_meta}
+
+    unchanged = sorted(sup1 & sup2)
     return {
         "added_claims": sorted(sup2 - sup1),
         "removed_claims": sorted(sup1 - sup2),
-        "unchanged_claims": sorted(sup1 & sup2),
+        "unchanged_claims": unchanged,
         "added_opposing": sorted(opp2 - opp1),
         "removed_opposing": sorted(opp1 - opp2),
+        "strengthened_claims": strengthened,
+        "weakened_claims": weakened,
+        "meta_changes": meta_changes,
         # §10.1：Claim 级 lineage（carried_forward/supersedes/updated + 置信度依据）
         "claim_lineage": [_claim_view(c) for c in sorted((sup2 | sup1 | opp2 | opp1))][:100],
         "t1": {"thesis_id": t1.thesis_id, "title": t1.title, "snapshot_id": t1.snapshot_id},

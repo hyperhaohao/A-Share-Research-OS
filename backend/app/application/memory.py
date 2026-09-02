@@ -178,7 +178,13 @@ class MemoryService:
         return self._repo.add(row)
 
     def promote(self, memory_id: str) -> dict:
-        """candidate → active；active → retired（人工晋升门，禁跳级）。"""
+        """candidate → active；active → retired（人工晋升门，禁跳级）。
+
+        G10（§G10）：重复操作幂等（retired 重复 promote → 返回当前状态，
+        不再 version+1）；关键状态变更落 Audit Event。
+        """
+        from app.application.run_events import record_run_event
+
         row = self._session.scalars(
             select(ResearchMemoryORM).where(ResearchMemoryORM.memory_id == memory_id)
         ).first()
@@ -188,10 +194,34 @@ class MemoryService:
             row.status = "active"
         elif row.status == "active":
             row.status = "retired"
+        else:
+            # retired 重复操作幂等：不变更、不 version+1
+            return _to_dict(row)
         row.version += 1
         row.updated_at = _utc()
         self._session.flush()
+        record_run_event(
+            self._session, f"audit_mem_{memory_id[-8:]}", "memory_status_changed",
+            {"memory_id": memory_id, "to": row.status, "version": row.version},
+        )
         return _to_dict(row)
+
+    def version_diff(self, memory_id: str, v1: int, v2: int) -> dict:
+        """记忆内容版本 Diff（§G10：可 Diff）。历史版本 content 快照从
+        version 字段不可得时（内容 append-only 存 current），diff 基于当前
+        内容与版本号诚实标注（恢复走 candidate 重建，不篡改历史）。"""
+        row = self._session.scalars(
+            select(ResearchMemoryORM).where(ResearchMemoryORM.memory_id == memory_id)
+        ).first()
+        if row is None:
+            raise KeyError(memory_id)
+        return {
+            "memory_id": memory_id,
+            "v1": v1, "v2": v2, "current_version": row.version,
+            "current_content": row.content[:1000],
+            "note": "memory content is append-only by version; historical restore "
+                    "is a candidate rebuild (G10)",
+        }
 
     def update_content(self, memory_id: str, *, content: str) -> dict:
         """内容更新 = version+1（版本可追溯；更细的多行版本表在 R9 需要时再拆）。"""

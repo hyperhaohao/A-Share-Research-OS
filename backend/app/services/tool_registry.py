@@ -738,3 +738,74 @@ register_tool(ToolSpec(
     idempotency_policy="at_most_once", artifact_contract=(),
     executor=_exec_reject_experience_card,
 ))
+
+def _exec_research_state_check(session: Session, args: dict) -> dict:
+    """研究链完整性检查（§G11.5/§G11.6）：freshness/PIT/missing/blockers。"""
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+
+    from app.services.current_thesis import get_current_thesis
+    from app.storage.orm import EvidenceORM
+    from sqlalchemy import select as _select
+
+    instrument_id = args["instrument_id"]
+    now = _dt.now(_tz.utc)
+    thesis = get_current_thesis(session, instrument_id)
+    ev_rows = session.scalars(
+        _select(EvidenceORM)
+        .where(EvidenceORM.instrument_id == instrument_id)
+        .where(EvidenceORM.available_time <= now)
+        .order_by(EvidenceORM.available_time.desc())
+        .limit(200)
+    ).all()
+    n_evidence = len(ev_rows)
+    latest_available = (
+        ev_rows[0].available_time if ev_rows and ev_rows[0].available_time else None
+    )
+    freshness_days = (
+        max((now - _ensure_utc2(latest_available)).days, 0) if latest_available else None
+    )
+
+    missing: list[str] = []
+    blockers: list[str] = []
+    if n_evidence == 0:
+        missing.append("evidence")
+    if thesis is None:
+        missing.append("current_thesis")
+
+    sufficient = bool(thesis is not None and n_evidence > 0)
+    if not sufficient:
+        blockers.append("INSUFFICIENT_RESEARCH_STATE")
+
+    return {
+        "instrument_id": instrument_id,
+        "sufficient": sufficient,
+        "freshness_days": freshness_days,
+        "n_evidence": n_evidence,
+        "current_thesis_id": thesis.thesis_id if thesis is not None else None,
+        "pit_ok": all(
+            (r.available_time is not None and _ensure_utc2(r.available_time) <= now)
+            for r in ev_rows
+        ),
+        "missing_inputs": missing,
+        "blockers": blockers,
+    }
+
+
+def _ensure_utc2(v):
+    from datetime import timezone as _tz
+
+    return v if (v is None or v.tzinfo is not None) else v.replace(tzinfo=_tz.utc)
+
+
+register_tool(ToolSpec(
+    name="research_state_check",
+    description="研究链完整性检查（freshness/PIT/missing/blockers/INSUFFICIENT_RESEARCH_STATE）",
+    input_schema={
+        "type": "object", "required": ["instrument_id"],
+        "properties": {"instrument_id": {"type": "string", "minLength": 4, "maxLength": 32}},
+    },
+    output_schema={"type": "object"},
+    risk_level=RISK_READ, requires_confirmation=False, timeout_s=10,
+    idempotency_policy="idempotent", artifact_contract=(),
+    executor=_exec_research_state_check,
+))
