@@ -85,3 +85,29 @@ def run_monitor(monitor_id: str, session: Session = Depends(get_session)) -> dic
     )
     thread.start()
     return {"monitor_id": monitor_id, "status": "running"}
+
+
+class MonitorStatusIn(BaseModel):
+    status: str = Field(min_length=5, max_length=16)
+
+
+@router.post("/{monitor_id}/status")
+def set_monitor_status(monitor_id: str, payload: MonitorStatusIn,
+                       session: Session = Depends(get_session)) -> dict:
+    """G7 状态机（§G7.3）：ACTIVE↔PAUSED→RETIRED（决定落审计事件）。"""
+    from app.core.errors import AppError
+    from app.services.strategy_monitor_service import (
+        StrategyMonitorRefusal,
+        StrategyMonitorService,
+    )
+
+    try:
+        out = StrategyMonitorService(session).set_status(
+            monitor_id, payload.status)
+    except KeyError:
+        raise AppError("monitor.not_found", status_code=404) from None
+    except StrategyMonitorRefusal as exc:
+        raise AppError("monitor.bad_transition", status_code=422,
+                       detail=str(exc)) from None
+    session.commit()
+    return {"monitor": out}

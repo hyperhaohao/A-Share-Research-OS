@@ -33,7 +33,7 @@
 - [x] G4 Typed Dataflow Workflow
 - [x] G5 Experience-driven Screening
 - [x] G6 Executable Strategy Lab
-- [ ] G7 Strategy-aware Monitor
+- [x] G7 Strategy-aware Monitor
 - [ ] G8 Causal Replay
 - [ ] G9 Research Products 产品化
 - [ ] G10 Thesis Center/Inbox/Memory

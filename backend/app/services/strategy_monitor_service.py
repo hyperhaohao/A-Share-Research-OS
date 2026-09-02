@@ -36,6 +36,12 @@ from app.storage.orm import EvidenceORM
 from app.storage.repository import EvidenceRepository
 from app.storage.research_orm import CorporateEventORM
 
+def _ensure_utc(v):
+    from datetime import timezone as _tz
+
+    return v if (v is None or v.tzinfo is not None) else v.replace(tzinfo=_tz.utc)
+
+
 QUOTE_MOVE_THRESHOLD_PCT = 2.0
 DEFAULT_INTERVAL_SECONDS = 3600
 
@@ -67,10 +73,11 @@ class StrategyMonitorService:
         version = StrategyRepository(self._session).get_version(version_id)
         if version is None:
             raise KeyError(version_id)
-        # §47 输出衔接：只有标记 EXPERIMENTAL 的版本可进入盯盘
-        if version["status"] != StrategyStatus.EXPERIMENTAL:
+        # §47 + §G7.4：EXPERIMENTAL/VALIDATED 均可监控（不再排除 Validated）
+        if version["status"] not in (StrategyStatus.EXPERIMENTAL, StrategyStatus.VALIDATED):
             raise StrategyMonitorRefusal(
-                "monitor requires an EXPERIMENTAL strategy version (§47: 未通过验证不可进入正式盯盘)"
+                "monitor requires EXPERIMENTAL or VALIDATED strategy version "
+                "(§47/§G7.4: 未通过验证不可进入正式盯盘)"
             )
         now = datetime.now(timezone.utc)
         row = type(self)._orm(
@@ -141,18 +148,29 @@ class StrategyMonitorService:
     # -- run（观察 → 信号 → 决策） -------------------------------------------------------
 
     def run_monitor(self, monitor_id: str) -> dict:
+        """G7（§G7.2/§G7.6/§G7.7）：状态机门 + 执行所引用策略版本规则 +
+        Cursor 幂等（同批输入重复运行不产生重复信号）+ 失败持久化。"""
         from app.application.run_events import record_run_event
+        from app.application.strategy import StrategyRepository
+        from app.services.backtest_engine import BacktestSpec, run_event_backtest
+        from app.services.workflow_service import load_daily_bars
 
         monitor = self._repo.get_monitor(monitor_id)
         if monitor is None:
             raise KeyError(monitor_id)
-        if not monitor["enabled"]:
-            raise StrategyMonitorRefusal("monitor is paused")
+        row = self._repo.get_monitor_row(monitor_id)
+        # §G7.3 状态机：仅 ACTIVE 运行
+        if (row.status or "ACTIVE") != "ACTIVE":
+            raise StrategyMonitorRefusal(
+                f"monitor status={row.status} — only ACTIVE monitors run"
+            )
 
         now = datetime.now(timezone.utc)
+        is_first_run = row.quote_cursor is None  # §G7.7：历史回填 vs 实时新信号
         record_run_event(
             self._session, monitor_id, "monitor_started",
-            {"version_id": monitor["version_id"], "universe": len(monitor["universe"])},
+            {"version_id": monitor["version_id"], "universe": len(monitor["universe"]),
+             "first_run": is_first_run},
         )
         all_observations: list[dict] = []
         all_signals: list[dict] = []
@@ -161,6 +179,61 @@ class StrategyMonitorService:
         threshold = float(
             (monitor["rules"] or {}).get("quote_move_threshold_pct", QUOTE_MOVE_THRESHOLD_PCT)
         )
+
+        # §G7.2：执行所引用策略版本的真实规则（G6 引擎，per 标的）
+        from app.application.strategy import StrategyRepository as _SR
+
+        version = _SR(self._session).get_version(monitor["version_id"])
+        strategy_signals: list[dict] = []
+        if version is not None:
+            entry_policy = dict(version["entry_policy"] or {})
+            horizon = int(entry_policy.get("horizon_days") or 20)
+            threshold_pct = float(entry_policy.get("threshold_pct") or 0.0)
+            cursor = _ensure_utc(row.quote_cursor)
+            for member in monitor["universe"]:
+                instrument_id = member["instrument_id"]
+                bars = load_daily_bars(self._session, instrument_id)
+                bars = [b for b in bars if not cursor or b["date"] > cursor.date().isoformat()]
+                spec = BacktestSpec(
+                    entry_rules=[{"kind": "quote_move",
+                                  "pct": threshold_pct, "window": min(horizon, 10)}],
+                    exit_rules=[{"kind": "max_hold_days", "days": horizon}],
+                )
+                try:
+                    out = run_event_backtest(bars, spec, include_phases=False)
+                except Exception as exc:  # noqa: BLE001 — 无数据等 → 失败持久化
+                    row.last_error = f"{type(exc).__name__}: {exc}"[:500]
+                    self._repo.save_monitor(row)
+                    continue
+                if out.get("status") == "INSUFFICIENT_SIGNALS":
+                    continue
+                for trade in out["trades"]:
+                    key = f"{monitor_id}:{instrument_id}:{trade['entry_date']}:{trade['exit_date']}"
+                    dup = self._session.scalars(
+                        select(SignalORM).where(
+                            SignalORM.idempotency_key == key)
+                    ).first()
+                    if dup is not None:
+                        continue  # 幂等：同批输入不重复
+                    signal = self._repo.add_signal(SignalORM(
+                        signal_id=f"sig_{_short_hex()}",
+                        monitor_id=monitor_id,
+                        instrument_id=instrument_id,
+                        rule_kind="strategy_entry_exit",
+                        strength=abs(float(trade["return_pct"])) / 100.0,
+                        text=(f"策略规则执行：{trade['entry_date']} 入场 → "
+                              f"{trade['exit_date']} 出场（{trade['exit_reason']}，"
+                              f"{trade['return_pct']:+.2f}%）"),
+                        observation_ids_json=[],
+                        created_at=now,
+                        direction="long",
+                        idempotency_key=key,
+                    ))
+                    strategy_signals.append(signal)
+        else:
+            raise StrategyMonitorRefusal(
+                f"strategy version missing: {monitor['version_id']}")
+
         for member in monitor["universe"]:
             instrument_id = member["instrument_id"]
             observations = self._observe(instrument_id, monitor["monitor_id"], now)
@@ -170,6 +243,8 @@ class StrategyMonitorService:
             signals = self._signalize(observations, monitor["monitor_id"], instrument_id, threshold)
             all_signals.extend(signals)
 
+        all_signals.extend(strategy_signals)
+
         decision = self._decide(
             monitor, all_observations, all_signals, all_evidence_ids, now
         )
@@ -178,19 +253,52 @@ class StrategyMonitorService:
         interval = int((monitor["rules"] or {}).get("interval_seconds", DEFAULT_INTERVAL_SECONDS))
         row.last_run_at = now
         row.next_run_at = now + timedelta(seconds=interval)
+        # §G7.6 Cursor：行情 Cursor = 本次运行时间（下次只看增量）
+        row.quote_cursor = now
+        row.evidence_cursor = now
         row.updated_at = now
         self._repo.save_monitor(row)
         record_run_event(
             self._session, monitor_id, "monitor_completed",
             {"observations": len(all_observations), "signals": len(all_signals),
-             "decision": decision["decision"]},
+             "strategy_signals": len(strategy_signals),
+             "decision": decision["decision"], "first_run": is_first_run},
         )
         return {
             "monitor": self._repo.get_monitor(monitor_id),
             "observations": len(all_observations),
             "signals": len(all_signals),
+            "strategy_signals": len(strategy_signals),
             "decision": decision,
         }
+
+    # -- G7 状态机（§G7.3：ACTIVE↔PAUSED→RETIRED；FAILED 保留） ----------------
+
+    def set_status(self, monitor_id: str, new_status: str) -> dict:
+        from app.application.run_events import record_run_event
+
+        row = self._repo.get_monitor_row(monitor_id)
+        if row is None:
+            raise KeyError(monitor_id)
+        allowed = {
+            "ACTIVE": {"PAUSED", "RETIRED"},
+            "PAUSED": {"ACTIVE", "RETIRED"},
+            "RETIRED": set(),
+        }
+        current = row.status or "ACTIVE"
+        if new_status not in allowed.get(current, set()):
+            raise StrategyMonitorRefusal(
+                f"cannot transition {current} → {new_status} (§G7.3)"
+            )
+        row.status = new_status
+        row.enabled = new_status == "ACTIVE"
+        row.updated_at = datetime.now(timezone.utc)
+        self._repo.save_monitor(row)
+        record_run_event(
+            self._session, monitor_id, "monitor_status_changed",
+            {"from": current, "to": new_status},
+        )
+        return self._repo.get_monitor(monitor_id)
 
     # -- Observation（§24：系统观察到什么，只来自真实数据） ---------------------------------
 

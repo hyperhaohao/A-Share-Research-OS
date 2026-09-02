@@ -60,6 +60,11 @@ class StrategyMonitorORM(Base):
     next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # G7（任务书 §G7）：状态机 + Cursor + 失败持久化
+    status: Mapped[str] = mapped_column(String(16), default="ACTIVE", index=True)
+    quote_cursor: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    evidence_cursor: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
 
 class ObservationORM(Base):
@@ -92,6 +97,9 @@ class SignalORM(Base):
     text: Mapped[str] = mapped_column(String(1000))
     observation_ids_json: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # G7：信号方向 + 幂等键（同批输入重复运行不产生重复信号）
+    direction: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
 
 
 class DecisionRecordORM(Base):
@@ -121,6 +129,10 @@ def _monitor_to_dict(row: StrategyMonitorORM) -> dict:
         "universe": list(row.universe_json or []),
         "rules": dict(row.rules_json or {}),
         "enabled": row.enabled,
+        "status": row.status,
+        "quote_cursor": _ensure_utc(row.quote_cursor).isoformat() if row.quote_cursor else None,
+        "evidence_cursor": _ensure_utc(row.evidence_cursor).isoformat() if row.evidence_cursor else None,
+        "last_error": row.last_error,
         "last_run_at": _ensure_utc(row.last_run_at).isoformat() if row.last_run_at else None,
         "next_run_at": _ensure_utc(row.next_run_at).isoformat() if row.next_run_at else None,
         "created_at": _ensure_utc(row.created_at).isoformat() if row.created_at else None,
@@ -148,6 +160,8 @@ def _signal_to_dict(row: SignalORM) -> dict:
         "rule_kind": row.rule_kind,
         "strength": row.strength,
         "text": row.text,
+        "direction": row.direction,
+        "idempotency_key": row.idempotency_key,
         "observation_ids": list(row.observation_ids_json or []),
         "created_at": _ensure_utc(row.created_at).isoformat() if row.created_at else None,
     }
