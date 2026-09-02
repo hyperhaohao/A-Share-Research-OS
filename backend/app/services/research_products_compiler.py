@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from uuid import uuid4
 
 from app.domain.research_products import get_contract
 from app.storage.orm import EvidenceORM
@@ -202,3 +203,120 @@ class MarketProductCompiler:
             "section_count": len(sections),
             "note": "研究简报 = Inbox/Thesis/信号 聚合（非行情播报）",
         }
+
+
+    # ── G9：编译持久化（Artifact/Version/PIT/Provenance） ────────────────────
+
+    def compile_and_register(self, kind: str) -> dict:
+        """编译 + 版本落库 + Artifact 注册（§G9：临时 dict 不再冒充产品）。
+
+        kind: mainline_radar | overseas_mapping | daily_brief
+        返回 {compile_id, product_type, version, as_of, artifact_id, product,
+              diff_vs_previous}
+        """
+        from app.application.artifacts import ArtifactService
+        from app.storage.research_product_orm import ResearchProductCompileORM
+
+        if kind == "mainline_radar":
+            product = self.compile_mainline_radar()
+        elif kind == "overseas_mapping":
+            product = self.compile_overseas_mapping()
+        elif kind == "daily_brief":
+            product = self.compile_daily_brief()
+        else:
+            raise ValueError(f"unknown product kind: {kind}")
+
+        prev_version = self._session.scalars(
+            select(ResearchProductCompileORM)
+            .where(ResearchProductCompileORM.product_type == product["product_type"])
+            .order_by(ResearchProductCompileORM.version.desc())
+            .limit(1)
+        ).first()
+        version = (prev_version.version + 1) if prev_version is not None else 1
+
+        artifact_id = None
+        provenance_status = "complete"
+        try:
+            artifact_id = ArtifactService(self._session).register(
+                artifact_type="research_product",
+                domain_type="ResearchProduct",
+                domain_id=f"{product['product_type']}:{version}",
+                title=f"{product['product_type']} v{version}",
+                instrument_ids=(),
+                created_by="research_products",
+                route="/research-products",
+                as_of_time=None,
+                version=version,
+            )
+        except Exception as exc:  # noqa: BLE001 — 显形 INCOMPLETE_PROVENANCE（§G2.6）
+            provenance_status = "INCOMPLETE_PROVENANCE"
+            artifact_error = f"{type(exc).__name__}: {exc}"[:200]
+
+        row = ResearchProductCompileORM(
+            compile_id=f"cmp_{uuid4().hex[:16]}",
+            product_type=product["product_type"],
+            version=version,
+            as_of=_utc(),
+            payload_json=product,
+            artifact_id=artifact_id,
+            provenance_status=provenance_status,
+            created_at=_utc(),
+        )
+        self._session.add(row)
+        self._session.flush()
+
+        # 与上一版差异（§G9：每版可查看与上一版变化）
+        diff = {"version": version, "previous_version": prev_version.version if prev_version else None,
+                "changed": True if prev_version is None else None}
+        if prev_version is not None:
+            prev_items = prev_version.payload_json.get("items") or prev_version.payload_json.get("sections") or []
+            cur_items = product.get("items") or product.get("sections") or []
+            diff = {
+                "version": version,
+                "previous_version": prev_version.version,
+                "previous_items": len(prev_items),
+                "current_items": len(cur_items),
+                "changed": len(prev_items) != len(cur_items),
+            }
+        out = {
+            "compile_id": row.compile_id, "product_type": product["product_type"],
+            "version": version, "as_of": row.as_of.isoformat(),
+            "artifact_id": artifact_id, "provenance_status": provenance_status,
+            "product": product, "diff_vs_previous": diff,
+        }
+        if provenance_status != "complete":
+            out["provenance_error"] = locals().get("artifact_error", "artifact registration failed")
+        return out
+
+    def list_compiles(self, product_type: str | None = None, *, limit: int = 20) -> list[dict]:
+        from app.storage.research_product_orm import ResearchProductCompileORM
+
+        stmt = select(ResearchProductCompileORM).order_by(
+            ResearchProductCompileORM.created_at.desc()).limit(limit)
+        if product_type:
+            stmt = stmt.where(ResearchProductCompileORM.product_type == product_type)
+        return [
+            {"compile_id": r.compile_id, "product_type": r.product_type,
+             "version": r.version, "as_of": r.as_of.isoformat() if r.as_of else None,
+             "artifact_id": r.artifact_id, "provenance_status": r.provenance_status}
+            for r in self._session.scalars(stmt).all()
+        ]
+
+    def compile_diff(self, product_type: str, v1: int, v2: int) -> dict:
+        from app.storage.research_product_orm import ResearchProductCompileORM
+
+        rows = {
+            r.version: r for r in self._session.scalars(
+                select(ResearchProductCompileORM)
+                .where(ResearchProductCompileORM.product_type == product_type)
+                .order_by(ResearchProductCompileORM.version.asc())
+            ).all()
+        }
+        if v1 not in rows or v2 not in rows:
+            raise ValueError("version not found")
+        a, b = rows[v1], rows[v2]
+        return {
+            "product_type": product_type, "v1": v1, "v2": v2,
+            "v1_as_of": a.as_of.isoformat(), "v2_as_of": b.as_of.isoformat(),
+            "v1_items": len((a.payload_json or {}).get("items") or []),
+            "v2_items": len((b.payload_json or {}).get("items") or []),        }

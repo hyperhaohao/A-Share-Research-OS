@@ -14,7 +14,7 @@
 - [x] G6 Executable Strategy Lab（真实交易路径回测）
 - [x] G7 Strategy-aware Monitor（执行策略版本 + Cursor + 状态机）
 - [x] G8 Causal Replay（因果引用 + Attribution + 可执行反馈）
-- [ ] G9 Research Products 产品化（Artifact/Version/PIT + 页面）
+- [x] G9 Research Products 产品化（Artifact/Version/PIT + 页面）
 - [ ] G10 Thesis Center/Inbox/Memory 补全
 - [ ] G11 帷幄全链整合（INSUFFICIENT_RESEARCH_STATE 等）
 - [ ] G12 长任务/并发/失败恢复统一

@@ -77,7 +77,7 @@ export function ResearchInboxPage() {
               <ul className="watch-list">
                 {(list("thesis_changes") as {thesis_id:string;instrument_id:string;title:string;is_current:boolean}[]).map(c => (
                   <li key={c.thesis_id} className="result-row">
-                    <Link to="/thesis">{c.title?.slice(0,50)}</Link>
+                    <Link to="/thesis-center">{c.title?.slice(0,50)}</Link>
                     <span className="secondary mono">{c.instrument_id}</span>
                     {c.is_current && <Badge tone="ok">{t("researchCenter.current")}</Badge>}
                   </li>

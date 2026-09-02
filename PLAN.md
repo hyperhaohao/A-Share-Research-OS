@@ -35,7 +35,7 @@
 - [x] G6 Executable Strategy Lab
 - [x] G7 Strategy-aware Monitor
 - [x] G8 Causal Replay
-- [ ] G9 Research Products 产品化
+- [x] G9 Research Products 产品化
 - [ ] G10 Thesis Center/Inbox/Memory
 - [ ] G11 帷幄全链整合
 - [ ] G12 长任务/并发/失败恢复

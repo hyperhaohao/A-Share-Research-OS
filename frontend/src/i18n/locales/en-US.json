@@ -998,5 +998,19 @@
     "provenance": "Provenance & Time",
     "diffAgainstCurrent": "Diff vs current",
     "claimLineage": "Claim Lineage"
+  },
+  "researchProducts": {
+    "title": "Research Products",
+    "subtitle": "Mainline radar / Overseas evidence radar / Daily brief — versioned compiles with artifact & PIT",
+    "compile": "Compile & register",
+    "missingChain": "Mapping chain gaps",
+    "diffVsPrevious": "Diff vs previous",
+    "changed": "changed",
+    "unchanged": "unchanged",
+    "versionHistory": "Version history",
+    "mainline": "Mainline Radar",
+    "overseas": "Overseas Evidence Radar",
+    "dailyBrief": "Daily Brief",
+    "compileFailed": "Compile failed (see backend logs)"
   }
 }

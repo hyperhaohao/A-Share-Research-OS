@@ -23,6 +23,7 @@ import { ThemeProvider } from "./theme/ThemeProvider";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 import { AppShell } from "./app/AppShell";
 import { WithInstrumentRedirect } from "./app/InstrumentRedirect";
+import { ResearchProductsPage } from "./pages/ResearchProductsPage";
 import { WorkflowsPage, WorkflowDetailPage } from "./pages/WorkflowsPage";
 import { WorkflowStudioPage } from "./pages/WorkflowStudioPage";
 import { SourceHealthPage } from "./pages/SourceHealthPage";
@@ -77,6 +78,7 @@ function Shell() {
         <Route path="/research-inbox" element={<ResearchInboxPage />} />
         <Route path="/research-memory" element={<ResearchMemoryPage />} />
         <Route path="/thesis-center" element={<ThesisCenterPage />} />
+        <Route path="/research-products" element={<ResearchProductsPage />} />
         <Route path="/research-graph" element={<ResearchGraphCanvasPage />} />
         <Route path="/research-graph/list" element={<ResearchGraphPage />} />
         <Route path="/source-health" element={<SourceHealthPage />} />

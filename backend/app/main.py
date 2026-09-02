@@ -46,6 +46,8 @@ from app.api.research_map import router as research_map_router
 from app.api.industry_graph import router as industry_graph_router
 from app.api.workflow_typed import router as workflow_typed_router
 from app.api.screening_v2 import router as screening_v2_router
+from app.api.screening_v2 import router as screening_v2_router
+from app.storage.research_product_orm import ResearchProductCompileORM  # noqa: F401 — G9 metadata
 from app.storage.screen_definition_orm import (  # noqa: F401 — G5 metadata
     ScreenDefinitionORM as _G5Def,
     ScreenDefinitionRunORM as _G5Run,

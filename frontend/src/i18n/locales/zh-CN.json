@@ -997,5 +997,19 @@
     "provenance": "来源与时间",
     "diffAgainstCurrent": "对比当前版",
     "claimLineage": "Claim 版本脉络"
+  },
+  "researchProducts": {
+    "title": "研究产品",
+    "subtitle": "主线雷达 / 海外证据雷达 / 研究晨报 —— 版本化编译，含 Artifact 与 PIT",
+    "compile": "编译并注册",
+    "missingChain": "映射链缺口",
+    "diffVsPrevious": "与上一版对比",
+    "changed": "有变化",
+    "unchanged": "无变化",
+    "versionHistory": "版本历史",
+    "mainline": "主线雷达",
+    "overseas": "海外证据雷达",
+    "dailyBrief": "研究晨报",
+    "compileFailed": "编译失败（详见后端日志）"
   }
 }
