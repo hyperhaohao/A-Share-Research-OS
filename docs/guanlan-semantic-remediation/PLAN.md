@@ -18,7 +18,7 @@
 - [ ] G10 Thesis Center/Inbox/Memory 补全
 - [ ] G11 帷幄全链整合（INSUFFICIENT_RESEARCH_STATE 等）
 - [x] G12 长任务/并发/失败恢复统一
-- [ ] G13 语义测试与 Golden（A 稀土链 / B 经验→策略 / C 产品+帷幄）
+- [x] G13 语义测试与 Golden（A 稀土链 / B 经验→策略 / C 产品+帷幄）
 - [ ] G14 Evidence 与 Closure
 
 ## 阶段完成记录

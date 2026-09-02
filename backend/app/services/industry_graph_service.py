@@ -296,7 +296,9 @@ class IndustryGraphService:
         row = self._get_edge_row(edge_id)
         if row is None:
             raise AppError("industry_graph.edge_not_found", status_code=404) from None
-        return self._edge_dict(row)
+        d = self._edge_dict(row)
+        d["evidence"] = self._edge_evidence(edge_id, as_of=None)
+        return d
 
     # ── Company Industry Position ───────────────────────────────────────────
 
