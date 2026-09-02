@@ -304,6 +304,7 @@ class ExperienceService:
                 validation_id=f"expv_{uuid4().hex[:12]}",
                 card_id=card_id,
                 method="case",
+                verdict="inconclusive",  # 方向预测记录由 G8 因果链接入
                 cases_json=[
                     {
                         "instrument_id": row.instrument_id,
@@ -393,6 +394,7 @@ class ExperienceService:
             ExperienceValidationORM(
                 validation_id=f"expv_{uuid4().hex[:12]}",
                 card_id=row.card_id,
+                verdict="fail" if counter_hits else "pass",
                 method="counterexample_search",
                 cases_json=counter_hits,
                 summary=(
@@ -453,6 +455,7 @@ class ExperienceService:
             ExperienceValidationORM(
                 validation_id=f"expv_{uuid4().hex[:12]}",
                 card_id=row.card_id,
+                verdict="inconclusive",
                 method="historical_evidence_validation",
                 cases_json=cases,
                 summary=f"历史证据验证 {len(cases)} 个快照：平均前向 {avg:+.2f}%",
@@ -495,6 +498,7 @@ class ExperienceService:
             ExperienceValidationORM(
                 validation_id=f"expv_{uuid4().hex[:12]}",
                 card_id=row.card_id,
+                verdict="inconclusive",
                 method="cross_company_validation",
                 cases_json=cases,
                 summary=f"跨公司核对（同业板块成员 {len(cases)} 家，行情可得性如实标注）",
@@ -503,16 +507,33 @@ class ExperienceService:
         )
 
     def approve(self, card_id: str, verdict: str | None) -> dict:
+        """§G3.3：至少一项明确 PASS 的有效验证；关键 FAIL 未解决禁止批准；
+        §G3.4：决定写入 Audit Event。"""
         row = self._repo.get_card_row(card_id)
         if row is None:
             raise KeyError(card_id)
         validations = self._repo.list_validations(card_id)
         if not validations:
             raise ExperienceRefusal("approve requires at least one validation (§13 验→用)")
+        fail_verdicts = [v for v in validations
+                         if str((v.get("verdict") or "")).lower() == "fail"]
+        if fail_verdicts:
+            raise ExperienceRefusal(
+                f"approve blocked: {len(fail_verdicts)} FAIL validation(s) unresolved "
+                "(§G3.3 关键 FAIL 未解决禁止批准)"
+            )
+        passed = [v for v in validations
+                  if str((v.get("verdict") or "")).lower() == "pass"]
+        if not passed:
+            raise ExperienceRefusal(
+                "approve requires at least one explicitly PASS validation (§G3.3)"
+            )
         row.status = ExperienceStatus.APPROVED
         row.verdict = (verdict or "approved").strip()[:500]
         row.updated_at = datetime.now(timezone.utc)
-        return self._repo.save_card(row)
+        saved = self._repo.save_card(row)
+        self._audit(card_id, "experience_approved", {"verdict": row.verdict})
+        return saved
 
     def reject(self, card_id: str, reason: str | None) -> dict:
         row = self._repo.get_card_row(card_id)
@@ -521,7 +542,123 @@ class ExperienceService:
         row.status = ExperienceStatus.REJECTED
         row.verdict = (reason or "rejected").strip()[:500]
         row.updated_at = datetime.now(timezone.utc)
-        return self._repo.save_card(row)
+        saved = self._repo.save_card(row)
+        self._audit(card_id, "experience_rejected", {"reason": (reason or "")[:200]})
+        return saved
+
+    def _audit(self, card_id: str, event_type: str, payload: dict) -> None:
+        from app.application.run_events import record_run_event
+
+        record_run_event(
+            self._session, f"audit_exp_{card_id[-8:]}", event_type,
+            {"card_id": card_id, **payload},
+        )
+
+    # -- 规则组件（§G3.5：Approved Experience 输出机器可消费规则） ----------------
+
+    def rule_component(self, card_id: str) -> dict:
+        """Approved Experience → 机器可消费规则组件（非描述文本）。
+
+        未批准/被拒 → 422（未验证经验不得进入生产 Screening，§G3 DoD）。
+        组件由 G5 ScreenDefinition 编译消费。
+        """
+        card = self._repo.get_card(card_id)
+        if card is None:
+            raise KeyError(card_id)
+        if card.get("status") != ExperienceStatus.APPROVED:
+            raise ExperienceRefusal(
+                f"rule component requires an APPROVED experience (current: {card.get('status')})"
+            )
+        row = self._repo.get_card_row(card_id)
+        return {
+            "kind": "experience_rule_component",
+            "component_version": 1,
+            "card_id": card_id,
+            "source_card_version": card.get("current_version"),
+            "statement": card.get("statement"),
+            "mechanism_terms": [
+                t.strip() for t in (card.get("mechanism") or "").split("；") if t.strip()
+            ][:8],
+            "preconditions": list(row.applicable_conditions_json or []),
+            "invalidators": list(row.invalid_conditions_json or []),
+            "signals": list(row.signals_json or []),
+            "scope": dict(row.scope_json or {}),
+            "usage_guidance": row.usage_guidance,
+            "counterexamples": list(row.counterexamples_json or []),
+            "validation_method": row.validation_method,
+            "instrument_scope": [card.get("instrument_id")],
+            "compiled_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    # -- 版本 Diff（§G3.6） -------------------------------------------------------
+
+    def version_diff(self, card_id: str, v1: int, v2: int) -> dict:
+        """两个版本的字段级 Diff（append-only 版本链）。"""
+        versions = {v["version_no"]: v for v in self._repo.list_versions(card_id)}
+        if v1 not in versions or v2 not in versions:
+            raise KeyError(f"version not found")
+        a, b = versions[v1], versions[v2]
+        fields = ("statement", "mechanism", "applicable_conditions",
+                  "invalid_conditions", "signals", "scope", "usage_guidance",
+                  "counterexamples", "confidence", "method")
+        diff = []
+        for f in fields:
+            va, vb = a.get(f), b.get(f)
+            if va != vb:
+                diff.append({"field": f, "v1": va, "v2": vb})
+        return {"card_id": card_id, "v1": v1, "v2": v2,
+                "changed_fields": [d["field"] for d in diff], "diff": diff}
+
+    # -- 非量化指标（§G3.7） ------------------------------------------------------
+
+    def validation_metrics(self, card_id: str) -> dict:
+        """真实非量化验证指标：样本数/跨度/前向收益分布。
+
+        方向 IC 依赖预测方向记录（G8 因果链接入）——当前 honest INSUFFICIENT；
+        样本 <3 → 整体 INSUFFICIENT（不造数值）。
+        """
+        from statistics import mean
+
+        card = self._repo.get_card(card_id)
+        if card is None:
+            raise KeyError(card_id)
+        validations = self._repo.list_validations(card_id)
+        cases = []
+        for v in validations:
+            for c in (v.get("cases") or []):
+                if isinstance(c, dict) and c.get("forward_return_pct") is not None:
+                    cases.append(c)
+        n = len(cases)
+        if n < 3:
+            return {
+                "card_id": card_id, "n_cases": n, "status": "INSUFFICIENT",
+                "note": "样本数 <3 → 指标 INSUFFICIENT（§G3.7 不造数值）",
+            }
+        returns = [float(c["forward_return_pct"]) for c in cases]
+        dates = sorted(str(c.get("exit_observed_at") or "") for c in cases)
+        span_days = None
+        if dates and dates[0] and dates[-1]:
+            try:
+                d0 = datetime.fromisoformat(dates[0].replace("Z", "+00:00"))
+                d1 = datetime.fromisoformat(dates[-1].replace("Z", "+00:00"))
+                span_days = int((d1 - d0).total_seconds() // 86400)
+            except ValueError:
+                span_days = None
+        positive = sum(1 for r in returns if r > 0)
+        return {
+            "card_id": card_id, "status": "ok", "n_cases": n,
+            "span_days": span_days,
+            "forward_return": {
+                "mean_pct": round(mean(returns), 3),
+                "min_pct": round(min(returns), 3),
+                "max_pct": round(max(returns), 3),
+                "positive_rate": round(positive / n, 3),
+            },
+            "directional_ic": "INSUFFICIENT",
+            "directional_ic_note": "预测方向记录由 Replay 因果链接入后提供（G8）",
+            "basis": "validated_case_records",
+        }
+
 
     # -- reads ----------------------------------------------------------------------
 

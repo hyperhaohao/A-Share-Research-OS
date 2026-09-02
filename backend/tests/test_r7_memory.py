@@ -58,6 +58,10 @@ def _make_approved_card(client, monkeypatch) -> dict:
     card = created.json()["card"]
     client.post(f"/api/v1/experience-cards/{card['card_id']}/validate")
     client.post(
+        f"/api/v1/experience-cards/{card['card_id']}/validate-non-quant",
+        json={"method": "counterexample_search"},
+    )
+    client.post(
         f"/api/v1/experience-cards/{card['card_id']}/approve", json={}
     )
     return client.get(f"/api/v1/experience-cards/{card['card_id']}").json()["card"]
@@ -134,6 +138,10 @@ def test_experience_to_memory_candidate_flow(client, monkeypatch):
     assert refused.status_code == 422
 
     client.post(f"/api/v1/experience-cards/{card_id}/validate")
+    client.post(
+        f"/api/v1/experience-cards/{card_id}/validate-non-quant",
+        json={"method": "counterexample_search"},
+    )
     client.post(f"/api/v1/experience-cards/{card_id}/approve", json={})
     ok = client.post(f"/api/v1/memories/from-experience/{card_id}")
     assert ok.status_code == 201, ok.text

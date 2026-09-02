@@ -143,3 +143,53 @@ def reject_card(card_id: str, payload: VerdictIn, session: Session = Depends(get
     except KeyError:
         raise AppError("experience.not_found", status_code=404) from None
     return {"card": card}
+
+
+# ── G3：规则组件 / 指标 / 版本 Diff ──────────────────────────────────────────
+
+
+@router.get("/{card_id}/rule-component")
+def get_rule_component(card_id: str, session: Session = Depends(get_session)) -> dict:
+    """Approved Experience → 机器可消费规则组件（未批准 422，§G3.5）。"""
+    from app.core.errors import AppError
+    from app.services.experience_service import ExperienceRefusal, ExperienceService
+
+    try:
+        out = ExperienceService(session).rule_component(card_id)
+    except KeyError:
+        raise AppError("experience.not_found", status_code=404) from None
+    except ExperienceRefusal as exc:
+        raise AppError("experience.not_approved", status_code=422, detail=str(exc)) from None
+    return {"rule_component": out}
+
+
+@router.get("/{card_id}/metrics")
+def get_validation_metrics(card_id: str, session: Session = Depends(get_session)) -> dict:
+    """真实非量化验证指标（样本/跨度/收益分布；<3 样本 → INSUFFICIENT）。"""
+    from app.core.errors import AppError
+    from app.services.experience_service import ExperienceService
+
+    try:
+        out = ExperienceService(session).validation_metrics(card_id)
+    except KeyError:
+        raise AppError("experience.not_found", status_code=404) from None
+    return {"metrics": out}
+
+
+@router.get("/{card_id}/versions/diff")
+def get_version_diff(
+    card_id: str,
+    v1: int = Query(ge=1),
+    v2: int = Query(ge=1),
+    session: Session = Depends(get_session),
+) -> dict:
+    """版本字段级 Diff（§G3.6 append-only 版本链）。"""
+    from app.core.errors import AppError
+    from app.services.experience_service import ExperienceService
+
+    try:
+        out = ExperienceService(session).version_diff(card_id, v1, v2)
+    except KeyError as exc:
+        raise AppError("experience.version_not_found", status_code=404,
+                       detail=str(exc)) from None
+    return out

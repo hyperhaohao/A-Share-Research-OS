@@ -110,8 +110,12 @@ def test_playbook_search_only_approved_no_evidence_fields(client, monkeypatch):
     empty = client.get("/api/v1/experience-cards/playbook/search", params={"q": ""}).json()
     assert all(r["card_id"] != card["card_id"] for r in empty["results"])
 
-    # 验证 + 批准 → 进 Playbook
+    # 验证（case+反例 pass）+ 批准 → 进 Playbook（G3.3 需 ≥1 PASS 验证）
     client.post(f"/api/v1/experience-cards/{card['card_id']}/validate")
+    client.post(
+        f"/api/v1/experience-cards/{card['card_id']}/validate-non-quant",
+        json={"method": "counterexample_search"},
+    )
     client.post(f"/api/v1/experience-cards/{card['card_id']}/approve", json={})
     found = client.get("/api/v1/experience-cards/playbook/search", params={"q": ""}).json()
     hits = [r for r in found["results"] if r["card_id"] == card["card_id"]]

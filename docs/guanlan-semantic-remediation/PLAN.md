@@ -8,7 +8,7 @@
 - [x] G0 基线、迁移台账和状态修正
 - [x] G1 真实 Industry Graph（Chain/Segment/Edge/Product/Position/EdgeEvidence）
 - [x] G2 产业语义 PIT/证据治理/五轴
-- [ ] G3 Experience 原—炼—验—用（规则组件 + Confirmation/Audit）
+- [x] G3 Experience 原—炼—验—用（规则组件 + Confirmation/Audit）
 - [ ] G4 Typed Dataflow Workflow（端口/schema/data_contract）
 - [ ] G5 Experience-driven Screening（Definition 编译/版本化）
 - [ ] G6 Executable Strategy Lab（真实交易路径回测）

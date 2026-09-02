@@ -139,6 +139,15 @@ def test_case_validation_and_approval_gate(client, monkeypatch):
     detail = client.get(f"/api/v1/experience-cards/{card_id}").json()["card"]
     assert detail["status"] == "VALIDATING"
 
+    # G3.3：批准需要 ≥1 明确 PASS 的验证（case=inconclusive 不足）→
+    # 补反例搜索（语料 0 命中 → pass）
+    cq = client.post(
+        f"/api/v1/experience-cards/{card_id}/validate-non-quant",
+        json={"method": "counterexample_search"},
+    )
+    assert cq.status_code == 201
+    assert cq.json()["validation"]["verdict"] == "pass"
+
     approved = client.post(
         f"/api/v1/experience-cards/{card_id}/approve", json={"verdict": "案例支持，继续观察"}
     )

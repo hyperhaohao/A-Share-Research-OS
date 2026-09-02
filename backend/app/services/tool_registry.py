@@ -694,3 +694,47 @@ register_tool(ToolSpec(
     idempotency_policy="idempotent", artifact_contract=(),
     executor=_exec_open_page,
 ))
+
+def _exec_approve_experience_card(session: Session, args: dict) -> dict:
+    """F7×G3：经验卡批准走审批门（≥1 PASS 验证；FAIL 未解决禁止）。"""
+    from app.services.experience_service import ExperienceService
+
+    out = ExperienceService(session).approve(args["card_id"], verdict="approved")
+    return {"card_id": args["card_id"], "status": out.get("status")}
+
+
+def _exec_reject_experience_card(session: Session, args: dict) -> dict:
+    from app.services.experience_service import ExperienceService
+
+    out = ExperienceService(session).reject(args["card_id"], reason=args.get("reason"))
+    return {"card_id": args["card_id"], "status": out.get("status")}
+
+
+register_tool(ToolSpec(
+    name="approve_experience_card",
+    description="批准经验卡进入生产（§G3.3：需 ≥1 PASS 验证且无未解决 FAIL）",
+    input_schema={
+        "type": "object", "required": ["card_id"],
+        "properties": {"card_id": {"type": "string", "minLength": 6, "maxLength": 40}},
+    },
+    output_schema={"type": "object"},
+    risk_level=RISK_HIGH, requires_confirmation=True, timeout_s=15,
+    idempotency_policy="at_most_once", artifact_contract=("experience_card",),
+    executor=_exec_approve_experience_card,
+))
+
+register_tool(ToolSpec(
+    name="reject_experience_card",
+    description="否决经验卡（审计留档）",
+    input_schema={
+        "type": "object", "required": ["card_id"],
+        "properties": {
+            "card_id": {"type": "string", "minLength": 6, "maxLength": 40},
+            "reason": {"type": "string", "maxLength": 300},
+        },
+    },
+    output_schema={"type": "object"},
+    risk_level=RISK_HIGH, requires_confirmation=True, timeout_s=15,
+    idempotency_policy="at_most_once", artifact_contract=(),
+    executor=_exec_reject_experience_card,
+))

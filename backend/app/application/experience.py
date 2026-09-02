@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import JSON, DateTime, Float, String, select
+from sqlalchemy import JSON, DateTime, Float, String, Text, select
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from app.storage.orm import Base
@@ -62,6 +62,13 @@ class ExperienceCardORM(Base):
     source_claim_ids_json: Mapped[list] = mapped_column(JSON, default=list)
     source_evidence_ids_json: Mapped[list] = mapped_column(JSON, default=list)
 
+    # G3：结构化经验字段（原—炼—验—用 §G3.1）
+    signals_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    scope_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    usage_guidance: Mapped[str | None] = mapped_column(Text, nullable=True)
+    counterexamples_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    validation_method: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
     status: Mapped[str] = mapped_column(String(16), default=ExperienceStatus.DRAFT, index=True)
     quant_expression: Mapped[str | None] = mapped_column(String(200), nullable=True)
     confidence: Mapped[float] = mapped_column(Float, default=0.5)
@@ -90,6 +97,12 @@ class ExperienceCardVersionORM(Base):
     confidence: Mapped[float] = mapped_column(Float, default=0.5)
     method: Mapped[str] = mapped_column(String(16), default="deterministic")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # G3：版本快照同样携带结构化字段（append-only）
+    signals_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    scope_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    usage_guidance: Mapped[str | None] = mapped_column(Text, nullable=True)
+    counterexamples_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    validation_method: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
 
 class ExperienceValidationORM(Base):
@@ -104,6 +117,8 @@ class ExperienceValidationORM(Base):
     cases_json: Mapped[list] = mapped_column(JSON, default=list)
     summary: Mapped[str] = mapped_column(String(1000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # G3：验证结论（pass | fail | inconclusive）
+    verdict: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
 
 def _card_to_dict(row: ExperienceCardORM, *, versions: int | None = None) -> dict:
@@ -142,6 +157,11 @@ def _version_to_dict(row: ExperienceCardVersionORM) -> dict:
         "mechanism": row.mechanism,
         "applicable_conditions": list(row.applicable_conditions_json or []),
         "invalid_conditions": list(row.invalid_conditions_json or []),
+        "signals": list(row.signals_json or []),
+        "scope": dict(row.scope_json or {}),
+        "usage_guidance": row.usage_guidance,
+        "counterexamples": list(row.counterexamples_json or []),
+        "validation_method": row.validation_method,
         "confidence": row.confidence,
         "method": row.method,
         "created_at": _ensure_utc(row.created_at).isoformat() if row.created_at else None,
@@ -153,6 +173,7 @@ def _validation_to_dict(row: ExperienceValidationORM) -> dict:
         "validation_id": row.validation_id,
         "card_id": row.card_id,
         "method": row.method,
+        "verdict": row.verdict,
         "cases": list(row.cases_json or []),
         "summary": row.summary,
         "created_at": _ensure_utc(row.created_at).isoformat() if row.created_at else None,
