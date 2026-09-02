@@ -125,10 +125,17 @@ def validate_card(card_id: str, session: Session = Depends(get_session)) -> dict
     return {"validation": validation}
 
 
+class ApproveIn(BaseModel):
+    verdict: str | None = Field(default=None, max_length=500)
+    confirmation_id: str = Field(min_length=6, max_length=32)
+
+
 @router.post("/{card_id}/approve")
-def approve_card(card_id: str, payload: VerdictIn, session: Session = Depends(get_session)) -> dict:
+def approve_card(card_id: str, payload: ApproveIn, session: Session = Depends(get_session)) -> dict:
+    """§R2.2：批准必须持有效持久 Confirmation（digest 绑定卡片版本）。"""
     try:
-        card = ExperienceService(session).approve(card_id, payload.verdict)
+        card = ExperienceService(session).approve(
+            card_id, payload.verdict, confirmation_id=payload.confirmation_id)
     except KeyError:
         raise AppError("experience.not_found", status_code=404) from None
     except ExperienceRefusal as exc:

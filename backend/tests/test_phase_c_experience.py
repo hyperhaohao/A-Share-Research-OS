@@ -118,9 +118,10 @@ def test_case_validation_and_approval_gate(client, monkeypatch):
     ).json()["card"]
     card_id = card["card_id"]
 
-    # approve before any validation is refused (§13 验→用)
+    # approve before any validation is refused (§13 验→用 + §R2.2 需确认)
     blocked = client.post(
-        f"/api/v1/experience-cards/{card_id}/approve", json={"verdict": "ok"}
+        f"/api/v1/experience-cards/{card_id}/approve",
+        json={"verdict": "ok", "confirmation_id": "cfm_none00000000001"},
     )
     assert blocked.status_code == 422
     assert blocked.json()["error_code"] == "experience.approve_blocked"
@@ -146,10 +147,17 @@ def test_case_validation_and_approval_gate(client, monkeypatch):
         json={"method": "counterexample_search"},
     )
     assert cq.status_code == 201
-    assert cq.json()["validation"]["verdict"] == "pass"
+    assert cq.json()["validation"]["verdict"] == "no_counterexample_found"  # R2 fail-closed
 
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card_id, "card_version": 1},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
     approved = client.post(
-        f"/api/v1/experience-cards/{card_id}/approve", json={"verdict": "案例支持，继续观察"}
+        f"/api/v1/experience-cards/{card_id}/approve", json={"verdict": "案例支持，继续观察",
+                                                             "confirmation_id": conf["confirmation_id"]}
     )
     assert approved.status_code == 200, approved.text
     assert approved.json()["card"]["status"] == "APPROVED"

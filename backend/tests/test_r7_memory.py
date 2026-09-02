@@ -61,9 +61,25 @@ def _make_approved_card(client, monkeypatch) -> dict:
         f"/api/v1/experience-cards/{card['card_id']}/validate-non-quant",
         json={"method": "counterexample_search"},
     )
-    client.post(
-        f"/api/v1/experience-cards/{card['card_id']}/approve", json={}
-    )
+    factory = client.app.state._test_factory
+    session = factory()
+    try:
+        from app.application.experience import ExperienceCardORM
+
+        card_row = session.scalars(
+            select(ExperienceCardORM).where(ExperienceCardORM.card_id == card["card_id"])
+        ).first()
+        card_version = card_row.current_version if card_row else 1
+    finally:
+        session.close()
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card["card_id"], "card_version": card_version},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
+    client.post(f"/api/v1/experience-cards/{card['card_id']}/approve", json={
+        "confirmation_id": conf["confirmation_id"]})
     return client.get(f"/api/v1/experience-cards/{card['card_id']}").json()["card"]
 
 
@@ -142,7 +158,14 @@ def test_experience_to_memory_candidate_flow(client, monkeypatch):
         f"/api/v1/experience-cards/{card_id}/validate-non-quant",
         json={"method": "counterexample_search"},
     )
-    client.post(f"/api/v1/experience-cards/{card_id}/approve", json={})
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card_id, "card_version": 1},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
+    client.post(f"/api/v1/experience-cards/{card_id}/approve", json={
+        "confirmation_id": conf["confirmation_id"]})
     ok = client.post(f"/api/v1/memories/from-experience/{card_id}")
     assert ok.status_code == 201, ok.text
     mem = ok.json()["memory"]

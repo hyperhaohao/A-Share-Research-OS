@@ -187,7 +187,15 @@ def _make_approved_experience(client, *, preconditions: list[str], name: str) ->
         session2.commit()
     finally:
         session2.close()
-    _approve_card(client, card.card_id)
+    # R2.2：持久确认 → 批准（digest 绑定卡片版本）
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card.card_id, "card_version": 1},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
+    client.post(f"/api/v1/experience-cards/{card.card_id}/approve", json={
+        "confirmation_id": conf["confirmation_id"]})
     return card.card_id
 
 

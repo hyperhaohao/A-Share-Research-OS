@@ -116,7 +116,14 @@ def test_playbook_search_only_approved_no_evidence_fields(client, monkeypatch):
         f"/api/v1/experience-cards/{card['card_id']}/validate-non-quant",
         json={"method": "counterexample_search"},
     )
-    client.post(f"/api/v1/experience-cards/{card['card_id']}/approve", json={})
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card["card_id"], "card_version": 1},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
+    client.post(f"/api/v1/experience-cards/{card['card_id']}/approve", json={
+        "confirmation_id": conf["confirmation_id"]})
     found = client.get("/api/v1/experience-cards/playbook/search", params={"q": ""}).json()
     hits = [r for r in found["results"] if r["card_id"] == card["card_id"]]
     assert hits, "approved card must appear in playbook"

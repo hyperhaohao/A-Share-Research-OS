@@ -123,11 +123,30 @@ def _approve(client, card_id: str) -> None:
         session.commit()
     finally:
         session.close()
+    # R2.2：创建持久确认（digest 绑定 card_id+card_version）→ 批准 → 消费
+    from app.application.experience import ExperienceCardORM
+
+    session2 = factory()
+    try:
+        row = session2.scalars(
+            select(ExperienceCardORM).where(ExperienceCardORM.card_id == card_id)
+        ).first()
+        card_version = row.current_version
+    finally:
+        session2.close()
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card_id, "card_version": card_version},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
     session = factory()
     try:
         from app.services.experience_service import ExperienceService
 
-        ExperienceService(session).approve(card_id, verdict="approved")
+        ExperienceService(session).approve(
+            card_id, verdict="approved",
+            confirmation_id=conf["confirmation_id"], consume=True)
         session.commit()
     finally:
         session.close()

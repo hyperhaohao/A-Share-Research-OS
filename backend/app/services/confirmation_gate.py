@@ -220,9 +220,11 @@ def consume_confirmation_record(
     *,
     tool_name: str,
     arguments_digest_value: str,
+    consume: bool = True,
 ) -> tuple[bool, str | None]:
-    """执行前消费：approved + digest 匹配 + 未过期未消费 → consumed。
+    """执行前校验/消费：approved + digest 匹配 + 未过期未消费。
 
+    consume=False 时仅校验（不改变状态）——供 executor 消费语义使用。
     Returns: (ok, error_code)
     """
     row = _get_row(session, confirmation_id)
@@ -233,7 +235,8 @@ def consume_confirmation_record(
         return False, "tool.confirmation_invalid"
     if row.tool_name != tool_name or row.arguments_digest != arguments_digest_value:
         return False, "tool.confirmation_invalid"
-    row.status = "consumed"
-    row.consumed_at = _now()
-    session.flush()
+    if consume:
+        row.status = "consumed"
+        row.consumed_at = _now()
+        session.flush()
     return True, None

@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.db import get_session
 from app.main import create_app
@@ -132,6 +133,28 @@ def _audit_events(client, card_id: str) -> list[dict]:
     return resp.json().get("results", [])
 
 
+def _approve_with_confirmation(client, card_id: str) -> str:
+    """R2：创建持久确认 → 批准 → 返回 confirmation_id（供直接 API 消费）。"""
+    factory = client.app.state._test_factory
+    session = factory()
+    try:
+        from app.application.experience import ExperienceCardORM
+
+        row = session.scalars(
+            select(ExperienceCardORM).where(ExperienceCardORM.card_id == card_id)
+        ).first()
+        card_version = row.current_version
+    finally:
+        session.close()
+    conf = client.post("/api/v1/command/confirmations", json={
+        "tool_name": "approve_experience_card",
+        "arguments": {"card_id": card_id, "card_version": card_version},
+    }).json()["confirmation"]
+    client.post(f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",
+                json={"decision": "approved"})
+    return conf["confirmation_id"]
+
+
 # ── §G3.3 Approval 语义 ──────────────────────────────────────────────────────
 
 
@@ -139,7 +162,8 @@ def test_approve_blocked_without_explicit_pass(client):
     card_id = _make_card(client)
     # case-only（inconclusive）→ 禁止批准
     _add_validation(client, card_id, method="case", verdict="inconclusive")
-    r = client.post(f"/api/v1/experience-cards/{card_id}/approve", json={})
+    r = client.post(f"/api/v1/experience-cards/{card_id}/approve", json={
+        "confirmation_id": "cfm_missing0000000000001"})
     assert r.status_code == 422, r.text
     assert "PASS" in r.json()["detail"]
 
@@ -149,7 +173,9 @@ def test_approve_blocked_by_unresolved_fail(client):
     # counterexample 命中反例 → fail → 禁止批准（即使另有 pass）
     _add_validation(client, card_id, method="counterexample_search", verdict="fail")
     _add_validation(client, card_id, method="counterexample_search2", verdict="pass")
-    r = client.post(f"/api/v1/experience-cards/{card_id}/approve", json={})
+    conf_id = _approve_with_confirmation(client, card_id)
+    r = client.post(f"/api/v1/experience-cards/{card_id}/approve", json={
+        "confirmation_id": conf_id})
     assert r.status_code == 422
     assert "FAIL" in r.json()["detail"]
 
@@ -159,7 +185,9 @@ def test_approve_with_pass_validation_and_audit(client):
     _add_validation(client, card_id, method="case", verdict="inconclusive")
     _add_validation(client, card_id, method="counterexample_search", verdict="pass")
 
-    approved = client.post(f"/api/v1/experience-cards/{card_id}/approve", json={})
+    conf_id = _approve_with_confirmation(client, card_id)
+    approved = client.post(f"/api/v1/experience-cards/{card_id}/approve", json={
+        "confirmation_id": conf_id})
     assert approved.status_code == 200, approved.text
     assert approved.json()["card"]["status"] == "APPROVED"
 
@@ -190,7 +218,9 @@ def test_rule_component_requires_approval(client):
 def test_rule_component_structured_output(client):
     card_id = _make_card(client)
     _add_validation(client, card_id, method="counterexample_search", verdict="pass")
-    client.post(f"/api/v1/experience-cards/{card_id}/approve", json={})
+    conf_id = _approve_with_confirmation(client, card_id)
+    client.post(f"/api/v1/experience-cards/{card_id}/approve", json={
+        "confirmation_id": conf_id})
 
     out = client.get(f"/api/v1/experience-cards/{card_id}/rule-component")
     assert out.status_code == 200, out.text
@@ -283,9 +313,20 @@ def test_approve_via_confirmation_gate_tool(client):
     digest = direct.json()["arguments_digest"]
 
     # 创建确认 → 批准 → 执行（consumed）
+    from app.application.experience import ExperienceCardORM
+
+    factory = client.app.state._test_factory
+    session = factory()
+    try:
+        row = session.scalars(
+            select(ExperienceCardORM).where(ExperienceCardORM.card_id == card_id)
+        ).first()
+        card_version = row.current_version
+    finally:
+        session.close()
     conf = client.post("/api/v1/command/confirmations", json={
         "tool_name": "approve_experience_card",
-        "arguments": {"card_id": card_id},
+        "arguments": {"card_id": card_id, "card_version": card_version},
     }).json()["confirmation"]
     client.post(
         f"/api/v1/command/confirmations/{conf['confirmation_id']}/decide",

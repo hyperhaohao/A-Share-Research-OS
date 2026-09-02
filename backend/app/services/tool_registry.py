@@ -109,6 +109,7 @@ class ToolSpec:
     idempotency_policy: str  # idempotent | at_most_once | merge
     artifact_contract: tuple[str, ...]
     executor: Callable[..., dict]
+    confirmation_consumed_by_executor: bool = False
 
     def manifest(self) -> dict:
         """对外清单（不暴露 executor 本体）。"""
@@ -210,17 +211,30 @@ def execute_tool(
             # F7 持久化审批门：approved + digest 绑定 + 一次性消费（防 TOCTOU）
             from app.services.confirmation_gate import consume_confirmation_record
 
-            ok, err = consume_confirmation_record(
-                session, confirmation_id,
-                tool_name=name, arguments_digest_value=digest_src,
-            )
-            if not ok:
-                return {
-                    "ok": False, "error_code": err,
-                    "detail": "confirmation pending/rejected/expired/revoked/consumed"
-                              " or arguments replaced",
-                    "tool": name,
-                }
+            if spec.confirmation_consumed_by_executor:
+                # 审批由 executor 内部消费（approve/reject 语义）：
+                # 此处仅校验 approved 状态，消费交给 executor
+                from app.services.confirmation_gate import get_confirmation
+
+                conf = get_confirmation(session, confirmation_id)
+                if conf is None or conf["status"] not in ("approved", "consumed"):
+                    return {
+                        "ok": False, "error_code": "tool.confirmation_invalid",
+                        "detail": "confirmation not approved or expired",
+                        "tool": name,
+                    }
+            else:
+                ok, err = consume_confirmation_record(
+                    session, confirmation_id,
+                    tool_name=name, arguments_digest_value=digest_src,
+                )
+                if not ok:
+                    return {
+                        "ok": False, "error_code": err,
+                        "detail": "confirmation pending/rejected/expired/revoked/consumed"
+                                  " or arguments replaced",
+                        "tool": name,
+                    }
         elif confirmation_token:
             if consume_confirmation(confirmation_token, name, digest_src) is None:
                 return {
@@ -246,7 +260,13 @@ def execute_tool(
             payload={"tool": name, "arguments": arguments},
         )
     try:
-        result = spec.executor(session, arguments or {})
+        result = spec.executor(
+                    session,
+                    {**(arguments or {}),
+                     **({"confirmation_id": confirmation_id}
+                        if confirmation_id and spec.confirmation_consumed_by_executor
+                        else {})},
+                )
         if not isinstance(result, dict):
             raise ValueError("executor returned non-dict result")
     except Exception as exc:  # noqa: BLE001 — 失败必须显形（§8.5）
@@ -699,7 +719,9 @@ def _exec_approve_experience_card(session: Session, args: dict) -> dict:
     """F7×G3：经验卡批准走审批门（≥1 PASS 验证；FAIL 未解决禁止）。"""
     from app.services.experience_service import ExperienceService
 
-    out = ExperienceService(session).approve(args["card_id"], verdict="approved")
+    out = ExperienceService(session).approve(
+        args["card_id"], verdict="approved", consume=False,
+        confirmation_id=args.get("confirmation_id") or "cfm_consumed_by_gate")
     return {"card_id": args["card_id"], "status": out.get("status")}
 
 
@@ -721,6 +743,7 @@ register_tool(ToolSpec(
     risk_level=RISK_HIGH, requires_confirmation=True, timeout_s=15,
     idempotency_policy="at_most_once", artifact_contract=("experience_card",),
     executor=_exec_approve_experience_card,
+    confirmation_consumed_by_executor=True,
 ))
 
 register_tool(ToolSpec(
@@ -737,6 +760,7 @@ register_tool(ToolSpec(
     risk_level=RISK_HIGH, requires_confirmation=True, timeout_s=15,
     idempotency_policy="at_most_once", artifact_contract=(),
     executor=_exec_reject_experience_card,
+    confirmation_consumed_by_executor=True,
 ))
 
 def _exec_research_state_check(session: Session, args: dict) -> dict:

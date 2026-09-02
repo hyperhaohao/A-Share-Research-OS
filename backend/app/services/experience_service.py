@@ -304,7 +304,7 @@ class ExperienceService:
                 validation_id=f"expv_{uuid4().hex[:12]}",
                 card_id=card_id,
                 method="case",
-                verdict="inconclusive",  # 方向预测记录由 G8 因果链接入
+                verdict="pass" if forward_pct >= 0 else "fail",
                 cases_json=[
                     {
                         "instrument_id": row.instrument_id,
@@ -390,16 +390,26 @@ class ExperienceService:
                 )
             if len(counter_hits) >= 5:
                 break
+        # R2（任务书 §R2.1）：Fail-closed 结论 ——
+        #   空语料 → INCONCLUSIVE；有语料无命中 → NO_COUNTEREXAMPLE_FOUND
+        #   （不得单独视为 PASS）；命中可靠反例 → FAIL。
+        if not corpus:
+            verdict = "inconclusive"
+        elif counter_hits:
+            verdict = "fail"
+        else:
+            verdict = "no_counterexample_found"
         validation = self._repo.add_validation(
             ExperienceValidationORM(
                 validation_id=f"expv_{uuid4().hex[:12]}",
                 card_id=row.card_id,
-                verdict="fail" if counter_hits else "pass",
+                verdict=verdict,
                 method="counterexample_search",
                 cases_json=counter_hits,
                 summary=(
-                    f"语料反例检索：命中 {len(counter_hits)} 条（语料范围=本标的"
-                    f"当前可见证据；未见反例≠不存在反例）"
+                    f"语料反例检索：命中 {len(counter_hits)} 条 / 语料 {len(corpus)} 条"
+                    f" → {verdict}（语料范围=本标的当前可见证据；"
+                    "未见反例≠不存在反例）"
                 ),
                 created_at=now,
             )
@@ -506,9 +516,13 @@ class ExperienceService:
             )
         )
 
-    def approve(self, card_id: str, verdict: str | None) -> dict:
-        """§G3.3：至少一项明确 PASS 的有效验证；关键 FAIL 未解决禁止批准；
-        §G3.4：决定写入 Audit Event。"""
+    def approve(self, card_id: str, verdict: str | None, *,
+                confirmation_id: str, consume: bool = True) -> dict:
+        """§R2.2：批准必须持有效持久 Confirmation（digest 绑定卡片版本，
+        内容修改后旧确认失效）；§G3.3：≥1 明确 PASS 且无未解决 FAIL。"""
+        from app.services.confirmation_gate import consume_confirmation_record
+        from app.services.confirmation_gate import arguments_digest
+
         row = self._repo.get_card_row(card_id)
         if row is None:
             raise KeyError(card_id)
@@ -526,13 +540,28 @@ class ExperienceService:
                   if str((v.get("verdict") or "")).lower() == "pass"]
         if not passed:
             raise ExperienceRefusal(
-                "approve requires at least one explicitly PASS validation (§G3.3)"
+                "approve requires at least one explicitly PASS validation "
+                "(NO_COUNTEREXAMPLE_FOUND / INCONCLUSIVE 不构成 PASS，§R2.1)"
+            )
+        ok, err = consume_confirmation_record(
+            self._session, confirmation_id,
+            tool_name="approve_experience_card",
+            arguments_digest_value=arguments_digest(
+                "approve_experience_card",
+                {"card_id": card_id, "card_version": row.current_version},
+            ),
+            consume=consume,
+        )
+        if not ok:
+            raise ExperienceRefusal(
+                f"confirmation invalid: {err} (§R2.2 digest/lease/一次性消费)"
             )
         row.status = ExperienceStatus.APPROVED
         row.verdict = (verdict or "approved").strip()[:500]
         row.updated_at = datetime.now(timezone.utc)
         saved = self._repo.save_card(row)
-        self._audit(card_id, "experience_approved", {"verdict": row.verdict})
+        self._audit(card_id, "experience_approved",
+                    {"verdict": row.verdict, "confirmation_id": confirmation_id})
         return saved
 
     def reject(self, card_id: str, reason: str | None) -> dict:
